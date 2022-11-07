@@ -4,13 +4,15 @@
 #include <iostream>
 #include <QApplication>
 #include <QKeyEvent>
+#include <QDateTime>
 
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 129.f, 48.f), m_terrain)
+      m_terrain(this), m_player(glm::vec3(48.f, 129.f, 48.f), m_terrain),
+      prevTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -81,9 +83,9 @@ void MyGL::resizeGL(int w, int h) {
     glm::mat4 viewproj = m_player.mcr_camera.getViewProj();
 
     // Upload the view-projection matrix to our shaders (i.e. onto the graphics card)
-
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
+
 
     printGLErrorLog();
 }
@@ -94,8 +96,13 @@ void MyGL::resizeGL(int w, int h) {
 // all per-frame actions here, such as performing physics updates on all
 // entities in the scene.
 void MyGL::tick() {
+    qint64 currTime = QDateTime::currentMSecsSinceEpoch(); // time at this ticl
+    float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
+    m_player.tick(dT, m_inputs); // tick the player
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
+
+    prevTime = currTime; // update the previous time
 }
 
 void MyGL::sendPlayerDataToGUI() const {
@@ -151,26 +158,68 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     if (e->key() == Qt::Key_Escape) {
         QApplication::quit();
     } else if (e->key() == Qt::Key_Right) {
-        m_player.rotateOnUpGlobal(-amount);
+        m_inputs.rightPressed = true;
     } else if (e->key() == Qt::Key_Left) {
-        m_player.rotateOnUpGlobal(amount);
+        m_inputs.leftPressed = true;
     } else if (e->key() == Qt::Key_Up) {
-        m_player.rotateOnRightLocal(-amount);
+        m_inputs.upPressed = true;
     } else if (e->key() == Qt::Key_Down) {
-        m_player.rotateOnRightLocal(amount);
+        m_inputs.downPressed = true;
     } else if (e->key() == Qt::Key_W) {
-        m_player.moveForwardLocal(amount);
+        m_inputs.wPressed = true;
     } else if (e->key() == Qt::Key_S) {
-        m_player.moveForwardLocal(-amount);
+        m_inputs.sPressed = true;
     } else if (e->key() == Qt::Key_D) {
-        m_player.moveRightLocal(amount);
+        m_inputs.dPressed = true;
     } else if (e->key() == Qt::Key_A) {
-        m_player.moveRightLocal(-amount);
+        m_inputs.aPressed = true;
     } else if (e->key() == Qt::Key_Q) {
-        m_player.moveUpGlobal(-amount);
+        if (m_inputs.flightMode)
+        {
+            m_inputs.qPressed = true;
+        }
     } else if (e->key() == Qt::Key_E) {
-        m_player.moveUpGlobal(amount);
+        if (m_inputs.flightMode)
+        {
+            m_inputs.ePressed = true;
+        }
+    } else if (e->key() == Qt::Key_Space) {
+        // do some jump event for the player
+    } else if (e->key() == Qt::Key_F) {
+        m_inputs.fPressed = true;
+        m_inputs.flightMode = !m_inputs.flightMode;
     }
+}
+
+void MyGL::keyReleaseEvent(QKeyEvent *e) {
+    // http://doc.qt.io/qt-5/qt.html#Key-enum
+    // This could all be much more efficient if a switch
+    // statement were used, but I really dislike their
+    // syntax so I chose to be lazy and use a long
+    // chain of if statements instead
+    if (e->key() == Qt::Key_Escape) {
+        QApplication::quit();
+    } else if (e->key() == Qt::Key_Right) {
+        m_inputs.rightPressed = false;
+    } else if (e->key() == Qt::Key_Left) {
+        m_inputs.leftPressed = false;
+    } else if (e->key() == Qt::Key_Up) {
+        m_inputs.upPressed = false;
+    } else if (e->key() == Qt::Key_Down) {
+        m_inputs.downPressed = false;
+    } else if (e->key() == Qt::Key_W) {
+        m_inputs.wPressed = false;
+    } else if (e->key() == Qt::Key_S) {
+        m_inputs.sPressed = false;
+    } else if (e->key() == Qt::Key_D) {
+        m_inputs.dPressed = false;
+    } else if (e->key() == Qt::Key_A) {
+        m_inputs.aPressed = false;
+    } else if (e->key() == Qt::Key_Q) {
+        m_inputs.qPressed = false;
+    } else if (e->key() == Qt::Key_E) {
+        m_inputs.ePressed = false;
+    } // dont do anything for space and F this time
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
