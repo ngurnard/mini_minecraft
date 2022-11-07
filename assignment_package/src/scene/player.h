@@ -10,7 +10,7 @@ private:
     const Terrain &mcr_terrain;
 
     void processInputs(InputBundle &inputs);
-    void computePhysics(float dT, const Terrain &terrain);
+    void computePhysics(float dT, const Terrain &terrain, InputBundle &inputs);
 
     bool flightMode; // the player always begins in flight mode (no gravity and no collision detection)
     float gravity; // acceleration cosntant in m/s due to gravity. Follows tradition
@@ -28,6 +28,8 @@ public:
 
     bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
     void detectCollision(glm::vec3 *rayDirection, const Terrain &terrain);
+
+    bool checkOnGround(InputBundle &inputs);
 
     void setCameraWidthHeight(unsigned int w, unsigned int h);
 

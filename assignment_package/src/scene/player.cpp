@@ -12,7 +12,7 @@ Player::~Player()
 
 void Player::tick(float dT, InputBundle &input) {
     processInputs(input);
-    computePhysics(dT, mcr_terrain);
+    computePhysics(dT, mcr_terrain, input);
 }
 
 void Player::processInputs(InputBundle &inputs) {
@@ -60,11 +60,7 @@ void Player::processInputs(InputBundle &inputs) {
         this->gravity = 9.81;
         this->accel_max = tune_max_accel; // acceleration of Usain Bolt
 
-        // Get the block type below the player (just barely below the foot of the player) to see if on the ground
-//        BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.001, glm::floor(this->m_position.z));; // for useful knowledle in jumping and falling
-//        if (blockBelow == EMPTY) { // if not on the ground, reduce ssssthe acceleration (reduce aerial drift)
-//            tune_max_accel = 0.1 * tune_max_accel;
-//        }
+        checkOnGround(inputs); // check if the player is on the ground
 
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(this->m_forward.x, 0.f, this->m_forward.z); // zero out the y component of the acceleration
@@ -80,12 +76,12 @@ void Player::processInputs(InputBundle &inputs) {
         }
         if (inputs.spacePressed) {
             // jump if on the ground
-
-            // Get the block type below the player (just barely below the foot of the player) to see if on the ground
-            BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.001, glm::floor(this->m_position.z));; // for useful knowledle in jumping and falling
-            if (blockBelow != EMPTY) {
+            if (inputs.onGround) {
                 this->m_velocity.y = this->m_velocity.y + 10.f;
             }
+        }
+        if (inputs.onGround) {
+            this->m_velocity.y = 0; // the player cant fall through the ground
         }
 
     }
@@ -109,7 +105,7 @@ void Player::processInputs(InputBundle &inputs) {
 
 }
 
-void Player::computePhysics(float dT, const Terrain &terrain) {
+void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &inputs) {
     // TODO: Update the Player's position based on its acceleration
     // and velocity, and also perform collision detection.
     // NOTE: This function is based off of kinematic equations
@@ -136,53 +132,47 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
 
     } else { // if not in flight mode
 
-        /*
-        // Get the block type below the player (just barely below the foot of the player) to detect collision
-        BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.001, glm::floor(this->m_position.z));
-        // wait, this is done with the gridmarching oops
+        this->speed_max = 1.f * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
+        this->m_velocity *= 0.98f; // reduce velocity for friction and drag
 
-        // if there is a block below the player
-        if (blockBelow != EMPTY) {
-            this->speed_max = 1.f * tune_max_speed; // set the max speed for non-flight mode in the x and y directions
+        // check if on the ground, if yes, stop falling
+        if (inputs.onGround) {
+            this->m_velocity.x = this->m_velocity.x + this->m_acceleration.x * dT; // kinematics equation for x
+            this->m_velocity.z = this->m_velocity.z + this->m_acceleration.z * dT; // kinematics equation for z
+            this->m_velocity.y = 0; // no y velocity
 
-            this->m_acceleration.y = 0; // turn off the acceleration of the player in the y direction
-            this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation
+            // Check if there is a collision
+
 
             // if the normalize function doesn't return nans (typically for zero vector or huge vector) and if not going too fast
             bool check_nans = glm::any(glm::isnan(glm::normalize(m_velocity)));
             if (!check_nans && glm::length(m_velocity) < speed_max) {
-                this->m_velocity = this->speed_max * this->m_velocity; // allow it to build up speed
+                // do nothing
             } else if (check_nans) {
                 this->m_velocity = glm::vec3(0, 0, 0); // fail safe
             } else {
                 this->m_velocity = this->speed_max * glm::normalize(this->m_velocity); // cap at max speed
             }
 
-            this->moveAlongVector(this->m_velocity);
-        } else { // if there is no block below the player
-            float terminal_speed = 5.f * tune_max_speed; // the max speed only for the z direction
-
-//            this->m_acceleration -= glm::vec3(0, this->gravity, 0);
-        }
-        */
-
-        this->speed_max = 1.f * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
-        float terminal_speed = 5.f * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
-
-        this->m_velocity *= 0.95f; // reduce velocity for friction and drag
-        this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation
-
-        // Check if there is a collision
-
-
-        // if the normalize function doesn't return nans (typically for zero vector or huge vector) and if not going too fast
-        bool check_nans = glm::any(glm::isnan(glm::normalize(m_velocity)));
-        if (!check_nans && glm::length(m_velocity) < speed_max) {
-            this->m_velocity = this->speed_max * this->m_velocity; // allow it to build up speed
-        } else if (check_nans) {
-            this->m_velocity = glm::vec3(0, 0, 0); // fail safe
         } else {
-            this->m_velocity = this->speed_max * glm::normalize(this->m_velocity); // cap at max speed
+            float terminal_speed = 2.f * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
+
+            this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
+
+            // Check if there is a collision
+
+            // if the normalize function doesn't return nans (typically for zero vector or huge vector) and if not going too fast
+            bool check_nans = glm::any(glm::isnan(glm::normalize(m_velocity)));
+            if (!check_nans && glm::length(m_velocity) < speed_max) {
+                //do nothing
+            } else if (check_nans) {
+                this->m_velocity = glm::vec3(0, 0, 0); // fail safe
+            } else {
+                glm::vec3 temp_vel = glm::normalize(this->m_velocity);
+                this->m_velocity.x = this->speed_max * temp_vel.x; // cap at max speed in x
+                this->m_velocity.z = this->speed_max * temp_vel.z; // cap at max speed in z
+                this->m_velocity.y = terminal_speed * temp_vel.y; // cap at max speed in y
+            }
         }
 
         this->moveAlongVector(this->m_velocity);
@@ -239,9 +229,23 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
     return false;
 }
 
-void detectCollision(glm::vec3 *rayDirection, const Terrain &terrain)
+void Player::detectCollision(glm::vec3 *rayDirection, const Terrain &terrain)
 {
     // idk yet
+}
+
+bool Player::checkOnGround(InputBundle &inputs)
+{
+    // Get the block type below the player (just barely below the foot of the player) to see if on the ground
+    BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
+
+    if (blockBelow != EMPTY) {
+        inputs.onGround = true;
+    } else {
+        inputs.onGround = false;
+    }
+
+    return inputs.onGround;
 }
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {
