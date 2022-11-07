@@ -21,7 +21,6 @@ void Player::processInputs(InputBundle &inputs) {
 
     this->m_acceleration = glm::vec3(0, 0, 0); // ensure we dont accidentally keep accelerating
     float tune_max_accel = 9.5; // this is acceleration of Usain Bolt
-    BlockType blockBelow; // for useful knowledle in jumping and falling
 
     // NOTE: it may help to check the note in the input bundle in the entity class to understand this line
     this->flightMode = inputs.flightMode; // make the player the opposite of what is set in the input bundle
@@ -61,6 +60,12 @@ void Player::processInputs(InputBundle &inputs) {
         this->gravity = 9.81;
         this->accel_max = tune_max_accel; // acceleration of Usain Bolt
 
+        // Get the block type below the player (just barely below the foot of the player) to see if on the ground
+//        BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.001, glm::floor(this->m_position.z));; // for useful knowledle in jumping and falling
+//        if (blockBelow == EMPTY) { // if not on the ground, reduce ssssthe acceleration (reduce aerial drift)
+//            tune_max_accel = 0.1 * tune_max_accel;
+//        }
+
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(this->m_forward.x, 0.f, this->m_forward.z); // zero out the y component of the acceleration
         }
@@ -74,12 +79,10 @@ void Player::processInputs(InputBundle &inputs) {
             this->m_acceleration -= tune_max_accel * glm::vec3(this->m_right.x, 0.f, this->m_right.z); // zero out the y component of the acceleration
         }
         if (inputs.spacePressed) {
-            // do something to jump, idk yet
+            // jump if on the ground
 
             // Get the block type below the player (just barely below the foot of the player) to see if on the ground
-            blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.001, glm::floor(this->m_position.z));
-
-            // jump if on the ground
+            BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.001, glm::floor(this->m_position.z));; // for useful knowledle in jumping and falling
             if (blockBelow != EMPTY) {
                 this->m_velocity.y = this->m_velocity.y + 10.f;
             }
@@ -94,6 +97,7 @@ void Player::processInputs(InputBundle &inputs) {
     } else if (!flightMode) { // if not in flight mode
         if (!check_nans) {
             this->m_acceleration = this->accel_max * glm::normalize(m_acceleration); // max out the acceleration to the norm max
+            // if on the ground, kepp, else make this smaller!
             // include a constant downward acceleration due to gravity
             this->m_acceleration -= glm::vec3(0, gravity, 0);
         } else {
