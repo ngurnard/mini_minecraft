@@ -37,6 +37,8 @@ private:
 
     void sendPlayerDataToGUI() const;
 
+    qint64 prevTime; // the time in the last tick
+
 
 public:
     explicit MyGL(QWidget *parent = nullptr);
@@ -61,6 +63,8 @@ protected:
     // Automatically invoked when the user
     // presses a key on the keyboard
     void keyPressEvent(QKeyEvent *e);
+    // release event so keys presses don't overwrite each other
+    void keyReleaseEvent(QKeyEvent *e); // a key release event so that the player is able to make diaganol movements.
     // Automatically invoked when the user
     // moves the mouse
     void mouseMoveEvent(QMouseEvent *e);
