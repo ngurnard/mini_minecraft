@@ -224,6 +224,15 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
     // TODO
+    float dpi = 0.025; // sensitivity of moving the mouse around the screen
+
+    // NOTE: position() returns the position of the point in this event,
+    // relative to the widget or item that received the event.
+    float dx = -(e->position().x() - this->width() / 2); // mouse position relative to center - center of screen. Negative because testing was backwards
+    float dy = -(e->position().y() - this->height() / 2); // mouse position relative to center - center of screen. Negative because testing was backwards
+    this->m_player.rotateOnUpGlobal(dx * dpi);
+    this->m_player.rotateOnRightLocal(dy * dpi);
+    moveMouseToCenter(); // recenter the mouse to properly compute the next dx and dy
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {

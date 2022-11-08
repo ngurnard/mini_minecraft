@@ -133,7 +133,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
     } else { // if not in flight mode
 
         this->speed_max = 1.f * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
-        this->m_velocity *= 0.98f; // reduce velocity for friction and drag
+        this->m_velocity *= 0.65f; // reduce velocity for friction and drag (slow down on release)
 
         // check if on the ground, if yes, stop falling
         if (inputs.onGround) {
@@ -155,11 +155,14 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
             }
 
         } else {
+
             float terminal_speed = 2.f * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
 
             this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
 
             // Check if there is a collision
+            glm::vec3 rayDir = this->m_velocity;
+            checkCollision(&rayDir, terrain);
 
             // if the normalize function doesn't return nans (typically for zero vector or huge vector) and if not going too fast
             bool check_nans = glm::any(glm::isnan(glm::normalize(m_velocity)));
@@ -173,8 +176,8 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
                 this->m_velocity.z = this->speed_max * temp_vel.z; // cap at max speed in z
                 this->m_velocity.y = terminal_speed * temp_vel.y; // cap at max speed in y
             }
-        }
 
+        }
         this->moveAlongVector(this->m_velocity);
 
     }
@@ -190,7 +193,7 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
     while(curr_t < maxLen) {
         float min_t = glm::sqrt(3.f);
         float interfaceAxis = -1; // Track axis for which t is smallest
-        for(int i = 0; i < 3; ++i) { // Iterate over the three axes
+        for(int i = 0; i < 3; ++i) { // Iterate over the three axes to fing the closest point of intersection with the block grid
             if(rayDirection[i] != 0) { // Is ray parallel to axis i?
                 float offset = glm::max(0.f, glm::sign(rayDirection[i])); // See slide 5
                 // If the player is *exactly* on an interface then
@@ -229,7 +232,7 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
     return false;
 }
 
-void Player::detectCollision(glm::vec3 *rayDirection, const Terrain &terrain)
+void Player::checkCollision(glm::vec3 *rayDirection, const Terrain &terrain)
 {
     // idk yet
 }

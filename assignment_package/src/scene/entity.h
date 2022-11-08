@@ -11,6 +11,7 @@ struct InputBundle {
     bool leftPressed, rightPressed, upPressed, downPressed;
     bool spacePressed; // jump button pressed (only when flight mode is false)
     float mouseX, mouseY;
+//    float mouseXprev, mouseYprev;
     bool onGround; // check if the entity is on the ground
 
     InputBundle()

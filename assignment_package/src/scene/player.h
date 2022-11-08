@@ -27,7 +27,7 @@ public:
     virtual ~Player() override;
 
     bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
-    void detectCollision(glm::vec3 *rayDirection, const Terrain &terrain);
+    void checkCollision(glm::vec3 *rayDirection, const Terrain &terrain);
 
     bool checkOnGround(InputBundle &inputs);
 
