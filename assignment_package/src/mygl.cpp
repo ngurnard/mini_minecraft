@@ -99,9 +99,10 @@ void MyGL::tick() {
     qint64 currTime = QDateTime::currentMSecsSinceEpoch(); // time at this ticl
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     m_player.tick(dT, m_inputs); // tick the player
+    // Uncomment this line to test terrain expansion
+    // m_terrain.updateTerrain(m_player.mcr_position);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
-
     prevTime = currTime; // update the previous time
 }
 
@@ -141,7 +142,7 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
-    m_terrain.draw(0, 64, 0, 64, &m_progInstanced);
+    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
 }
 
 
