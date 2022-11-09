@@ -185,7 +185,8 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
             m_inputs.ePressed = true;
         }
     } else if (e->key() == Qt::Key_Space) {
-        // do some jump event for the player
+//        std::cout << "Space pressed" << std::endl;
+        m_inputs.spacePressed = true;
     } else if (e->key() == Qt::Key_F) {
         m_inputs.fPressed = true;
         m_inputs.flightMode = !m_inputs.flightMode;
@@ -220,7 +221,10 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
         m_inputs.qPressed = false;
     } else if (e->key() == Qt::Key_E) {
         m_inputs.ePressed = false;
-    } // dont do anything for space and F this time
+    } else if (e->key() == Qt::Key_Space) {
+        m_inputs.spacePressed = false;
+//        std::cout << "Space released" << std::endl;
+    } // dont do anything for F this time
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
