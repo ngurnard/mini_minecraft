@@ -1,14 +1,25 @@
 #pragma once
 #include "glm_includes.h"
+#include <iostream>
 
 struct InputBundle {
-    bool wPressed, aPressed, sPressed, dPressed;
-    bool spacePressed;
+    bool wPressed, aPressed, sPressed, dPressed, ePressed, qPressed; // movement presses
+    bool fPressed; // flight mode toggle pressed
+    // Note: in the case of making NPC's, one must remember to change the flight mode.
+    //       because all entities start on flightmode true.
+    bool flightMode; // set the flight mode of this entitity to false initially
+    bool leftPressed, rightPressed, upPressed, downPressed;
+    bool spacePressed; // jump button pressed (only when flight mode is false)
     float mouseX, mouseY;
+//    float mouseXprev, mouseYprev;
+    bool onGround; // check if the entity is on the ground
 
     InputBundle()
-        : wPressed(false), aPressed(false), sPressed(false),
-          dPressed(false), spacePressed(false), mouseX(0.f), mouseY(0.f)
+        : wPressed(false), aPressed(false), sPressed(false), dPressed(false),
+          ePressed(false), qPressed(false), fPressed(false), flightMode(true), // NOTE: ALL ENTITIES START IN FLIGHTMODE = TRUE
+          leftPressed(false), rightPressed(false), upPressed(false), downPressed(false),
+          spacePressed(false), mouseX(0.f), mouseY(0.f),
+          onGround(true)
     {}
 };
 

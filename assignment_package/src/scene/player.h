@@ -10,7 +10,13 @@ private:
     const Terrain &mcr_terrain;
 
     void processInputs(InputBundle &inputs);
-    void computePhysics(float dT, const Terrain &terrain);
+    void computePhysics(float dT, const Terrain &terrain, InputBundle &inputs);
+
+    bool flightMode; // the player always begins in flight mode (no gravity and no collision detection)
+    float gravity; // acceleration cosntant in m/s due to gravity. Follows tradition
+    float speed; // the player's speed, independent of the direction (unlike velocity)
+    float accel_max; // the player's maximum acceleration scaler (max norm)
+    float speed_max; // ensure the player's speed doesn't exceed this value (max norm)
 
 public:
     // Readonly public reference to our camera
@@ -20,6 +26,11 @@ public:
     Player(glm::vec3 pos, const Terrain &terrain);
     virtual ~Player() override;
 
+    bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
+    void checkCollision(glm::vec3 *rayDirection, const Terrain &terrain);
+
+    bool checkOnGround(InputBundle &inputs);
+
     void setCameraWidthHeight(unsigned int w, unsigned int h);
 
     void tick(float dT, InputBundle &input) override;
@@ -28,15 +39,19 @@ public:
     // functions so that it transforms its camera
     // by the same amount as it transforms itself.
     void moveAlongVector(glm::vec3 dir) override;
+
     void moveForwardLocal(float amount) override;
     void moveRightLocal(float amount) override;
     void moveUpLocal(float amount) override;
+
     void moveForwardGlobal(float amount) override;
     void moveRightGlobal(float amount) override;
     void moveUpGlobal(float amount) override;
+
     void rotateOnForwardLocal(float degrees) override;
     void rotateOnRightLocal(float degrees) override;
     void rotateOnUpLocal(float degrees) override;
+
     void rotateOnForwardGlobal(float degrees) override;
     void rotateOnRightGlobal(float degrees) override;
     void rotateOnUpGlobal(float degrees) override;
