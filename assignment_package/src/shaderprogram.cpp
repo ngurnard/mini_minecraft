@@ -3,12 +3,14 @@
 #include <QStringBuilder>
 #include <QTextStream>
 #include <QDebug>
+#include <iostream>
+#include <ostream>
 #include <stdexcept>
 
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
-      attrPos(-1), attrNor(-1), attrCol(-1),
+      attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
       context(context)
 {}
@@ -64,6 +66,8 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
+    attrUV = context->glGetAttribLocation(prog, "vs_UV");
+    attrAnim = context->glGetAttribLocation(prog, "vs_Anim");
     if(attrCol == -1) attrCol = context->glGetAttribLocation(prog, "vs_ColInstanced");
     attrPosOffset = context->glGetAttribLocation(prog, "vs_OffsetInstanced");
 
@@ -178,6 +182,59 @@ void ShaderProgram::draw(Drawable &d)
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
 
+    context->printGLErrorLog();
+}
+
+
+void ShaderProgram::drawInterleaved(Drawable &d)
+{
+    useMe();
+
+    if(d.elemCount() < 0) {
+        throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
+    }
+    // Each of the following blocks checks that:
+    //   * This shader has this attribute, and
+    //   * This Drawable has a vertex buffer for this attribute.
+    // If so, it binds the appropriate buffers to each attribute.
+
+    // Remember, by calling bindPos(), we call
+    // glBindBuffer on the Drawable's VBO for vertex position,
+    // meaning that glVertexAttribPointer associates vs_Pos
+    // (referred to by attrPos) with that VBO
+    if(d.bindInterleavedList())
+    {
+        if (attrPos != -1) {
+            context->glEnableVertexAttribArray(attrPos);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 16 * sizeof(float), static_cast<void*>(0));
+        }
+        if (attrCol != -1) {
+            context->glEnableVertexAttribArray(attrCol);
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 16 * sizeof(float), (void*)(4 * sizeof(float)));
+        }
+        if (attrNor != -1) {
+            context->glEnableVertexAttribArray(attrNor);
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 16 * sizeof(float), (void*)(8 * sizeof(float)));
+        }
+        if (attrUV != -1) {
+            context->glEnableVertexAttribArray(attrUV);
+            context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 16 * sizeof(float), (void*)(12 * sizeof(float)));
+        }
+        if (attrAnim != -1) {
+            context->glEnableVertexAttribArray(attrAnim);
+            context->glVertexAttribPointer(attrAnim, 1, GL_FLOAT, false, 16 * sizeof(float), (void*)(14 * sizeof(float)));
+        }
+    }
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdx();
+    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
+    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
+    if (attrAnim != -1) context->glDisableVertexAttribArray(attrAnim);
     context->printGLErrorLog();
 }
 

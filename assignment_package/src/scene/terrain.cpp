@@ -4,11 +4,11 @@
 #include <iostream>
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), m_geomCube(context), mp_context(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context) //, m_geomCube(context)
 {}
 
 Terrain::~Terrain() {
-    m_geomCube.destroyVBOdata();
+//    m_geomCube.destroyVBOdata();
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -115,7 +115,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 }
 
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>();
+    uPtr<Chunk> chunk = mkU<Chunk>(mp_context);
     Chunk *cPtr = chunk.get();
     m_chunks[toKey(x, z)] = move(chunk);
     // Set the neighbor pointers of itself and its neighbors
@@ -136,62 +136,27 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
     return cPtr;
-    return cPtr;
 }
 
 // TODO: When you make Chunk inherit from Drawable, change this code so
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
-    m_geomCube.clearOffsetBuf();
-    m_geomCube.clearColorBuf();
-
-    std::vector<glm::vec3> offsets, colors;
-
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
-            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            for(int i = 0; i < 16; ++i) {
-                for(int j = 0; j < 256; ++j) {
-                    for(int k = 0; k < 16; ++k) {
-                        BlockType t = chunk->getBlockAt(i, j, k);
-
-                        if(t != EMPTY) {
-                            offsets.push_back(glm::vec3(i+x, j, k+z));
-                            switch(t) {
-                            case GRASS:
-                                colors.push_back(glm::vec3(95.f, 159.f, 53.f) / 255.f);
-                                break;
-                            case DIRT:
-                                colors.push_back(glm::vec3(121.f, 85.f, 58.f) / 255.f);
-                                break;
-                            case STONE:
-                                colors.push_back(glm::vec3(0.5f));
-                                break;
-                            case WATER:
-                                colors.push_back(glm::vec3(0.f, 0.f, 0.75f));
-                                break;
-                            default:
-                                // Other block types are not yet handled, so we default to debug purple
-                                colors.push_back(glm::vec3(1.f, 0.f, 1.f));
-                                break;
-                            }
-                        }
-                    }
-                }
+            if(hasChunkAt(x, z))
+            {
+                const uPtr<Chunk> &chunk = getChunkAt(x, z);
+                chunk->createVBOdata();
+                shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
+                shaderProgram->drawInterleaved(*chunk);
+                chunk->destroyVBOdata();
             }
         }
     }
-
-    m_geomCube.createInstancedVBOdata(offsets, colors);
-    shaderProgram->drawInstanced(m_geomCube);
 }
-
 void Terrain::CreateTestScene()
 {
-    // TODO: DELETE THIS LINE WHEN YOU DELETE m_geomCube!
-    m_geomCube.createVBOdata();
-
     // Create the Chunks that will
     // store the blocks for our
     // initial world space
@@ -226,5 +191,26 @@ void Terrain::CreateTestScene()
     // Add a central column
     for(int y = 129; y < 140; ++y) {
         setBlockAt(32, y, 32, GRASS);
+    }
+}
+void Terrain::updateTerrain(const glm::vec3 &player_pos)
+{
+    vector<glm::vec2> directions = {
+        glm::vec2(0, 1),
+        glm::vec2(1, 0),
+        glm::vec2(0, -1),
+        glm::vec2(-1, 0),
+        glm::vec2(1, 1),
+        glm::vec2(-1, 1),
+        glm::vec2(-1, -1),
+        glm::vec2(1, -1)
+    };
+    for(int i = 0; i < directions.size(); i++)
+    {
+        glm::vec2 new_pos = glm::vec2(player_pos.x, player_pos.z) + directions[i];
+        if(!hasChunkAt(new_pos.x, new_pos.y))
+        {
+            instantiateChunkAt(new_pos.x, new_pos.y);
+        }
     }
 }
