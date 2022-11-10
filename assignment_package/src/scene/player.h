@@ -14,9 +14,9 @@ private:
 
     bool flightMode; // the player always begins in flight mode (no gravity and no collision detection)
     float gravity; // acceleration cosntant in m/s due to gravity. Follows tradition
-    float speed; // the player's speed, independent of the direction (unlike velocity)
-    float accel_max; // the player's maximum acceleration scaler (max norm)
-    float speed_max; // ensure the player's speed doesn't exceed this value (max norm)
+//    float speed; // the player's speed, independent of the direction (unlike velocity)
+//    float accel_max; // the player's maximum acceleration scaler (max norm)
+//    float speed_max; // ensure the player's speed doesn't exceed this value (max norm)
 
 public:
     // Readonly public reference to our camera
@@ -27,9 +27,8 @@ public:
     virtual ~Player() override;
 
     bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
-    void checkCollision(glm::vec3 *rayDirection, const Terrain &terrain);
-
-    bool checkOnGround(InputBundle &inputs);
+    void checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs);
+//    bool checkOnGround(InputBundle &inputs);
 
     void setCameraWidthHeight(unsigned int w, unsigned int h);
 
