@@ -44,10 +44,10 @@ void Player::processInputs(InputBundle &inputs) {
             this->m_acceleration -= tune_max_accel * this->m_right;
         }
         if (inputs.ePressed) {
-            this->m_acceleration += tune_max_accel * this->m_up;
+            this->m_acceleration += tune_max_accel * glm::vec3(0, 1, 0);
         }
         if (inputs.qPressed) {
-            this->m_acceleration -= tune_max_accel * this->m_up;
+            this->m_acceleration -= tune_max_accel * glm::vec3(0, 1, 0);
         }
         if (!inputs.wPressed && !inputs.sPressed && !inputs.dPressed && !inputs.aPressed && !inputs.ePressed && !inputs.qPressed) {
             this->m_velocity = glm::vec3(0, 0, 0); // can float and do nothing
@@ -64,7 +64,7 @@ void Player::processInputs(InputBundle &inputs) {
         this->gravity = 9.81 * accel_scaler;
         tune_max_accel *= accel_scaler;
 
-//        checkOnGround(inputs); // check if the player is on the ground
+        checkOnGround(inputs); // check if the player is on the ground
 
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(this->m_forward.x, 0.f, this->m_forward.z); // zero out the y component of the acceleration
@@ -112,7 +112,10 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
         this->m_velocity = glm::clamp(this->m_velocity, -tune_max_speed, tune_max_speed); // ensure not too fast
 
-        this->moveAlongVector(this->m_velocity * dT); // move along the position vector
+//        this->moveAlongVector(this->m_velocity * dT); // move along the position vector
+        this->moveRightGlobal(this->m_velocity.x * dT);
+        this->moveUpGlobal(this->m_velocity.y * dT);
+        this->moveForwardGlobal(this->m_velocity.z * dT);
 
     } else { // if not in flight mode
 
@@ -123,7 +126,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
 
         // Check if there is a collision
-        glm::vec3 posRayDir = this->m_velocity * dT; // position vector
+        glm::vec3 posRayDir = this->m_velocity * dT; // position vector (slides say length == speed)
         checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
 
         // Ensure not going too fast
@@ -131,16 +134,16 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         glm::clamp(this->m_velocity.z, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.y, -terminal_speed, terminal_speed);
 
-        this->moveAlongVector(this->m_velocity * dT); // move along the position vector
+        this->moveAlongVector(posRayDir); // move along the position vector
     }
 }
 
-bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit) {
+bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, float *interfaceAxisPtr) {
     float maxLen = glm::length(rayDirection); // Farthest we search
-    glm::ivec3 currCell = glm::ivec3(glm::floor(rayOrigin));
+    glm::ivec3 currCell = glm::ivec3(glm::floor(rayOrigin)); // cell our ray origin exists within
     rayDirection = glm::normalize(rayDirection); // Now all t values represent world dist.
 
-    float curr_t = 0.f;
+    float curr_t = 0.f; // distance to nearest axist x,y,z
     while(curr_t < maxLen) {
         float min_t = glm::sqrt(3.f);
         float interfaceAxis = -1; // Track axis for which t is smallest
@@ -156,13 +159,16 @@ bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrai
                 float axis_t = (nextIntercept - rayOrigin[i]) / rayDirection[i];
                 axis_t = glm::min(axis_t, maxLen); // Clamp to max len to avoid super out of bounds errors
                 if(axis_t < min_t) { // determinging the cell we are intersecting from the point on the axis of intersection
-                    min_t = axis_t; // this is now the closes acis intersection
+                    min_t = axis_t; // this is now the closest axis intersection
                     interfaceAxis = i; // track axis for which t is smallest
                 }
             }
         }
         if(interfaceAxis == -1) {
             throw std::out_of_range("interfaceAxis was -1 after the for loop in gridMarch!");
+        }
+        if (interfaceAxisPtr != nullptr) {
+            *interfaceAxisPtr = interfaceAxis;
         }
         curr_t += min_t; // min_t is declared in slide 7 algorithm
         rayOrigin += rayDirection * min_t;
@@ -202,36 +208,83 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
-                    this->m_velocity.x = 0; // ensure you cant move in this dir
+//                    this->m_velocity.x = 0; // ensure you cant move in this dir
+                    if (out_dist < glm::abs(rayDirection.x)) {
+                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.001);
+                    }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
-                    this->m_velocity.y = 0; // ensure you cant move in this dir
-                    if (y == 0) { // set the ground bool to true
-                        inputs.onGround = true;
-//                        this->m_position.y = glm::floor(this->m_position).y;
+//                    this->m_velocity.y = 0; // ensure you cant move in this dir
+//                    if (y == 0) { // set the ground bool to true
+//                        inputs.onGround = true;
+//                    }
+                    if (out_dist < glm::abs(rayDirection.y)) {
+//                        std::cout << "I am here" << std::endl;
+                        std::cout << rayDirection.y << std::endl;
+                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.001);
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
-                    this->m_velocity.z = 0; // ensure you cant move in this dir
+//                    this->m_velocity.z = 0; // ensure you cant move in this dir
+                    if (out_dist < glm::abs(rayDirection.z)) {
+                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - 0.001);
+                    }
                 }
             }
         }
     }
 }
 
-//bool Player::checkOnGround(InputBundle &inputs)
-//{
-//    // Get the block type below the player (just barely below the foot of the player) to see if on the ground
-//    BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
+bool Player::checkOnGround(InputBundle &inputs)
+{
+    // Get the block type below the player (just barely below the foot of the player) to see if on the ground
+    BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
 
-//    if (blockBelow != EMPTY) {
-//        inputs.onGround = true;
-//    } else {
-//        inputs.onGround = false;
-//    }
+    if (blockBelow != EMPTY) {
+        inputs.onGround = true;
+    } else {
+        inputs.onGround = false;
+    }
 
-//    return inputs.onGround;
-//}
+    return inputs.onGround;
+}
+
+BlockType Player::removeBlock(Terrain &terrain) {
+    glm::vec3 cameraOrigin = this->m_camera.mcr_position; // the camera in position
+    glm::vec3 rayCamera = 3.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
+    float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+    glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
+
+    if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit)) { // if there is a detected block
+        BlockType block = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z); // get the block type that we clicked
+        terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
+//        std::cout << "Removing block" << std::endl;
+        return block; // return the block type that was hit
+    }
+    return EMPTY; // if not block hit, return empty block
+}
+
+BlockType Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
+    glm::vec3 cameraOrigin = this->m_camera.mcr_position; // the camera in position
+    glm::vec3 rayCamera = 3.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
+    float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+    glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
+    float interfaceAxis; // to keep track of the face that we hit
+
+
+    if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit, &interfaceAxis)) { // if there is a detected block
+        if (interfaceAxis == 2) { // z-axis
+            terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z - glm::sign(rayCamera.z), blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
+//            std::cout << "placing block Z" << std::endl;
+        } else if (interfaceAxis == 1) { // y-axis
+            terrain.setBlockAt(out_blockHit.x, out_blockHit.y - glm::sign(rayCamera.y), out_blockHit.z, blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
+//            std::cout << "placing block Y" << std::endl;
+        } else if (interfaceAxis == 0) { // x-axis
+            terrain.setBlockAt(out_blockHit.x - glm::sign(rayCamera.x), out_blockHit.y, out_blockHit.z, blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
+//            std::cout << "placing block X" << std::endl;
+        }
+    }
+}
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {
     m_camera.setWidthHeight(w, h);
