@@ -334,6 +334,13 @@ void Terrain::CreateTestTerrainScene()
             }
         }
     }
+    for(int x = 0; x < 64; x += 16) {
+        for(int z = 0; z < 64; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            chunk->destroyVBOdata();
+            chunk->createVBOdata();
+        }
+    }
 }
 
 void Terrain::updateTerrain(const glm::vec3 &player_pos)

@@ -30,8 +30,7 @@ void Player::processInputs(InputBundle &inputs) {
 
         // Update the players member variables. Go faster, turn off gravity
         this->gravity = 0;
-//        accel_scaler = 65.f; // ultimately controls speed
-        accel_scaler = 5;
+        accel_scaler = 10;
         tune_max_accel *= accel_scaler; // this is acceleration of Usain Bolt scaled
 
         if (inputs.wPressed) {
@@ -53,7 +52,6 @@ void Player::processInputs(InputBundle &inputs) {
             this->m_acceleration -= tune_max_accel * glm::vec3(0, 1, 0);
         }
         if (!inputs.wPressed && !inputs.sPressed && !inputs.dPressed && !inputs.aPressed && !inputs.ePressed && !inputs.qPressed) {
-            this->m_velocity = glm::vec3(0, 0, 0); // can float and do nothing
             this->m_acceleration = glm::vec3(0, 0, 0); // can float and do nothing
         }
 
@@ -63,7 +61,7 @@ void Player::processInputs(InputBundle &inputs) {
     } else { // if not in flight mode
 
         // Update the players member variables. Ensure gravity is on
-        accel_scaler = 2; // ultimately controls speed. Scales the ussain bolt and gravity values the same degree
+        accel_scaler = 8; // ultimately controls speed. Scales the ussain bolt and gravity values the same degree
         this->gravity = 9.81 * accel_scaler;
         tune_max_accel *= accel_scaler;
 
@@ -82,24 +80,22 @@ void Player::processInputs(InputBundle &inputs) {
             this->m_acceleration -= tune_max_accel * glm::vec3(this->m_right.x, 0.f, this->m_right.z); // zero out the y component of the acceleration
         }
 
-        if (inputs.spacePressed) {
-//            std::cout << "On the ground? " << inputs.onGround << std::endl;
-            // jump if on the ground
-            if (inputs.onGround) {
-//                std::cout << "I should be jumping" << std::endl;
-                this->m_acceleration.y = this->m_acceleration.y + 100.f;
-                inputs.onGround = false; // no longer on the ground (prevent flying)
-            }
-        }
-
         // ensure we dont accelerate way too fast
         this->m_acceleration = glm::clamp(this->m_acceleration, -tune_max_accel, tune_max_accel);
 
         // include the gravity component
         this->m_acceleration -= glm::vec3(0, gravity, 0);
+
+        if (inputs.spacePressed) {
+            // jump if on the ground
+            if (inputs.onGround) {
+                this->m_acceleration.y = this->m_acceleration.y + 20*this->gravity;
+                inputs.onGround = false; // no longer on the ground (prevent flying)
+            }
+        }
     }
 
-//    std::cout << glm::length(m_acceleration) << std::endl;
+    std::cout << glm::length(m_acceleration.y) << std::endl;
 
 }
 
@@ -114,7 +110,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
         tune_max_speed = 2 * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
 
-        this->m_velocity *= 0.998f; // reduce velocity for friction and drag (slow down on release)
+        this->m_velocity *= 0.9f; // reduce velocity for friction and drag (slow down on release)
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation
 
         this->m_velocity = glm::clamp(this->m_velocity, -tune_max_speed, tune_max_speed); // ensure not too fast
@@ -125,7 +121,9 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
     } else { // if not in flight mode
 
-        this->m_velocity *= 0.998f; // reduce velocity for friction and drag (slow down on release)
+        this->m_velocity.x *= 0.85f; // reduce velocity for friction and drag (slow down on release)
+        this->m_velocity.y *= 0.975f; // reduce velocity for friction and drag (slow down on release) -- allow terminal velocity to be reached
+        this->m_velocity.z *= 0.85f; // reduce velocity for friction and drag (slow down on release)
         float terminal_speed = 6.6 * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
 
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
@@ -135,11 +133,9 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         glm::clamp(this->m_velocity.z, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.y, -terminal_speed, terminal_speed);
 
-        std::cout << glm::length(m_velocity.y) << std::endl;
-
         // Check if there is a collision
         glm::vec3 posRayDir = this->m_velocity * dT; // position vector (slides say length == speed)
-        checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
+        checkCollision(posRayDir, terrain); // should edit the velocity to stop in the direction of collision
 
         this->moveAlongVector(posRayDir); // move along the position vector
     }
@@ -196,7 +192,7 @@ bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrai
     return false;
 }
 
-void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs)
+void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain)
 {
     // NOTE: the ray direction is the position based on the velocity because in gridmarch we check as far as this vector!
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
@@ -269,7 +265,7 @@ BlockType Player::removeBlock(Terrain &terrain) {
     return EMPTY; // if not block hit, return empty block
 }
 
-BlockType Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
+void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
     glm::vec3 cameraOrigin = this->m_camera.mcr_position; // the camera in position
     glm::vec3 rayCamera = 3.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)

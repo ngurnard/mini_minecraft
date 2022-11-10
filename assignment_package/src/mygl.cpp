@@ -73,8 +73,8 @@ void MyGL::initializeGL()
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
 
-//    m_terrain.CreateTestScene();
-    m_terrain.CreateTestTerrainScene();
+    m_terrain.CreateTestScene();
+//    m_terrain.CreateTestTerrainScene();
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -257,6 +257,6 @@ void MyGL::mousePressEvent(QMouseEvent *e) {
         BlockType removedBlock = this->m_player.removeBlock(this->m_terrain);
     } else if (e->button() == Qt::RightButton) { // if the player clicks the right mouse, place a block
         BlockType blockToPlace = GRASS;
-        BlockType placedBlock = this->m_player.placeBlock(this->m_terrain, blockToPlace);
+        this->m_player.placeBlock(this->m_terrain, blockToPlace);
     }
 }
