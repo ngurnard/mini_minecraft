@@ -5,7 +5,9 @@
 
 Terrain::Terrain(OpenGLContext *context)
     : m_chunks(), m_generatedTerrain(), mp_context(context) //, m_geomCube(context)
-{}
+{
+    createHeightMaps();
+}
 
 Terrain::~Terrain() {
 //    m_geomCube.destroyVBOdata();
@@ -145,6 +147,8 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
             }
         }
     }
+    cPtr->destroyVBOdata();
+    cPtr->createVBOdata();
     return cPtr;
 }
 
@@ -157,14 +161,71 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
             if(hasChunkAt(x, z))
             {
                 const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                chunk->createVBOdata();
                 shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
                 shaderProgram->drawInterleaved(*chunk);
-                chunk->destroyVBOdata();
             }
         }
     }
 }
+
+void Terrain::createHeightMaps()
+{
+    glm::vec2 range(129, 255);
+
+    int mtn_octaves = 4; float mtn_freq = 0.1f;
+    float mtn_amp = 0.5; float mtn_persistance = 0.5;
+
+    m_mountainHeightMap = customFBM(mtn_octaves, mtn_freq, mtn_amp, mtn_persistance, range);
+
+    int grass_octaves = 8; float grass_freq = 0.06f;
+    float grass_amp = 0.5; float grass_persistance = 0.5;
+
+    m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
+
+    int mask_octaves = 8; float mask_freq = 0.025f;
+    float mask_amp = 0.5; float mask_persistance = 0.5;
+
+    m_biomeMaskMap = customFBM(mask_octaves, mask_freq, mask_amp, mask_persistance, range);
+}
+
+void Terrain::mountainHeightPostProcess(float& val)
+{
+    val = 1 - 0.5 * pow(val, 0.3);
+}
+
+void Terrain::grasslandHeightPostProcess(float& val)
+{
+    val = 0.25 * (1 - pow(val, 0.5));
+}
+
+void Terrain::biomeMaskPostProcess(float& val)
+{
+    val = glm::smoothstep(0.75f, 0.25f, val);
+}
+
+int Terrain::computeHeight(int x, int z)
+{
+    float mtnH = m_mountainHeightMap.computeFBM(x, z);
+    mountainHeightPostProcess(mtnH);
+    m_mountainHeightMap.mapOutput2Range(mtnH);
+
+    float grassH = m_grasslandHeightMap.computeFBM(x, z);
+    grasslandHeightPostProcess(grassH);
+    m_grasslandHeightMap.mapOutput2Range(grassH);
+
+    float mask = m_biomeMaskMap.computeFBM(x, z);
+    biomeMaskPostProcess(mask);
+    // mask should be [0,1] bounded...
+
+    return floor(glm::mix(grassH, mtnH, mask));
+}
+
+void Terrain::printHeight(int x, int z)
+{
+    int H = computeHeight(x, z);
+    std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << std::endl;
+}
+
 void Terrain::CreateTestScene()
 {
     // Create the Chunks that will
@@ -201,6 +262,13 @@ void Terrain::CreateTestScene()
     // Add a central column
     for(int y = 129; y < 140; ++y) {
         setBlockAt(32, y, 32, GRASS);
+    }
+    for(int x = 0; x < 64; x += 16) {
+        for(int z = 0; z < 64; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            chunk->destroyVBOdata();
+            chunk->createVBOdata();
+        }
     }
 }
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
