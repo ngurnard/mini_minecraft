@@ -86,10 +86,10 @@ glm::vec4 getColor(BlockType block)
         case GRASS:
             color = glm::vec4(0.494f, 0.784f, 0.313f, 1.f);
             break;
-        case STONE:
+        case DIRT:
             color = glm::vec4(0.607f, 0.462f, 0.325f, 1.f);
             break;
-        case DIRT:
+        case STONE:
             color = glm::vec4(0.368f, 0.368f, 0.368f, 1.f);
             break;
         case ICE:
@@ -97,7 +97,10 @@ glm::vec4 getColor(BlockType block)
             break;
         case WATER:
             color = glm::vec4(0.f, 0.f, 0.75f, 1.f);
-        break;
+            break;
+        case SNOW:
+            color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+            break;
         default:
             break;
     }

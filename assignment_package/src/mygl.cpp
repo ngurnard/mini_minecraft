@@ -100,7 +100,7 @@ void MyGL::tick() {
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     m_player.tick(dT, m_inputs); // tick the player
     // Uncomment this line to test terrain expansion
-    // m_terrain.updateTerrain(m_player.mcr_position);
+    m_terrain.updateTerrain(m_player.mcr_position);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     prevTime = currTime; // update the previous time
@@ -142,7 +142,10 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
-    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
+//    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
+    int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
+    int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
+    m_terrain.draw(x - 256, x + 256, z - 256, z + 256, &m_progLambert);
 }
 
 
@@ -232,7 +235,7 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
     // TODO
-    float dpi = 0.025; // sensitivity of moving the mouse around the screen
+    float dpi = 0.003; // sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.
