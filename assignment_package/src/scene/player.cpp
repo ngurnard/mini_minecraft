@@ -214,18 +214,12 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
-//                    this->m_velocity.y = 0; // ensure you cant move in this dir
-//                    if (y == 0) { // set the ground bool to true
-//                        inputs.onGround = true;
-//                    }
                     if (out_dist < glm::abs(rayDirection.y)) {
-//                        std::cout << "I am here" << std::endl;
                         std::cout << rayDirection.y << std::endl;
                         rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.001);
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
-//                    this->m_velocity.z = 0; // ensure you cant move in this dir
                     if (out_dist < glm::abs(rayDirection.z)) {
                         rayDirection.z = glm::sign(rayDirection.z) * (out_dist - 0.001);
                     }
