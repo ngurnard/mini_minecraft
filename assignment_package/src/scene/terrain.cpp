@@ -208,19 +208,21 @@ void Terrain::createHeightMaps()
 void Terrain::mountainHeightPostProcess(float& val)
 {
     // reduces peak distribution and confines values to >= |range|/2 + range[0]
-    val = 1 - 0.5 * pow(val, 0.3);
+    // val = 1 - 0.5 * pow(val, 0.3); // original
+    val = 0.9 - 0.85 * pow(val, 0.55);
 }
 
 void Terrain::grasslandHeightPostProcess(float& val)
 {
     // flatten and lower terrain relative to mountains
-    val = 0.25 * (1 - pow(val, 0.5));
+    // val = 0.25 * (1 - pow(val, 0.5)); // original
+    val = 0.05 * pow(val, 0.65);
 }
 
 void Terrain::biomeMaskPostProcess(float& val)
 {
     // smoothstep to increase contrast
-    val = glm::smoothstep(0.85f, 0.15f, val);
+    val = glm::smoothstep(0.85f, 0.15f, val); // original
 }
 
 std::pair<int, int> Terrain::computeHeight(int x, int z)
