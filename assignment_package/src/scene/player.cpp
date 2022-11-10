@@ -95,7 +95,7 @@ void Player::processInputs(InputBundle &inputs) {
         }
     }
 
-    std::cout << glm::length(m_acceleration.y) << std::endl;
+//    std::cout << glm::length(m_acceleration.y) << std::endl;
 
 }
 
