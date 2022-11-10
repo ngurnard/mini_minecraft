@@ -78,15 +78,12 @@ void Player::processInputs(InputBundle &inputs) {
         if (inputs.aPressed) {
             this->m_acceleration -= tune_max_accel * glm::vec3(this->m_right.x, 0.f, this->m_right.z); // zero out the y component of the acceleration
         }
-        if (inputs.onGround) {
-//            this->m_velocity.y = 0; // the player cant fall through the ground
-        }
 
         if (inputs.spacePressed) {
-            std::cout << "On the ground? " << inputs.onGround << std::endl;
+//            std::cout << "On the ground? " << inputs.onGround << std::endl;
             // jump if on the ground
             if (inputs.onGround) {
-                std::cout << "I should be jumping" << std::endl;
+//                std::cout << "I should be jumping" << std::endl;
                 this->m_velocity.y = this->m_velocity.y + 100.f;
                 inputs.onGround = false; // no longer on the ground (prevent flying)
             }
@@ -108,14 +105,14 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
     float tune_max_speed = 15;
 
-//    std::cout << "Acceleration in compute physics: {" << m_acceleration.x << ", " << m_acceleration.y << ", " << m_acceleration.z << "}" << std::endl;
     if (this->flightMode) { // if in flight mode
 
+        this->m_velocity *= 0.25f; // reduce velocity for friction and drag (slow down on release)
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation
 
         this->m_velocity = glm::clamp(this->m_velocity, -tune_max_speed, tune_max_speed); // ensure not too fast
 
-        this->moveAlongVector(this->m_velocity * dT);
+        this->moveAlongVector(this->m_velocity * dT); // move along the position vector
 
     } else { // if not in flight mode
 
@@ -129,7 +126,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         glm::vec3 posRayDir = this->m_velocity * dT; // position vector
         checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
 
-        // if the normalize function doesn't return nans (typically for zero vector or huge vector) and if not going too fast
+        // Ensure not going too fast
         glm::clamp(this->m_velocity.x, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.z, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.y, -terminal_speed, terminal_speed);
@@ -199,6 +196,8 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 castedRayOrigin = glm::vec3(playerVertOrigin.x + x,
                                                       playerVertOrigin.y + y,
                                                       playerVertOrigin.z + z); // z is negative because the forward dir is -z
+
+                // positive direction collisions
                 glm::vec3 rayX = rayDirection * glm::vec3(1, 0, 0); // get only the x component
                 glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
@@ -207,8 +206,7 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                     this->m_velocity.y = 0; // ensure you cant move in this dir
-                    if (y == 0) {
-                        std::cout << "switching to on the ground" << std::endl;
+                    if (y == 0) { // set the ground bool to true
                         inputs.onGround = true;
 //                        this->m_position.y = glm::floor(this->m_position).y;
                     }
