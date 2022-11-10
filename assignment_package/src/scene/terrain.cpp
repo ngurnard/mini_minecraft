@@ -137,16 +137,40 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-    for (int i = x; i < x + 16; i++) {
-        for (int j = z; j < z + 16; j++) {
-            if((i + j) % 2 == 0) {
-                setBlockAt(i, 128, j, STONE);
-            }
-            else {
-                setBlockAt(i, 128, j, DIRT);
+    // EVAN: fill w/ surface of terrain
+    for(int i = x; i < x + 16; ++i) {
+        for(int j = z; j < z + 16; ++j) {
+            auto HB = computeHeight(i, j);
+            float H = HB.first;
+            float biome = HB.second;
+            if (biome == 0) {
+                // grassland
+                if (H <= 138) {
+                    setBlockAt(i, H, j, WATER);
+                } else {
+                    setBlockAt(i, H, j, GRASS);
+                }
+            } else {
+                // mountains
+                if (H >= 200) {
+                    setBlockAt(i, H, j, SNOW);
+                } else {
+                    setBlockAt(i, H, j, STONE);
+                }
             }
         }
     }
+
+//    for (int i = x; i < x + 16; i++) {
+//        for (int j = z; j < z + 16; j++) {
+//            if((i + j) % 2 == 0) {
+//                setBlockAt(i, 128, j, STONE);
+//            }
+//            else {
+//                setBlockAt(i, 128, j, DIRT);
+//            }
+//        }
+//    }
     return cPtr;
 }
 
@@ -170,7 +194,10 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 
 void Terrain::createHeightMaps()
 {
-    glm::vec2 range(129, 255);
+    // Creates the FBM-based Height Maps for Mountains and Grassland
+    // as well as a FBM-based Mask which will interpolate between these regions
+
+    glm::vec2 range(129, 255); // y Height range where [0,128] should be stone, the rest is biome-specific
 
     int mtn_octaves = 4; float mtn_freq = 0.1f;
     float mtn_amp = 0.5; float mtn_persistance = 0.5;
@@ -184,27 +211,32 @@ void Terrain::createHeightMaps()
 
     int mask_octaves = 8; float mask_freq = 0.025f;
     float mask_amp = 0.5; float mask_persistance = 0.5;
+    glm::vec2 mask_range(0,1);
 
-    m_biomeMaskMap = customFBM(mask_octaves, mask_freq, mask_amp, mask_persistance, range);
+    m_biomeMaskMap = customFBM(mask_octaves, mask_freq, mask_amp, mask_persistance, mask_range);
 }
 
 void Terrain::mountainHeightPostProcess(float& val)
 {
+    // reduces peak distribution and confines values to >= |range|/2 + range[0]
     val = 1 - 0.5 * pow(val, 0.3);
 }
 
 void Terrain::grasslandHeightPostProcess(float& val)
 {
+    // flatten and lower terrain relative to mountains
     val = 0.25 * (1 - pow(val, 0.5));
 }
 
 void Terrain::biomeMaskPostProcess(float& val)
 {
-    val = glm::smoothstep(0.75f, 0.25f, val);
+    // smoothstep to increase contrast
+    val = glm::smoothstep(0.85f, 0.15f, val);
 }
 
-int Terrain::computeHeight(int x, int z)
+std::pair<int, int> Terrain::computeHeight(int x, int z)
 {
+    // Computes individual biome heights and blends w/ biomeMask
     float mtnH = m_mountainHeightMap.computeFBM(x, z);
     mountainHeightPostProcess(mtnH);
     m_mountainHeightMap.mapOutput2Range(mtnH);
@@ -215,19 +247,26 @@ int Terrain::computeHeight(int x, int z)
 
     float mask = m_biomeMaskMap.computeFBM(x, z);
     biomeMaskPostProcess(mask);
+    int biome = 0;
+    if (mask > 0.5) {
+        biome = 1;
+    }
     // mask should be [0,1] bounded...
 
-    return floor(glm::mix(grassH, mtnH, mask));
+    return {floor(glm::mix(grassH, mtnH, mask)), biome};
 }
 
 void Terrain::printHeight(int x, int z)
 {
-    int H = computeHeight(x, z);
-    std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << std::endl;
+    auto blockInfo = computeHeight(x, z);
+    int H = blockInfo.first;
+    int biome = blockInfo.second;
+    std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << " --BIOME " << biome << std::endl;
 }
 
 void Terrain::CreateTestScene()
 {
+    std::cout << "TestScene called" << std::endl;
     // Create the Chunks that will
     // store the blocks for our
     // initial world space
@@ -264,6 +303,41 @@ void Terrain::CreateTestScene()
         setBlockAt(32, y, 32, GRASS);
     }
 }
+
+void Terrain::CreateTestTerrainScene()
+{
+    for(int x = 0; x < 64; x += 16) {
+        for(int z = 0; z < 64; z += 16) {
+            instantiateChunkAt(x, z);
+        }
+    }
+
+    m_generatedTerrain.insert(toKey(0, 0));
+
+    for(int x = 0; x < 64; ++x) {
+        for(int z = 0; z < 64; ++z) {
+            auto HB = computeHeight(x, z);
+            float H = HB.first;
+            float biome = HB.second;
+            if (biome == 0) {
+                // grassland
+                if (H <= 138) {
+                    setBlockAt(x, H, z, WATER);
+                } else {
+                    setBlockAt(x, H, z, GRASS);
+                }
+            } else {
+                // mountains
+                if (H >= 200) {
+                    setBlockAt(x, H, z, SNOW);
+                } else {
+                    setBlockAt(x, H, z, STONE);
+                }
+            }
+        }
+    }
+}
+
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
 {
     int player_pos_x = 16 * static_cast<int>(glm::floor(player_pos.x / 16.f));

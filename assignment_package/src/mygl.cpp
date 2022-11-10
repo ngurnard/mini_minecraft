@@ -73,7 +73,8 @@ void MyGL::initializeGL()
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
 
-    m_terrain.CreateTestScene();
+//    m_terrain.CreateTestScene();
+    m_terrain.CreateTestTerrainScene();
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -145,7 +146,9 @@ void MyGL::renderTerrain() {
 //    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
     int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
     int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
-    m_terrain.draw(x - 256, x + 256, z - 256, z + 256, &m_progLambert);
+
+    int rend_dist = 64;
+    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
 }
 
 
@@ -235,7 +238,7 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
     // TODO
-    float dpi = 0.003; // sensitivity of moving the mouse around the screen
+    float dpi = 0.03; // sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.

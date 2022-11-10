@@ -65,8 +65,7 @@ private:
     void grasslandHeightPostProcess(float&);
     void biomeMaskPostProcess(float&);
 
-    int computeHeight(int x, int z);
-
+    std::pair<int, int> computeHeight(int x, int z); // returns H, biome
 
 public:
     Terrain(OpenGLContext *context);
@@ -104,6 +103,7 @@ public:
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.
     void CreateTestScene();
+    void CreateTestTerrainScene();
     /*
     A function in the Terrain class that checks whether a new Chunk should be
     added to the Terrain based on the Player's proximity to the edge of a Chunk
