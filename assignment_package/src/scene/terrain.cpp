@@ -135,6 +135,16 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
+    for (int i = x; i < x + 16; i++) {
+        for (int j = z; j < z + 16; j++) {
+            if((i + j) % 2 == 0) {
+                setBlockAt(i, 128, j, STONE);
+            }
+            else {
+                setBlockAt(i, 128, j, DIRT);
+            }
+        }
+    }
     return cPtr;
 }
 
@@ -195,19 +205,21 @@ void Terrain::CreateTestScene()
 }
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
 {
-    vector<glm::vec2> directions = {
-        glm::vec2(0, 1),
-        glm::vec2(1, 0),
-        glm::vec2(0, -1),
-        glm::vec2(-1, 0),
-        glm::vec2(1, 1),
-        glm::vec2(-1, 1),
-        glm::vec2(-1, -1),
-        glm::vec2(1, -1)
+    int player_pos_x = 16 * static_cast<int>(glm::floor(player_pos.x / 16.f));
+    int player_pos_z = 16 * static_cast<int>(glm::floor(player_pos.z / 16.f));
+    vector<glm::ivec2> directions = {
+        glm::ivec2(0, 1),
+        glm::ivec2(1, 0),
+        glm::ivec2(0, -1),
+        glm::ivec2(-1, 0),
+        glm::ivec2(1, 1),
+        glm::ivec2(-1, 1),
+        glm::ivec2(-1, -1),
+        glm::ivec2(1, -1)
     };
     for(int i = 0; i < directions.size(); i++)
     {
-        glm::vec2 new_pos = glm::vec2(player_pos.x, player_pos.z) + directions[i];
+        glm::ivec2 new_pos = glm::ivec2(player_pos_x, player_pos_z) + 16 * directions[i];
         if(!hasChunkAt(new_pos.x, new_pos.y))
         {
             instantiateChunkAt(new_pos.x, new_pos.y);
