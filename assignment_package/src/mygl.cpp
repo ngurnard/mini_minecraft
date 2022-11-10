@@ -251,4 +251,12 @@ void MyGL::mouseMoveEvent(QMouseEvent *e) {
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
     // TODO
+
+    // somehow call grid marching with the camera as the origin? and remove the block if they click
+    if (e->button() == Qt::LeftButton) { // if the player clicks the left mouse button, remove a block
+        BlockType removedBlock = this->m_player.removeBlock(this->m_terrain);
+    } else if (e->button() == Qt::RightButton) { // if the player clicks the right mouse, place a block
+        BlockType blockToPlace = GRASS;
+        BlockType placedBlock = this->m_player.placeBlock(this->m_terrain, blockToPlace);
+    }
 }

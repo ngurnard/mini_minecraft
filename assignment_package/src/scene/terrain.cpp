@@ -160,17 +160,8 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
             }
         }
     }
-
-//    for (int i = x; i < x + 16; i++) {
-//        for (int j = z; j < z + 16; j++) {
-//            if((i + j) % 2 == 0) {
-//                setBlockAt(i, 128, j, STONE);
-//            }
-//            else {
-//                setBlockAt(i, 128, j, DIRT);
-//            }
-//        }
-//    }
+    cPtr->destroyVBOdata();
+    cPtr->createVBOdata();
     return cPtr;
 }
 
@@ -183,10 +174,8 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
             if(hasChunkAt(x, z))
             {
                 const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                chunk->createVBOdata();
                 shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
                 shaderProgram->drawInterleaved(*chunk);
-                chunk->destroyVBOdata();
             }
         }
     }
@@ -301,6 +290,13 @@ void Terrain::CreateTestScene()
     // Add a central column
     for(int y = 129; y < 140; ++y) {
         setBlockAt(32, y, 32, GRASS);
+    }
+    for(int x = 0; x < 64; x += 16) {
+        for(int z = 0; z < 64; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            chunk->destroyVBOdata();
+            chunk->createVBOdata();
+        }
     }
 }
 
