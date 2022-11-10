@@ -29,7 +29,7 @@ void Player::processInputs(InputBundle &inputs) {
 
         // Update the players member variables. Go faster, turn off gravity
         this->gravity = 0;
-        tune_max_accel *= 5; // this is acceleration of Usain Bolt
+        tune_max_accel *= 150.f; // this is acceleration of Usain Bolt
 
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * this->m_forward;
@@ -60,7 +60,7 @@ void Player::processInputs(InputBundle &inputs) {
     } else { // if not in flight mode
 
         // Update the players member variables. Ensure gravity is on
-        float accel_scaler = 5; // to scale the ussain bolt and gravity values the same degree
+        float accel_scaler = 150.f; // to scale the ussain bolt and gravity values the same degree
         this->gravity = 9.81 * accel_scaler;
         tune_max_accel *= accel_scaler;
 
@@ -103,7 +103,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
     // and velocity, and also perform collision detection.
     // NOTE: This function is based off of kinematic equations
 
-    float tune_max_speed = 15;
+    float tune_max_speed = 200.f;
 
     if (this->flightMode) { // if in flight mode
 
@@ -208,14 +208,12 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
-//                    this->m_velocity.x = 0; // ensure you cant move in this dir
                     if (out_dist < glm::abs(rayDirection.x)) {
                         rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.001);
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                     if (out_dist < glm::abs(rayDirection.y)) {
-                        std::cout << rayDirection.y << std::endl;
                         rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.001);
                     }
                 }
@@ -252,7 +250,10 @@ BlockType Player::removeBlock(Terrain &terrain) {
     if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit)) { // if there is a detected block
         BlockType block = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z); // get the block type that we clicked
         terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
-//        std::cout << "Removing block" << std::endl;
+        const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
+        chunk->destroyVBOdata();
+        chunk->createVBOdata();
+
         return block; // return the block type that was hit
     }
     return EMPTY; // if not block hit, return empty block
@@ -269,14 +270,14 @@ BlockType Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
     if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit, &interfaceAxis)) { // if there is a detected block
         if (interfaceAxis == 2) { // z-axis
             terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z - glm::sign(rayCamera.z), blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
-//            std::cout << "placing block Z" << std::endl;
         } else if (interfaceAxis == 1) { // y-axis
             terrain.setBlockAt(out_blockHit.x, out_blockHit.y - glm::sign(rayCamera.y), out_blockHit.z, blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
-//            std::cout << "placing block Y" << std::endl;
         } else if (interfaceAxis == 0) { // x-axis
             terrain.setBlockAt(out_blockHit.x - glm::sign(rayCamera.x), out_blockHit.y, out_blockHit.z, blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
-//            std::cout << "placing block X" << std::endl;
         }
+        const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
+        chunk->destroyVBOdata();
+        chunk->createVBOdata();
     }
 }
 
