@@ -8,6 +8,8 @@
 #include "shaderprogram.h"
 #include "cube.h"
 
+#include "customfbm.h" // Evan's custom Noise Function Class
+
 
 //using namespace std;
 
@@ -54,9 +56,23 @@ private:
 
     OpenGLContext* mp_context;
 
+    customFBM m_mountainHeightMap;
+    customFBM m_grasslandHeightMap;
+    customFBM m_biomeMaskMap;
+
+    void createHeightMaps();
+    void mountainHeightPostProcess(float&);
+    void grasslandHeightPostProcess(float&);
+    void biomeMaskPostProcess(float&);
+
+    int computeHeight(int x, int z);
+
+
 public:
     Terrain(OpenGLContext *context);
     ~Terrain();
+
+    void printHeight(int x, int z);
 
     // Instantiates a new Chunk and stores it in
     // our chunk map at the given coordinates.

@@ -208,7 +208,7 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                     this->m_velocity.y = 0; // ensure you cant move in this dir
                     if (y == 0) {
-                        std::cout << "switching to on the ground" << std::endl;
+                        // std::cout << "switching to on the ground" << std::endl;
                         inputs.onGround = true;
 //                        this->m_position.y = glm::floor(this->m_position).y;
                     }

@@ -190,6 +190,9 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     } else if (e->key() == Qt::Key_F) {
         m_inputs.fPressed = true;
         m_inputs.flightMode = !m_inputs.flightMode;
+    } else if (e->key() == Qt::Key_P) {
+        //EVAN: debugging print of height map altitude where player stands
+        m_terrain.printHeight(m_player.mcr_position.x, m_player.mcr_position.z);
     }
 }
 
