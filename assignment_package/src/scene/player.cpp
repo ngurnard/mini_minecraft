@@ -21,6 +21,7 @@ void Player::processInputs(InputBundle &inputs) {
 
     this->m_acceleration = glm::vec3(0, 0, 0); // ensure we dont accidentally keep accelerating
     float tune_max_accel = 9.5; // this is acceleration of Usain Bolt
+    float accel_scaler;
 
     // NOTE: it may help to check the note in the input bundle in the entity class to understand this line
     this->flightMode = inputs.flightMode; // make the player the opposite of what is set in the input bundle
@@ -29,7 +30,9 @@ void Player::processInputs(InputBundle &inputs) {
 
         // Update the players member variables. Go faster, turn off gravity
         this->gravity = 0;
-        tune_max_accel *= 150.f; // this is acceleration of Usain Bolt
+//        accel_scaler = 65.f; // ultimately controls speed
+        accel_scaler = 5;
+        tune_max_accel *= accel_scaler; // this is acceleration of Usain Bolt scaled
 
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * this->m_forward;
@@ -60,7 +63,7 @@ void Player::processInputs(InputBundle &inputs) {
     } else { // if not in flight mode
 
         // Update the players member variables. Ensure gravity is on
-        float accel_scaler = 150.f; // to scale the ussain bolt and gravity values the same degree
+        accel_scaler = 2; // ultimately controls speed. Scales the ussain bolt and gravity values the same degree
         this->gravity = 9.81 * accel_scaler;
         tune_max_accel *= accel_scaler;
 
@@ -84,17 +87,19 @@ void Player::processInputs(InputBundle &inputs) {
             // jump if on the ground
             if (inputs.onGround) {
 //                std::cout << "I should be jumping" << std::endl;
-                this->m_velocity.y = this->m_velocity.y + 100.f;
+                this->m_acceleration.y = this->m_acceleration.y + 100.f;
                 inputs.onGround = false; // no longer on the ground (prevent flying)
             }
         }
 
-        // include the gravity component
-        this->m_acceleration -= glm::vec3(0, gravity, 0);
-
         // ensure we dont accelerate way too fast
         this->m_acceleration = glm::clamp(this->m_acceleration, -tune_max_accel, tune_max_accel);
+
+        // include the gravity component
+        this->m_acceleration -= glm::vec3(0, gravity, 0);
     }
+
+//    std::cout << glm::length(m_acceleration) << std::endl;
 
 }
 
@@ -103,36 +108,38 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
     // and velocity, and also perform collision detection.
     // NOTE: This function is based off of kinematic equations
 
-    float tune_max_speed = 200.f;
+    float tune_max_speed = 10.f; // approxmately the max speed of usain bolt in 1 direction
 
     if (this->flightMode) { // if in flight mode
 
-        this->m_velocity *= 0.25f; // reduce velocity for friction and drag (slow down on release)
+        tune_max_speed = 2 * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
+
+        this->m_velocity *= 0.998f; // reduce velocity for friction and drag (slow down on release)
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation
 
         this->m_velocity = glm::clamp(this->m_velocity, -tune_max_speed, tune_max_speed); // ensure not too fast
 
-//        this->moveAlongVector(this->m_velocity * dT); // move along the position vector
         this->moveRightGlobal(this->m_velocity.x * dT);
         this->moveUpGlobal(this->m_velocity.y * dT);
         this->moveForwardGlobal(this->m_velocity.z * dT);
 
     } else { // if not in flight mode
 
-        tune_max_speed = 0.5 * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
-        this->m_velocity *= 0.25f; // reduce velocity for friction and drag (slow down on release)
-        float terminal_speed = 10.f * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
+        this->m_velocity *= 0.998f; // reduce velocity for friction and drag (slow down on release)
+        float terminal_speed = 6.6 * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
 
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
-
-        // Check if there is a collision
-        glm::vec3 posRayDir = this->m_velocity * dT; // position vector (slides say length == speed)
-        checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
 
         // Ensure not going too fast
         glm::clamp(this->m_velocity.x, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.z, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.y, -terminal_speed, terminal_speed);
+
+        std::cout << glm::length(m_velocity.y) << std::endl;
+
+        // Check if there is a collision
+        glm::vec3 posRayDir = this->m_velocity * dT; // position vector (slides say length == speed)
+        checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
 
         this->moveAlongVector(posRayDir); // move along the position vector
     }
@@ -208,18 +215,21 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
-                    if (out_dist < glm::abs(rayDirection.x)) {
+                    if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
                         rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.001);
+                        this->m_velocity.x = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
-                    if (out_dist < glm::abs(rayDirection.y)) {
+                    if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
                         rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.001);
+                        this->m_velocity.y = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
-                    if (out_dist < glm::abs(rayDirection.z)) {
+                    if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
                         rayDirection.z = glm::sign(rayDirection.z) * (out_dist - 0.001);
+                        this->m_velocity.z = 0;
                     }
                 }
             }
