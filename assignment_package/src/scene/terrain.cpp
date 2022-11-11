@@ -255,7 +255,8 @@ void Terrain::createHeightMaps()
     // Creates the FBM-based Height Maps for Mountains and Grassland
     // as well as an FBM-based Mask which will interpolate between these regions
 
-    glm::vec2 range(129, 255); // y Height range where [0,128] should be stone, the rest is biome-specific
+    // y Height range where [0,128] should be stone, the rest is biome-specific
+    glm::vec2 range(129, 255);
 
     // Generic FBM parameters
     int mtn_octaves = 4; float mtn_freq = 0.05f;
@@ -268,8 +269,8 @@ void Terrain::createHeightMaps()
 
     m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
 
-    int mask_octaves = 8; float mask_freq = 0.01f;
-    float mask_amp = 0.5; float mask_persistance = 0.6;
+    int mask_octaves = 8; float mask_freq = 0.009;
+    float mask_amp = 0.5; float mask_persistance = 0.6; //very sensitive!!
     glm::vec2 mask_range(0,1);
 
     m_biomeMaskMap = customFBM(mask_octaves, mask_freq, mask_amp, mask_persistance, mask_range);
@@ -277,17 +278,13 @@ void Terrain::createHeightMaps()
 
 void Terrain::mountainHeightPostProcess(float& val)
 {
-    // reduces peak distribution and confines values to >= |range|/2 + range[0]
-    // val = 1 - 0.5 * pow(val, 0.3); // original
-    // val = 1.0 - 0.8 * pow(val, 0.55); // 2nd iteration
+    // Changes peak distribution to Gaussian
     val = 0.95 * glm::exp(-pow(val, 2.f) / 0.65f);
 }
 
 void Terrain::grasslandHeightPostProcess(float& val)
 {
     // flatten and lower terrain relative to mountains
-    // val = 0.25 * (1 - pow(val, 0.5)); // original
-    // val = 0.135 * pow(val, 0.3); // 2nd iteration
     val = 0.03 + 0.135 * (pow(val+.2, 2) - 0.5 * pow(val, 3));
 }
 
@@ -378,7 +375,7 @@ void Terrain::CreateTestScene()
             chunk->createVBOdata();
         }
     }
-    //this->m_drawFMB = true;
+    this->m_drawFMB = true;
 }
 
 void Terrain::CreateTestTerrainScene()
@@ -386,7 +383,7 @@ void Terrain::CreateTestTerrainScene()
     // instantiates chunks of the world immediately around
     // player spawn point
 
-    int range = 64; //normally 32
+    int range = 2*64; //normally 32
     for(int x = -range; x < range; x += 16) {
         for(int z = -range; z < range; z += 16) {
             instantiateChunkAt(x, z);
