@@ -116,6 +116,8 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     }
 }
 void Terrain::updateNeighbors(int x, int z) {
+    // TODO MS2: look into never drawing subterranean walls
+    // to begin with - check height map around chunk
     if(hasChunkAt(x, z + 16)) {
         m_chunks[toKey(x, z + 16)]->destroyVBOdata();
         m_chunks[toKey(x, z + 16)]->createVBOdata();
@@ -131,6 +133,72 @@ void Terrain::updateNeighbors(int x, int z) {
     if(hasChunkAt(x - 16, z)) {
         m_chunks[toKey(x - 16, z)]->destroyVBOdata();
         m_chunks[toKey(x - 16, z)]->createVBOdata();
+    }
+}
+
+void Terrain::setChunkBlocks(int x, int z) {
+    int biomeBaseH = 129;
+    int waterH = 138;
+    int snowH = 200;
+
+    // EVAN: fill w/ surface of terrain
+    for(int i = x; i < x + 16; ++i) {
+        for(int j = z; j < z + 16; ++j) {
+            auto HB = computeHeight(i, j);
+            float H = HB.first;
+            float biome = HB.second;
+
+            // Fill [0, 128] with STONE
+            for (int y = 0; y <= biomeBaseH-1; y ++) {
+                setBlockAt(i, y, j, STONE);
+            }
+
+            if (biome == 0) {
+                // Grassland
+                if (H <= waterH) {
+                    // Blocks are underwater
+                    for (int y = biomeBaseH; y < H; y++) {
+                        setBlockAt(i, y, j, DIRT);
+                    }
+                    setBlockAt(i, H, j, SAND);
+                    for (int y = H+1; y <= waterH; y++) {
+                        setBlockAt(i, y, j, WATER);
+                    }
+                } else {
+                    // Not underwater
+                    for (int y = biomeBaseH; y < H; y++) {
+                        setBlockAt(i, y, j, DIRT);
+                    }
+                    setBlockAt(i, H, j, GRASS);
+                }
+
+            } else if (biome == 1) {
+                // Mountains
+                if (H >= snowH) {
+                    // Snow-capped
+                    int y = biomeBaseH;
+                    for (; y < H; y++) {
+                        setBlockAt(i, y, j, STONE);
+                    }
+                    if (H < snowH + 10) {
+                        // Inject Noise to snow line
+                        float rand = m_mountainHeightMap.noise2D({i,j});
+                        if (float(snowH + 10 - H) / 10.f < pow(rand, 0.5)) {
+                            setBlockAt(i, H, j, SNOW);
+                        } else {
+                            setBlockAt(i, H, j, STONE);
+                        }
+                    } else {
+                        setBlockAt(i, H, j, SNOW);
+                    }
+                } else {
+                    // No Snow :(
+                    for (int y = biomeBaseH; y <= H; y++) {
+                        setBlockAt(i, y, j, STONE);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -155,65 +223,9 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-    // EVAN: fill w/ surface of terrain
-    for(int i = x; i < x + 16; ++i) {
-        for(int j = z; j < z + 16; ++j) {
-            auto HB = computeHeight(i, j);
-            float H = HB.first;
-            float biome = HB.second;
 
-            // Fill [0, 128] with STONE
-            for (int y = 0; y <= 128; y ++) {
-                setBlockAt(i, y, j, STONE);
-            }
+    setChunkBlocks(x, z);
 
-            if (biome == 0) {
-                // Grassland
-                if (H <= 138) {
-                    // Blocks are underwater
-                    for (int y = 129; y < H; y++) {
-                        setBlockAt(i, y, j, DIRT);
-                    }
-                    setBlockAt(i, H, j, SAND);
-                    for (int y = H+1; y <= 138; y++) {
-                        setBlockAt(i, y, j, WATER);
-                    }
-                } else {
-                    // Not underwater
-                    for (int y = 129; y < H; y++) {
-                        setBlockAt(i, y, j, DIRT);
-                    }
-                    setBlockAt(i, H, j, GRASS);
-                }
-
-            } else {
-                // Mountains
-                if (H >= 200) {
-                    // Snow-capped
-                    int y = 129;
-                    for (; y < H; y++) {
-                        setBlockAt(i, y, j, STONE);
-                    }
-                    if (H < 210) {
-                        // Inject Noise to snow line
-                        float rand = m_mountainHeightMap.noise2D({i,j});
-                        if (float(210 - H) / 10.f < pow(rand, 0.5)) {
-                            setBlockAt(i, H, j, SNOW);
-                        } else {
-                            setBlockAt(i, H, j, STONE);
-                        }
-                    } else {
-                        setBlockAt(i, H, j, SNOW);
-                    }
-                } else {
-                    // No Snow :(
-                    for (int y = 129; y <= H; y++) {
-                        setBlockAt(i, y, j, STONE);
-                    }
-                }
-            }
-        }
-    }
     cPtr->destroyVBOdata();
     cPtr->createVBOdata();
     updateNeighbors(x, z);

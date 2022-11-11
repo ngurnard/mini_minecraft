@@ -3,7 +3,17 @@
 ### Milestone 1:
 
 1. Procedural generation of terrain using noise functions (Evan)
-
+- Created several fragment shaders in ShaderToy.pro to design and visualize various noise functions to be used for terrain
+- Wrote customFBM class as a template for the 3 FBM-based noise function I decided upon for mountains, grassland, and biomeMask
+- Made 3 post-process functions for each FBM function to further tailor the output to specific terrain and exponentiate/ smoothstep the mask
+- Mapped keypress ("P") to a print function which prints the terrain height at player position (useful for debugging terrrain stuff)
+- Wrote computeHeight() function which interpolates between biome height maps via the biomeMask FBM and returns final height & biome
+- Implemented function to fill a set a given chunk's blocks given terrain parameters (height, biome, snow height, water height, etc.)
+- Replaced starting platform create function with a function that generates a given number of terrain chunks around the start posiiton
+- Fine-tuned FBM and post-processing parameters to achive desired biome qualities and distribution. I was going for a Jackson, Wyoming look with lakes and grassland surrounded by impossibly-high vertical peaks jutting out of the landscape. I may tweak these moving forward to make the terrain more traversable with some gentler perlin-noise based options.
+- Injected noise to break up the snowline such that the snow caps on the peaks look less uniform
+- Added sand block option to surround water in the grassland
+- Challenges: Finding the proper look and distribution of terrain was exceptionally challenging, and I feel I could still improve the look considerably.
 
 2. Altering the provided Terrain system to efficiently store and render blocks (Benedict)
 - Chunk was made inheritable from Drawable
