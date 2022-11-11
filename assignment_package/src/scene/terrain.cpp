@@ -198,8 +198,8 @@ void Terrain::createHeightMaps()
 
     m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
 
-    int mask_octaves = 8; float mask_freq = 0.025f;
-    float mask_amp = 0.5; float mask_persistance = 0.5;
+    int mask_octaves = 8; float mask_freq = 0.01f;
+    float mask_amp = 0.5; float mask_persistance = 0.6;
     glm::vec2 mask_range(0,1);
 
     m_biomeMaskMap = customFBM(mask_octaves, mask_freq, mask_amp, mask_persistance, mask_range);
@@ -208,19 +208,22 @@ void Terrain::createHeightMaps()
 void Terrain::mountainHeightPostProcess(float& val)
 {
     // reduces peak distribution and confines values to >= |range|/2 + range[0]
-    val = 1 - 0.5 * pow(val, 0.3);
+    // val = 1 - 0.5 * pow(val, 0.3); // original
+    val = 1.0 - 0.8 * pow(val, 0.55);
 }
 
 void Terrain::grasslandHeightPostProcess(float& val)
 {
     // flatten and lower terrain relative to mountains
-    val = 0.25 * (1 - pow(val, 0.5));
+    // val = 0.25 * (1 - pow(val, 0.5)); // original
+    val = 0.135 * pow(val, 0.3);
 }
 
 void Terrain::biomeMaskPostProcess(float& val)
 {
     // smoothstep to increase contrast
-    val = glm::smoothstep(0.85f, 0.15f, val);
+    val = pow(val, 2.5);
+    val = glm::smoothstep(0.25f, 0.95f, val); // original
 }
 
 std::pair<int, int> Terrain::computeHeight(int x, int z)
