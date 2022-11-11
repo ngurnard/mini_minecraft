@@ -235,7 +235,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    float dpi = 0.0005; // sensitivity of moving the mouse around the screen
+    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
+//    float dpi = 0.0005; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.
