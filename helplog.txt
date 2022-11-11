@@ -1,0 +1,5 @@
+Nov 11 9:30 PM : Chun-Fu Yeh helped me in figuring that the Lambert shader had fs_Col had a uniform green color
+instead of using vs_Col when I was having trouble with all chunks being rendered in the same color
+
+I used some QT documentation all throughout the work and also used the classroom lecture on Efficient Terrain 
+Rendering and Chunking to implement the code.
