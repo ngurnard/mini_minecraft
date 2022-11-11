@@ -66,6 +66,7 @@ void Player::processInputs(InputBundle &inputs) {
         tune_max_accel *= accel_scaler;
 
         checkOnGround(inputs); // check if the player is on the ground
+        checkinLiquid(inputs); // check if the player is in LAVA or WATER
 
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(this->m_forward.x, 0.f, this->m_forward.z); // zero out the y component of the acceleration
@@ -84,7 +85,12 @@ void Player::processInputs(InputBundle &inputs) {
         this->m_acceleration = glm::clamp(this->m_acceleration, -tune_max_accel, tune_max_accel);
 
         // include the gravity component
-        this->m_acceleration -= glm::vec3(0, gravity, 0);
+        if (!inputs.inLiquid) {
+            this->m_acceleration -= glm::vec3(0, gravity, 0);
+        } else {
+            this->m_acceleration *= 2/3;
+            this->m_acceleration -= glm::vec3(0, 2/3 * gravity, 0);
+        }
 
         if (inputs.spacePressed) {
             // jump if on the ground
@@ -94,8 +100,6 @@ void Player::processInputs(InputBundle &inputs) {
             }
         }
     }
-
-    std::cout << glm::length(m_acceleration.y) << std::endl;
 
 }
 
@@ -135,7 +139,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
         // Check if there is a collision
         glm::vec3 posRayDir = this->m_velocity * dT; // position vector (slides say length == speed)
-        checkCollision(posRayDir, terrain); // should edit the velocity to stop in the direction of collision
+        checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
 
         this->moveAlongVector(posRayDir); // move along the position vector
     }
@@ -192,7 +196,7 @@ bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrai
     return false;
 }
 
-void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain)
+void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs)
 {
     // NOTE: the ray direction is the position based on the velocity because in gridmarch we check as far as this vector!
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
@@ -213,6 +217,7 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain)
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
                     if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
                         rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.001);
+//                        if (inputs)
                         this->m_velocity.x = 0;
                     }
                 }
@@ -233,18 +238,27 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain)
     }
 }
 
-bool Player::checkOnGround(InputBundle &inputs)
+void Player::checkOnGround(InputBundle &inputs)
 {
     // Get the block type below the player (just barely below the foot of the player) to see if on the ground
     BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
 
-    if (blockBelow != EMPTY) {
+    if (blockBelow != EMPTY && blockBelow != WATER && blockBelow != LAVA) {
         inputs.onGround = true;
     } else {
         inputs.onGround = false;
     }
+}
 
-    return inputs.onGround;
+void Player::checkinLiquid(InputBundle &inputs) {
+    // Get the block type below the player (just barely below the foot of the player) to see if on the ground
+    BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
+
+    if (blockBelow == WATER || blockBelow == LAVA) {
+        inputs.inLiquid = true;
+    } else {
+        inputs.inLiquid = false;
+    }
 }
 
 BlockType Player::removeBlock(Terrain &terrain) {

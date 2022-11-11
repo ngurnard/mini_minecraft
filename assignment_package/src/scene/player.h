@@ -24,8 +24,9 @@ public:
     virtual ~Player() override;
 
     bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, float *interfaceAxis = 0); // last argument is optional
-    void checkCollision(glm::vec3 &rayDirection, const Terrain &terrain);
-    bool checkOnGround(InputBundle &inputs);
+    void checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs);
+    void checkOnGround(InputBundle &inputs);
+    void checkinLiquid(InputBundle &inputs);
     BlockType removeBlock(Terrain &terrain); // remove block on left mouse click
     void placeBlock(Terrain &terrain, BlockType &blockToPlace); // remove block on right mouse click
 

@@ -191,7 +191,6 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
             m_inputs.ePressed = true;
         }
     } else if (e->key() == Qt::Key_Space) {
-//        std::cout << "Space pressed" << std::endl;
         m_inputs.spacePressed = true;
     } else if (e->key() == Qt::Key_F) {
         m_inputs.fPressed = true;
@@ -232,12 +231,10 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
         m_inputs.ePressed = false;
     } else if (e->key() == Qt::Key_Space) {
         m_inputs.spacePressed = false;
-//        std::cout << "Space released" << std::endl;
     } // dont do anything for F this time
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    // TODO
     float dpi = 0.03; // sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
@@ -250,8 +247,6 @@ void MyGL::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
-    // TODO
-
     // somehow call grid marching with the camera as the origin? and remove the block if they click
     if (e->button() == Qt::LeftButton) { // if the player clicks the left mouse button, remove a block
         BlockType removedBlock = this->m_player.removeBlock(this->m_terrain);
