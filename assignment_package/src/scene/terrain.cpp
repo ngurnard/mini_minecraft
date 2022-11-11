@@ -258,12 +258,12 @@ void Terrain::createHeightMaps()
     glm::vec2 range(129, 255); // y Height range where [0,128] should be stone, the rest is biome-specific
 
     // Generic FBM parameters
-    int mtn_octaves = 4; float mtn_freq = 0.06f;
+    int mtn_octaves = 4; float mtn_freq = 0.05f;
     float mtn_amp = 0.5; float mtn_persistance = 0.5;
 
     m_mountainHeightMap = customFBM(mtn_octaves, mtn_freq, mtn_amp, mtn_persistance, range);
 
-    int grass_octaves = 8; float grass_freq = 0.04f;
+    int grass_octaves = 8; float grass_freq = 0.03f;
     float grass_amp = 0.5; float grass_persistance = 0.5;
 
     m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
@@ -386,7 +386,7 @@ void Terrain::CreateTestTerrainScene()
     // instantiates chunks of the world immediately around
     // player spawn point
 
-    int range = 64; //normally 32
+    int range = 64*4; //normally 32
     for(int x = -range; x < range; x += 16) {
         for(int z = -range; z < range; z += 16) {
             instantiateChunkAt(x, z);
