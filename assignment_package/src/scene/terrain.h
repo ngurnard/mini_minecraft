@@ -77,6 +77,9 @@ public:
     // our chunk map at the given coordinates.
     // Returns a pointer to the created Chunk.
     Chunk* instantiateChunkAt(int x, int z);
+
+    void setChunkBlocks(int x, int z);
+
     // Do these world-space coordinates lie within
     // a Chunk that exists?
     bool hasChunkAt(int x, int z) const;

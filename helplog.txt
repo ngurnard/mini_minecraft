@@ -1,3 +1,17 @@
+------------------------
+Evan:
+------------------------
+Nov 09 : Sebastian Lague is a youtuber with excellent inspiration for procedural terrain. This video served as 
+a launch point for my exploration of noise: https://youtu.be/lctXaT9pxA0
+
+Nov 10 : Found the following site helpful for understanding Fractal Noise parameters used to design my FBMs:
+	https://www.redblobgames.com/maps/terrain-from-noise/
+
+Otherwise, relied primarily on class lectures and resources describing various noise functions.
+
+------------------------
+Benedict:
+------------------------
 Nov 11 9:30 PM : Chun-Fu Yeh helped me in figuring that the Lambert shader had fs_Col had a uniform green color
 instead of using vs_Col when I was having trouble with all chunks being rendered in the same color
 
