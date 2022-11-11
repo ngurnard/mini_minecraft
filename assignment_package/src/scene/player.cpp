@@ -34,11 +34,11 @@ void Player::processInputs(InputBundle &inputs) {
         tune_max_accel *= accel_scaler; // this is acceleration of Usain Bolt scaled
 
         if (inputs.wPressed) {
-            this->m_acceleration += tune_max_accel * this->m_forward;
+            this->m_acceleration += tune_max_accel * glm::cross(glm::vec3(0, 1, 0), this->m_right);
             this->m_acceleration.y = 0; // move parallel to xz plane
         }
         if (inputs.sPressed) {
-            this->m_acceleration -= tune_max_accel * this->m_forward;
+            this->m_acceleration -= tune_max_accel * glm::cross(glm::vec3(0, 1, 0), this->m_right);
             this->m_acceleration.y = 0; // move parallel to xz plane
         }
         if (inputs.dPressed) {
@@ -204,10 +204,15 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
     glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
+    float offset = 0.0001; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
     // make rays for every corner of the 2 block stack and check for collisions
     for (float x = -0.5; x <= 0.5; x++) { // iterate over the 2 possible x coords
-        for (int y = 0; y < 3; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
+        for (float y = 0; y < 3; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
             for (float z = -0.5; z <= 0.5; z++) { // iterate over the possible z coords
+//                if (y == 2) {
+//                    y -= 2 * offset;
+//                    std::cout << y << std::endl;
+//                }
                 glm::vec3 castedRayOrigin = glm::vec3(playerVertOrigin.x + x,
                                                       playerVertOrigin.y + y,
                                                       playerVertOrigin.z + z); // z is negative because the forward dir is -z
@@ -218,20 +223,20 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
                     if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
-                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.0001);
+                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
 //                        if (inputs)
                         this->m_velocity.x = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                     if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
-                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.0001);
+                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - offset);
                         this->m_velocity.y = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
                     if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
-                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - 0.0001);
+                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - offset);
                         this->m_velocity.z = 0;
                     }
                 }
@@ -254,9 +259,9 @@ void Player::checkOnGround(InputBundle &inputs)
 
 void Player::checkinLiquid(InputBundle &inputs) {
     // Get the block type below the player (just barely below the foot of the player) to see if on the ground
-    BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
+    BlockType currBlock = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
 
-    if (blockBelow == WATER || blockBelow == LAVA) {
+    if (currBlock == WATER || currBlock == LAVA) {
         inputs.inLiquid = true;
     } else {
         inputs.inLiquid = false;
@@ -340,8 +345,17 @@ void Player::rotateOnForwardLocal(float degrees) {
     m_camera.rotateOnForwardLocal(degrees);
 }
 void Player::rotateOnRightLocal(float degrees) {
-    Entity::rotateOnRightLocal(degrees);
-    m_camera.rotateOnRightLocal(degrees);
+    // The following logic ensures the player cant rotate past the global up vector
+    if (glm::abs(this->lockDegree + degrees) < 90.f) {
+        this->lockDegree += degrees;
+        Entity::rotateOnRightLocal(degrees);
+        m_camera.rotateOnRightLocal(degrees);
+    } else {
+        degrees = glm::sign(this->lockDegree) * 90 - this->lockDegree;
+        this->lockDegree += degrees;
+        Entity::rotateOnRightLocal(degrees);
+        m_camera.rotateOnRightLocal(degrees);
+    }
 }
 void Player::rotateOnUpLocal(float degrees) {
     Entity::rotateOnUpLocal(degrees);

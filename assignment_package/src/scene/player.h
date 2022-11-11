@@ -14,6 +14,7 @@ private:
 
     bool flightMode; // the player always begins in flight mode (no gravity and no collision detection)
     float gravity; // acceleration cosntant in m/s due to gravity. Follows tradition
+    float lockDegree = 0; // Ensures the player cant rotate past the global up vector
 
 public:
     // Readonly public reference to our camera
