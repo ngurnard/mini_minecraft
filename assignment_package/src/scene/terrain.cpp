@@ -258,12 +258,12 @@ void Terrain::createHeightMaps()
     glm::vec2 range(129, 255); // y Height range where [0,128] should be stone, the rest is biome-specific
 
     // Generic FBM parameters
-    int mtn_octaves = 4; float mtn_freq = 0.06f;
+    int mtn_octaves = 4; float mtn_freq = 0.05f;
     float mtn_amp = 0.5; float mtn_persistance = 0.5;
 
     m_mountainHeightMap = customFBM(mtn_octaves, mtn_freq, mtn_amp, mtn_persistance, range);
 
-    int grass_octaves = 8; float grass_freq = 0.04f;
+    int grass_octaves = 8; float grass_freq = 0.03f;
     float grass_amp = 0.5; float grass_persistance = 0.5;
 
     m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
@@ -332,9 +332,9 @@ void Terrain::CreateTestScene()
 {
     this->m_drawFMB = false; //disable terrain
 
-    int y_offset = 145;
-    int x_offset = -64; // must be divisible by 16
-    int z_offset = -64; // must be divisible by 16
+    int y_offset = 139;
+    int x_offset = -32; // must be divisible by 16
+    int z_offset = -32; // must be divisible by 16
 
     // Create the Chunks that will
     // store the blocks for our

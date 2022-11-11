@@ -181,9 +181,9 @@ private:
     // The third input to this map just lets us use a Direction as
     // a key for this map.
     // These allow us to properly determine
-    std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
 
 public:
+    std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
     Chunk(OpenGLContext* context);
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
     BlockType getBlockAt(int x, int y, int z);
