@@ -133,6 +133,7 @@ void Terrain::updateNeighbors(int x, int z) {
         m_chunks[toKey(x - 16, z)]->createVBOdata();
     }
 }
+
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
     uPtr<Chunk> chunk = mkU<Chunk>(mp_context);
     Chunk *cPtr = chunk.get();

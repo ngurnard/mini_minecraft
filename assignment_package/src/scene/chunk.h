@@ -7,16 +7,16 @@
 #include <cstddef>
 #include <unordered_set>
 #include "drawable.h"
-
 using namespace std;
 
 // C++ 11 allows us to define the size of an enum. This lets us use only one byte
 // of memory to store our different block types. By default, the size of a C++ enum
 // is that of an int (so, usually four bytes). This *does* limit us to only 256 different
 // block types, but in the scope of this project we'll never get anywhere near that many.
+
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND
+    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND, UNCERTAIN
 };
 
 // The six cardinal directions in 3D space
@@ -42,8 +42,6 @@ const static unordered_set<BlockType, EnumHash> animatable_blocks{
     WATER, LAVA
 };
 
-// Helper function to be used in Chunk::create()
-bool crossesBorder(glm::ivec3 pos, glm::ivec3 dir);
 glm::vec4 getColor(BlockType type);
 
 // Strucutres based on class lectures

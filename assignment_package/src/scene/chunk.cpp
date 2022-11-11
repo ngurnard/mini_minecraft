@@ -14,9 +14,13 @@ BlockType Chunk::getBlockAt(unsigned int x, unsigned int y, unsigned int z) {
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion
 BlockType Chunk::getBlockAt(int x, int y, int z) {
     // Boundary constraints on y direction
-    if(y > 255 || y < 0)
+    if(y > 255)
     {
         return EMPTY;
+    }
+    if(y < 0)
+    {
+        return UNCERTAIN;
     }
     // Boundary constraints on x direction
     if(x < 0 && m_neighbors[XNEG] != nullptr)
@@ -37,10 +41,11 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {
-        return EMPTY;
+        return UNCERTAIN;
     }
     return getBlockAt(static_cast<unsigned int>(x), static_cast<unsigned int>(y), static_cast<unsigned int>(z));
 }
+
 
 // Does bounds checking with at()
 void Chunk::setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t) {

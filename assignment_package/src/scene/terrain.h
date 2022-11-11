@@ -6,8 +6,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "shaderprogram.h"
-#include "cube.h"
-
 #include "customfbm.h" // Evan's custom Noise Function Class
 
 
