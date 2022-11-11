@@ -4,7 +4,7 @@
 #include <iostream>
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), mp_context(context) //, m_geomCube(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true) //, m_geomCube(context)
 {
     createHeightMaps();
 }
@@ -137,9 +137,9 @@ void Terrain::updateNeighbors(int x, int z) {
 }
 
 void Terrain::setChunkBlocks(int x, int z) {
-    int biomeBaseH = 129;
-    int waterH = 138;
-    int snowH = 200;
+    int biomeBaseH = 129;   // Height below which there is only stone
+    int waterH = 138;       // Height of water level
+    int snowH = 200;        // Height where snow is possible
 
     // EVAN: fill w/ surface of terrain
     for(int i = x; i < x + 16; ++i) {
@@ -224,7 +224,9 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
 
-    setChunkBlocks(x, z);
+    if (this->m_drawFMB) {
+        setChunkBlocks(x, z);
+    }
 
     cPtr->destroyVBOdata();
     cPtr->createVBOdata();
@@ -326,6 +328,58 @@ void Terrain::printHeight(int x, int z)
     std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << " --BIOME " << biome << std::endl;
 }
 
+void Terrain::CreateTestScene()
+{
+    this->m_drawFMB = false; //disable terrain
+
+    int y_offset = 145;
+    int x_offset = -64; // must be divisible by 16
+    int z_offset = -64; // must be divisible by 16
+
+    // Create the Chunks that will
+    // store the blocks for our
+    // initial world space
+    for(int x = x_offset; x < x_offset+64; x += 16) {
+        for(int z = z_offset; z < z_offset+64; z += 16) {
+            instantiateChunkAt(x, z);
+        }
+    }
+    // Tell our existing terrain set that
+    // the "generated terrain zone" at (0,0)
+    // now exists.
+    m_generatedTerrain.insert(toKey(0, 0));
+
+    // Create the basic terrain floor
+    for(int x = x_offset; x < x_offset+64; ++x) {
+        for(int z = z_offset; z < z_offset+64; ++z) {
+            if((x + z) % 2 == 0) {
+                setBlockAt(x, y_offset, z, STONE);
+            }
+            else {
+                setBlockAt(x, y_offset, z, DIRT);
+            }
+        }
+    }
+    // Add "walls" for collision testing
+    for(int x = x_offset; x < x_offset+64; ++x) {
+        setBlockAt(x, y_offset+1, z_offset, GRASS);
+        setBlockAt(x, y_offset+2, z_offset, GRASS);
+        setBlockAt(x, y_offset+1, z_offset+63, GRASS);
+        setBlockAt(x_offset, y_offset+2, x, GRASS);
+    }
+    // Add a central column
+    for(int y = y_offset+1; y < y_offset+11; ++y) {
+        setBlockAt(x_offset+32, y, z_offset+32, GRASS);
+    }
+    for(int x = x_offset; x < x_offset+64; x += 16) {
+        for(int z = z_offset; z < z_offset+64; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            chunk->destroyVBOdata();
+            chunk->createVBOdata();
+        }
+    }
+    //this->m_drawFMB = true;
+}
 
 void Terrain::CreateTestTerrainScene()
 {

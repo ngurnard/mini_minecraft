@@ -65,6 +65,8 @@ private:
 
     std::pair<int, int> computeHeight(int x, int z); // returns H, biome
 
+    bool m_drawFMB;
+
 public:
     Terrain(OpenGLContext *context);
     ~Terrain();

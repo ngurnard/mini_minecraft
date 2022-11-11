@@ -11,7 +11,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 129.f, 48.f), m_terrain),
+      m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
       prevTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -73,8 +73,9 @@ void MyGL::initializeGL()
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
 
-//    m_terrain.CreateTestScene();
-    m_terrain.CreateTestTerrainScene();
+    m_terrain.CreateTestScene();
+    //m_terrain.CreateTestTerrainScene();
+
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -147,7 +148,7 @@ void MyGL::renderTerrain() {
     int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
     int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
 
-    int rend_dist = 256;
+    int rend_dist = 2*256;
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
 }
 
