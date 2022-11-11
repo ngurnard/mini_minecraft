@@ -34,16 +34,20 @@ void Player::processInputs(InputBundle &inputs) {
         tune_max_accel *= accel_scaler; // this is acceleration of Usain Bolt scaled
 
         if (inputs.wPressed) {
-            this->m_acceleration += tune_max_accel * this->m_forward;
+//            this->m_acceleration += tune_max_accel * this->m_forward;
+            this->m_acceleration -= tune_max_accel * glm::vec3(0, 0, 1);
         }
         if (inputs.sPressed) {
-            this->m_acceleration -= tune_max_accel * this->m_forward;
+//            this->m_acceleration -= tune_max_accel * this->m_forward;
+            this->m_acceleration += tune_max_accel * glm::vec3(0, 0, 1);
         }
         if (inputs.dPressed) {
-            this->m_acceleration += tune_max_accel * this->m_right;
+//            this->m_acceleration += tune_max_accel * this->m_right;
+            this->m_acceleration += tune_max_accel * glm::vec3(1, 0, 0);
         }
         if (inputs.aPressed) {
-            this->m_acceleration -= tune_max_accel * this->m_right;
+//            this->m_acceleration -= tune_max_accel * this->m_right;
+            this->m_acceleration -= tune_max_accel * glm::vec3(1, 0, 0);
         }
         if (inputs.ePressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(0, 1, 0);
