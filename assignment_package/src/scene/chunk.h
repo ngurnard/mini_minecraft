@@ -16,7 +16,7 @@ using namespace std;
 
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND, UNCERTAIN
+    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND, UNCERTAIN, BEDROCK
 };
 
 // The six cardinal directions in 3D space

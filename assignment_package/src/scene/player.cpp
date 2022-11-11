@@ -202,17 +202,28 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
 {
     // NOTE: the ray direction is the position based on the velocity because in gridmarch we check as far as this vector!
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
+//    glm::vec3 playerVertOrigin = glm::floor(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
     glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
     float offset = 0.0001; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
+//    float offset = 0; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
     // make rays for every corner of the 2 block stack and check for collisions
     for (float x = -0.5; x <= 0.5; x++) { // iterate over the 2 possible x coords
-        for (float y = 0; y < 3; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
+        for (float y = 0; y <= 2; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
             for (float z = -0.5; z <= 0.5; z++) { // iterate over the possible z coords
+
+//    for (float x = 0; x <= 1; x++) { // iterate over the 2 possible x coords
+//        for (float y = 0; y < 3; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
+//            for (float z = 0; z <= 1; z++) { // iterate over the possible z coords
+
+                // shrink the player a tiny bit
+//                x = x - glm::sign(x) * offset;
 //                if (y == 2) {
-//                    y -= 2 * offset;
-//                    std::cout << y << std::endl;
+//                    y = y - glm::sign(y) * offset;
 //                }
+//                z = z - glm::sign(z) * offset;
+//                y = y - glm::sign(y) * offset;
+
                 glm::vec3 castedRayOrigin = glm::vec3(playerVertOrigin.x + x,
                                                       playerVertOrigin.y + y,
                                                       playerVertOrigin.z + z); // z is negative because the forward dir is -z
@@ -223,20 +234,23 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
                     if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
+                        std::cout << "Colliding in x: " << std::endl;
                         rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
-                        this->m_velocity.x = 0;
+//                        this->m_velocity.x = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                     if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
+                        std::cout << "Colliding in y: " << std::endl;
                         rayDirection.y = glm::sign(rayDirection.y) * (out_dist - offset);
-                        this->m_velocity.y = 0;
+//                        this->m_velocity.y = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
                     if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
+                        std::cout << "Colliding in z: " << std::endl;
                         rayDirection.z = glm::sign(rayDirection.z) * (out_dist - offset);
-                        this->m_velocity.z = 0;
+//                        this->m_velocity.z = 0;
                     }
                 }
             }
