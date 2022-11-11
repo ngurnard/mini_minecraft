@@ -153,9 +153,10 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
                 // Grassland
                 if (H <= 138) {
                     // Blocks are underwater
-                    for (int y = 0; y <= H; y++) {
+                    for (int y = 0; y < H; y++) {
                         setBlockAt(i, y, j, DIRT);
                     }
+                    setBlockAt(i, H, j, SAND);
                     for (int y = H+1; y <= 138; y++) {
                         setBlockAt(i, y, j, WATER);
                     }
@@ -237,14 +238,16 @@ void Terrain::mountainHeightPostProcess(float& val)
 {
     // reduces peak distribution and confines values to >= |range|/2 + range[0]
     // val = 1 - 0.5 * pow(val, 0.3); // original
-    val = 1.0 - 0.8 * pow(val, 0.55);
+    // val = 1.0 - 0.8 * pow(val, 0.55); // 2nd iteration
+    val = 0.95 * glm::exp(-pow(val, 2.f) / 0.35f);
 }
 
 void Terrain::grasslandHeightPostProcess(float& val)
 {
     // flatten and lower terrain relative to mountains
     // val = 0.25 * (1 - pow(val, 0.5)); // original
-    val = 0.135 * pow(val, 0.3);
+    // val = 0.135 * pow(val, 0.3); // 2nd iteration
+    val = 0.03 + 0.135 * (pow(val+.2, 2) - 0.5 * pow(val, 3));
 }
 
 void Terrain::biomeMaskPostProcess(float& val)
@@ -268,7 +271,7 @@ std::pair<int, int> Terrain::computeHeight(int x, int z)
     float mask = m_biomeMaskMap.computeFBM(x, z);
     biomeMaskPostProcess(mask);
     int biome = 0;
-    if (mask > 0.5) {
+    if (mask > 0.4) {
         biome = 1;
     }
     // mask should be [0,1] bounded...
@@ -338,38 +341,7 @@ void Terrain::CreateTestTerrainScene()
             instantiateChunkAt(x, z);
         }
     }
-
     m_generatedTerrain.insert(toKey(0, 0));
-
-//    for(int x = 0; x < 64; ++x) {
-//        for(int z = 0; z < 64; ++z) {
-//            auto HB = computeHeight(x, z);
-//            float H = HB.first;
-//            float biome = HB.second;
-//            if (biome == 0) {
-//                // grassland
-//                if (H <= 138) {
-//                    setBlockAt(x, H, z, WATER);
-//                } else {
-//                    setBlockAt(x, H, z, GRASS);
-//                }
-//            } else {
-//                // mountains
-//                if (H >= 200) {
-//                    setBlockAt(x, H, z, SNOW);
-//                } else {
-//                    setBlockAt(x, H, z, STONE);
-//                }
-//            }
-//        }
-//    }
-//    for(int x = 0; x < 64; x += 16) {
-//        for(int z = 0; z < 64; z += 16) {
-//            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-//            chunk->destroyVBOdata();
-//            chunk->createVBOdata();
-//        }
-//    }
 }
 
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
