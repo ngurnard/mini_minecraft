@@ -68,7 +68,7 @@ void Player::processInputs(InputBundle &inputs) {
         tune_max_accel *= accel_scaler;
 
         checkOnGround(inputs); // check if the player is on the ground
-        checkinLiquid(inputs); // check if the player is in LAVA or WATER
+        checkInLiquid(inputs); // check if the player is in LAVA or WATER
 
         if (inputs.wPressed) {
             this->m_acceleration += tune_max_accel * glm::cross(glm::vec3(0, 1, 0), this->m_right);
@@ -141,9 +141,9 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
         // Check if there is a collision
         glm::vec3 posRayDir = this->m_velocity * dT; // position vector (slides say length == speed)
-        checkCollision(posRayDir, terrain, inputs); // should edit the velocity to stop in the direction of collision
-
+        std::array<bool, 3> collidedAxesMask = checkCollision(posRayDir, terrain, inputs);
         this->moveAlongVector(posRayDir); // move along the position vector
+        this->m_velocity = this->m_velocity * glm::vec3(!collidedAxesMask[0], !collidedAxesMask[1], !collidedAxesMask[2]); // zero out the velocity vector is colliding with solid block
     }
 }
 
@@ -198,64 +198,76 @@ bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrai
     return false;
 }
 
-void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs)
-{
+const static vector<glm::vec3> playerCorners {
+    // NOTE: the player is shrunk a little bit to fit into small crevices
+    // Bottom
+    glm::vec3(-0.45, 0.0, -0.45),
+    glm::vec3(0.45, 0.0, -0.45),
+    glm::vec3(0.45, 0.0, 0.45),
+    glm::vec3(-0.45, 0.0, 0.45),
+    // Mid
+    glm::vec3(-0.45, 0.95, -0.45),
+    glm::vec3(0.45, 0.95, -0.45),
+    glm::vec3(0.45, 0.95, 0.45),
+    glm::vec3(-0.45, 0.95, 0.45),
+    // Top
+    glm::vec3(-0.45, 1.9, -0.45),
+    glm::vec3(0.45, 1.9, -0.45),
+    glm::vec3(0.45, 1.9, 0.45),
+    glm::vec3(-0.45, 1.9, 0.45),
+};
+
+std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs)
+{   
     // NOTE: the ray direction is the position based on the velocity because in gridmarch we check as far as this vector!
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
-//    glm::vec3 playerVertOrigin = glm::floor(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
     glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
     float offset = 0.0001; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
-//    float offset = 0; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
+
+    std::array<bool, 3> collidedWithAxis{0, 0, 0}; // check if the axis was collided with. Used as a mask to change the speed
+
     // make rays for every corner of the 2 block stack and check for collisions
-    for (float x = -0.5; x <= 0.5; x++) { // iterate over the 2 possible x coords
-        for (float y = 0; y <= 2; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
-            for (float z = -0.5; z <= 0.5; z++) { // iterate over the possible z coords
+    for (auto &corner : playerCorners) {
 
-//    for (float x = 0; x <= 1; x++) { // iterate over the 2 possible x coords
-//        for (float y = 0; y < 3; y++) { // iterate over the 2 possible y coords (recall the 2 block stack! Hence 3)
-//            for (float z = 0; z <= 1; z++) { // iterate over the possible z coords
+        glm::vec3 castedRayOrigin = glm::vec3(playerVertOrigin.x + corner.x,
+                                              playerVertOrigin.y + corner.y,
+                                              playerVertOrigin.z + corner.z); // z is negative because the forward dir is -z
 
-                // shrink the player a tiny bit
-//                x = x - glm::sign(x) * offset;
-//                if (y == 2) {
-//                    y = y - glm::sign(y) * offset;
-//                }
-//                z = z - glm::sign(z) * offset;
-//                y = y - glm::sign(y) * offset;
-
-                glm::vec3 castedRayOrigin = glm::vec3(playerVertOrigin.x + x,
-                                                      playerVertOrigin.y + y,
-                                                      playerVertOrigin.z + z); // z is negative because the forward dir is -z
-
-                // positive direction collisions
-                glm::vec3 rayX = rayDirection * glm::vec3(1, 0, 0); // get only the x component
-                glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
-                glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
-                if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
-                    if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
-                        std::cout << "Colliding in x: " << std::endl;
-                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
-//                        this->m_velocity.x = 0;
-                    }
+        // positive direction collisions
+        glm::vec3 rayX = rayDirection * glm::vec3(1, 0, 0); // get only the x component
+        glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
+        glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
+        if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
+            if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
+                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
+                    rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
+                    collidedWithAxis[0] = true;
+//                    std::cout << "colliding x" << std::endl;
                 }
-                if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
-                    if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
-                        std::cout << "Colliding in y: " << std::endl;
-                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - offset);
-//                        this->m_velocity.y = 0;
-                    }
+            }
+        }
+        if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
+            if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
+                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
+                    rayDirection.y = glm::sign(rayDirection.y) * (out_dist - offset);
+                    collidedWithAxis[1] = true;
+//                    std::cout << "colliding y" << std::endl;
                 }
-                if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
-                    if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
-                        std::cout << "Colliding in z: " << std::endl;
-                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - offset);
-//                        this->m_velocity.z = 0;
-                    }
+            }
+        }
+        if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
+            if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
+                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
+                    rayDirection.z = glm::sign(rayDirection.z) * (out_dist - offset);
+                    collidedWithAxis[2] = true;
+//                    std::cout << "colliding z" << std::endl;
                 }
             }
         }
     }
+
+    return collidedWithAxis;
 }
 
 void Player::checkOnGround(InputBundle &inputs)
@@ -270,14 +282,25 @@ void Player::checkOnGround(InputBundle &inputs)
     }
 }
 
-void Player::checkinLiquid(InputBundle &inputs) {
-    // Get the block type below the player (just barely below the foot of the player) to see if on the ground
+void Player::checkInLiquid(InputBundle &inputs) {
+    // Get the block type where the player is
     BlockType currBlock = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
 
     if (currBlock == WATER || currBlock == LAVA) {
         inputs.inLiquid = true;
     } else {
         inputs.inLiquid = false;
+    }
+}
+
+bool Player::checkIsLiquid(float x, float y, float z) {
+    // Get the block type where the player is
+    BlockType currBlock = this->mcr_terrain.getBlockAt(x, y, z);
+
+    if (currBlock == WATER || currBlock == LAVA) {
+        return true;
+    } else {
+        return false;
     }
 }
 

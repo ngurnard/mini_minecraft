@@ -347,7 +347,7 @@ void Terrain::CreateTestScene()
     // Tell our existing terrain set that
     // the "generated terrain zone" at (0,0)
     // now exists.
-    m_generatedTerrain.insert(toKey(0, 0));
+    m_generatedTerrain.insert(toKey(x_offset, z_offset));
 
     // Create the basic terrain floor
     for(int x = x_offset; x < x_offset+64; ++x) {
