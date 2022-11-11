@@ -332,9 +332,9 @@ void Terrain::CreateTestScene()
 {
     this->m_drawFMB = false; //disable terrain
 
-    int y_offset = 145;
-    int x_offset = -64; // must be divisible by 16
-    int z_offset = -64; // must be divisible by 16
+    int y_offset = 139;
+    int x_offset = -32; // must be divisible by 16
+    int z_offset = -32; // must be divisible by 16
 
     // Create the Chunks that will
     // store the blocks for our
@@ -347,7 +347,7 @@ void Terrain::CreateTestScene()
     // Tell our existing terrain set that
     // the "generated terrain zone" at (0,0)
     // now exists.
-    m_generatedTerrain.insert(toKey(0, 0));
+    m_generatedTerrain.insert(toKey(x_offset, z_offset));
 
     // Create the basic terrain floor
     for(int x = x_offset; x < x_offset+64; ++x) {
