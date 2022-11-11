@@ -6,7 +6,7 @@ class customFBM
 {
 private:
 
-    float noise2D(glm::vec2) const;
+
     float interpNoise2D(float, float) const;
 
     int octaves;
@@ -20,6 +20,7 @@ public:
     customFBM(int oct, float f, float A, float p);
     customFBM(int oct, float f, float A, float p, glm::vec2 range);
 
+    float noise2D(glm::vec2) const;
     void mapOutput2Range(float&) const;
     float computeFBM(int x, int z) const;
 };

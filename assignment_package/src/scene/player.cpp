@@ -224,7 +224,6 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
                     if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
                         rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
-//                        if (inputs)
                         this->m_velocity.x = 0;
                     }
                 }

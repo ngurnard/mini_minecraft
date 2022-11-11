@@ -101,6 +101,8 @@ glm::vec4 getColor(BlockType block)
         case SNOW:
             color = glm::vec4(1.f, 1.f, 1.f, 1.f);
             break;
+        case SAND:
+            color = glm::vec4(0.981f, 0.93f, 0.501f, 1.f);
         default:
             break;
     }
