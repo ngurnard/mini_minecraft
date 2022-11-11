@@ -71,10 +71,10 @@ void Player::processInputs(InputBundle &inputs) {
         checkinLiquid(inputs); // check if the player is in LAVA or WATER
 
         if (inputs.wPressed) {
-            this->m_acceleration += tune_max_accel * glm::vec3(this->m_forward.x, 0.f, this->m_forward.z); // zero out the y component of the acceleration
+            this->m_acceleration += tune_max_accel * glm::cross(glm::vec3(0, 1, 0), this->m_right);
         }
         if (inputs.sPressed) {
-            this->m_acceleration -= tune_max_accel * glm::vec3(this->m_forward.x, 0.f, this->m_forward.z); // zero out the y component of the acceleration
+            this->m_acceleration -= tune_max_accel * glm::cross(glm::vec3(0, 1, 0), this->m_right);
         }
         if (inputs.dPressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(this->m_right.x, 0.f, this->m_right.z); // zero out the y component of the acceleration
