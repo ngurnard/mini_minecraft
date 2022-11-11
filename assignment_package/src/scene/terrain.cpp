@@ -153,7 +153,7 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
                 // Grassland
                 if (H <= 138) {
                     // Blocks are underwater
-                    for (int y = 0; y < H; y++) {
+                    for (int y = 129; y < H; y++) {
                         setBlockAt(i, y, j, DIRT);
                     }
                     setBlockAt(i, H, j, SAND);
@@ -162,7 +162,7 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
                     }
                 } else {
                     // Not underwater
-                    for (int y = 0; y < H; y++) {
+                    for (int y = 129; y < H; y++) {
                         setBlockAt(i, y, j, DIRT);
                     }
                     setBlockAt(i, H, j, GRASS);
@@ -173,11 +173,19 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
                 if (H >= 200) {
                     // Snow-capped
                     int y = 129;
-                    for (; y < 200; y++) {
+                    for (; y < H; y++) {
                         setBlockAt(i, y, j, STONE);
                     }
-                    for (; y <= H; y++) {
-                        setBlockAt(i, y, j, SNOW);
+                    if (H < 210) {
+                        // Inject Noise to snow line
+                        float rand = m_mountainHeightMap.noise2D({i,j});
+                        if (float(210 - H) / 10.f < pow(rand, 0.5)) {
+                            setBlockAt(i, H, j, SNOW);
+                        } else {
+                            setBlockAt(i, H, j, STONE);
+                        }
+                    } else {
+                        setBlockAt(i, H, j, SNOW);
                     }
                 } else {
                     // No Snow :(
@@ -217,7 +225,7 @@ void Terrain::createHeightMaps()
     glm::vec2 range(129, 255); // y Height range where [0,128] should be stone, the rest is biome-specific
 
     // Generic FBM parameters
-    int mtn_octaves = 4; float mtn_freq = 0.1f;
+    int mtn_octaves = 4; float mtn_freq = 0.06f;
     float mtn_amp = 0.5; float mtn_persistance = 0.5;
 
     m_mountainHeightMap = customFBM(mtn_octaves, mtn_freq, mtn_amp, mtn_persistance, range);
@@ -239,7 +247,7 @@ void Terrain::mountainHeightPostProcess(float& val)
     // reduces peak distribution and confines values to >= |range|/2 + range[0]
     // val = 1 - 0.5 * pow(val, 0.3); // original
     // val = 1.0 - 0.8 * pow(val, 0.55); // 2nd iteration
-    val = 0.95 * glm::exp(-pow(val, 2.f) / 0.35f);
+    val = 0.95 * glm::exp(-pow(val, 2.f) / 0.65f);
 }
 
 void Terrain::grasslandHeightPostProcess(float& val)
@@ -253,8 +261,8 @@ void Terrain::grasslandHeightPostProcess(float& val)
 void Terrain::biomeMaskPostProcess(float& val)
 {
     // smoothstep to increase contrast
-    val = pow(val, 2.5);
-    val = glm::smoothstep(0.25f, 0.95f, val); // original
+    val = pow(val, 2.25);
+    val = glm::smoothstep(0.15f, 0.95f, val); // original
 }
 
 std::pair<int, int> Terrain::computeHeight(int x, int z)
@@ -336,8 +344,12 @@ void Terrain::CreateTestScene()
 
 void Terrain::CreateTestTerrainScene()
 {
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
+    // instantiates chunks of the world immediately around
+    // player spawn point
+
+    int range = 64; //normally 32
+    for(int x = -range; x < range; x += 16) {
+        for(int z = -range; z < range; z += 16) {
             instantiateChunkAt(x, z);
         }
     }
