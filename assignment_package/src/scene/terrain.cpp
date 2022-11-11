@@ -187,8 +187,6 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
             }
         }
     }
-    cPtr->destroyVBOdata();
-    cPtr->createVBOdata();
     return cPtr;
 }
 
@@ -284,52 +282,6 @@ void Terrain::printHeight(int x, int z)
     std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << " --BIOME " << biome << std::endl;
 }
 
-void Terrain::CreateTestScene()
-{
-    std::cout << "TestScene called" << std::endl;
-    // Create the Chunks that will
-    // store the blocks for our
-    // initial world space
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
-            instantiateChunkAt(x, z);
-        }
-    }
-    // Tell our existing terrain set that
-    // the "generated terrain zone" at (0,0)
-    // now exists.
-    m_generatedTerrain.insert(toKey(0, 0));
-
-    // Create the basic terrain floor
-    for(int x = 0; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            if((x + z) % 2 == 0) {
-                setBlockAt(x, 128, z, STONE);
-            }
-            else {
-                setBlockAt(x, 128, z, DIRT);
-            }
-        }
-    }
-    // Add "walls" for collision testing
-    for(int x = 0; x < 64; ++x) {
-        setBlockAt(x, 129, 0, GRASS);
-        setBlockAt(x, 130, 0, GRASS);
-        setBlockAt(x, 129, 63, GRASS);
-        setBlockAt(0, 130, x, GRASS);
-    }
-    // Add a central column
-    for(int y = 129; y < 140; ++y) {
-        setBlockAt(32, y, 32, GRASS);
-    }
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
-            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            chunk->destroyVBOdata();
-            chunk->createVBOdata();
-        }
-    }
-}
 
 void Terrain::CreateTestTerrainScene()
 {
@@ -338,38 +290,14 @@ void Terrain::CreateTestTerrainScene()
             instantiateChunkAt(x, z);
         }
     }
-
     m_generatedTerrain.insert(toKey(0, 0));
-
-//    for(int x = 0; x < 64; ++x) {
-//        for(int z = 0; z < 64; ++z) {
-//            auto HB = computeHeight(x, z);
-//            float H = HB.first;
-//            float biome = HB.second;
-//            if (biome == 0) {
-//                // grassland
-//                if (H <= 138) {
-//                    setBlockAt(x, H, z, WATER);
-//                } else {
-//                    setBlockAt(x, H, z, GRASS);
-//                }
-//            } else {
-//                // mountains
-//                if (H >= 200) {
-//                    setBlockAt(x, H, z, SNOW);
-//                } else {
-//                    setBlockAt(x, H, z, STONE);
-//                }
-//            }
-//        }
-//    }
-//    for(int x = 0; x < 64; x += 16) {
-//        for(int z = 0; z < 64; z += 16) {
-//            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-//            chunk->destroyVBOdata();
-//            chunk->createVBOdata();
-//        }
-//    }
+    for(int x = 0; x < 64; x += 16) {
+        for(int z = 0; z < 64; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            chunk->destroyVBOdata();
+            chunk->createVBOdata();
+        }
+    }
 }
 
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
@@ -389,9 +317,12 @@ void Terrain::updateTerrain(const glm::vec3 &player_pos)
     for(int i = 0; i < directions.size(); i++)
     {
         glm::ivec2 new_pos = glm::ivec2(player_pos_x, player_pos_z) + 16 * directions[i];
-        if(!hasChunkAt(new_pos.x, new_pos.y))
+        if(!hasChunkAt(new_pos[0], new_pos[1]))
         {
-            instantiateChunkAt(new_pos.x, new_pos.y);
+            instantiateChunkAt(new_pos[0], new_pos[1]);
+            const uPtr<Chunk> &chunk = getChunkAt(new_pos[0], new_pos[1]);
+            chunk->destroyVBOdata();
+            chunk->createVBOdata();
         }
     }
 }
