@@ -115,7 +115,24 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
                                 std::to_string(z) + " have no Chunk!");
     }
 }
-
+void Terrain::updateNeighbors(int x, int z) {
+    if(hasChunkAt(x, z + 16)) {
+        m_chunks[toKey(x, z + 16)]->destroyVBOdata();
+        m_chunks[toKey(x, z + 16)]->createVBOdata();
+    }
+    if(hasChunkAt(x, z - 16)) {
+        m_chunks[toKey(x, z - 16)]->destroyVBOdata();
+        m_chunks[toKey(x, z - 16)]->createVBOdata();
+    }
+    if(hasChunkAt(x + 16, z)) {
+        m_chunks[toKey(x + 16, z)]->destroyVBOdata();
+        m_chunks[toKey(x + 16, z)]->createVBOdata();
+    }
+    if(hasChunkAt(x - 16, z)) {
+        m_chunks[toKey(x - 16, z)]->destroyVBOdata();
+        m_chunks[toKey(x - 16, z)]->createVBOdata();
+    }
+}
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
     uPtr<Chunk> chunk = mkU<Chunk>(mp_context);
     Chunk *cPtr = chunk.get();
@@ -196,6 +213,9 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
             }
         }
     }
+    cPtr->destroyVBOdata();
+    cPtr->createVBOdata();
+    updateNeighbors(x, z);
     return cPtr;
 }
 
@@ -306,13 +326,6 @@ void Terrain::CreateTestTerrainScene()
         }
     }
     m_generatedTerrain.insert(toKey(0, 0));
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
-            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            chunk->destroyVBOdata();
-            chunk->createVBOdata();
-        }
-    }
 }
 
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
@@ -335,9 +348,6 @@ void Terrain::updateTerrain(const glm::vec3 &player_pos)
         if(!hasChunkAt(new_pos[0], new_pos[1]))
         {
             instantiateChunkAt(new_pos[0], new_pos[1]);
-            const uPtr<Chunk> &chunk = getChunkAt(new_pos[0], new_pos[1]);
-            chunk->destroyVBOdata();
-            chunk->createVBOdata();
         }
     }
 }

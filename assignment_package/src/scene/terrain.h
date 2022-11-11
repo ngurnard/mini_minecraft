@@ -110,4 +110,5 @@ public:
     without a neighbor in a particular direction.
     */
     void updateTerrain(const glm::vec3 &player_pos);
+    void updateNeighbors(int x, int z);
 };
