@@ -143,19 +143,46 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
             auto HB = computeHeight(i, j);
             float H = HB.first;
             float biome = HB.second;
+
+            // Fill [0, 128] with STONE
+            for (int y = 0; y <= 128; y ++) {
+                setBlockAt(i, y, j, STONE);
+            }
+
             if (biome == 0) {
-                // grassland
+                // Grassland
                 if (H <= 138) {
-                    setBlockAt(i, H, j, WATER);
+                    // Blocks are underwater
+                    for (int y = 0; y <= H; y++) {
+                        setBlockAt(i, y, j, DIRT);
+                    }
+                    for (int y = H+1; y <= 138; y++) {
+                        setBlockAt(i, y, j, WATER);
+                    }
                 } else {
+                    // Not underwater
+                    for (int y = 0; y < H; y++) {
+                        setBlockAt(i, y, j, DIRT);
+                    }
                     setBlockAt(i, H, j, GRASS);
                 }
+
             } else {
-                // mountains
+                // Mountains
                 if (H >= 200) {
-                    setBlockAt(i, H, j, SNOW);
+                    // Snow-capped
+                    int y = 129;
+                    for (; y < 200; y++) {
+                        setBlockAt(i, y, j, STONE);
+                    }
+                    for (; y <= H; y++) {
+                        setBlockAt(i, y, j, SNOW);
+                    }
                 } else {
-                    setBlockAt(i, H, j, STONE);
+                    // No Snow :(
+                    for (int y = 129; y <= H; y++) {
+                        setBlockAt(i, y, j, STONE);
+                    }
                 }
             }
         }
@@ -184,16 +211,17 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 void Terrain::createHeightMaps()
 {
     // Creates the FBM-based Height Maps for Mountains and Grassland
-    // as well as a FBM-based Mask which will interpolate between these regions
+    // as well as an FBM-based Mask which will interpolate between these regions
 
     glm::vec2 range(129, 255); // y Height range where [0,128] should be stone, the rest is biome-specific
 
+    // Generic FBM parameters
     int mtn_octaves = 4; float mtn_freq = 0.1f;
     float mtn_amp = 0.5; float mtn_persistance = 0.5;
 
     m_mountainHeightMap = customFBM(mtn_octaves, mtn_freq, mtn_amp, mtn_persistance, range);
 
-    int grass_octaves = 8; float grass_freq = 0.06f;
+    int grass_octaves = 8; float grass_freq = 0.04f;
     float grass_amp = 0.5; float grass_persistance = 0.5;
 
     m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
@@ -313,35 +341,35 @@ void Terrain::CreateTestTerrainScene()
 
     m_generatedTerrain.insert(toKey(0, 0));
 
-    for(int x = 0; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            auto HB = computeHeight(x, z);
-            float H = HB.first;
-            float biome = HB.second;
-            if (biome == 0) {
-                // grassland
-                if (H <= 138) {
-                    setBlockAt(x, H, z, WATER);
-                } else {
-                    setBlockAt(x, H, z, GRASS);
-                }
-            } else {
-                // mountains
-                if (H >= 200) {
-                    setBlockAt(x, H, z, SNOW);
-                } else {
-                    setBlockAt(x, H, z, STONE);
-                }
-            }
-        }
-    }
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
-            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            chunk->destroyVBOdata();
-            chunk->createVBOdata();
-        }
-    }
+//    for(int x = 0; x < 64; ++x) {
+//        for(int z = 0; z < 64; ++z) {
+//            auto HB = computeHeight(x, z);
+//            float H = HB.first;
+//            float biome = HB.second;
+//            if (biome == 0) {
+//                // grassland
+//                if (H <= 138) {
+//                    setBlockAt(x, H, z, WATER);
+//                } else {
+//                    setBlockAt(x, H, z, GRASS);
+//                }
+//            } else {
+//                // mountains
+//                if (H >= 200) {
+//                    setBlockAt(x, H, z, SNOW);
+//                } else {
+//                    setBlockAt(x, H, z, STONE);
+//                }
+//            }
+//        }
+//    }
+//    for(int x = 0; x < 64; x += 16) {
+//        for(int z = 0; z < 64; z += 16) {
+//            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+//            chunk->destroyVBOdata();
+//            chunk->createVBOdata();
+//        }
+//    }
 }
 
 void Terrain::updateTerrain(const glm::vec3 &player_pos)
