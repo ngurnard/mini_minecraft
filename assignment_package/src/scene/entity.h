@@ -13,6 +13,7 @@ struct InputBundle {
     float mouseX, mouseY;
 //    float mouseXprev, mouseYprev;
     bool onGround; // check if the entity is on the ground
+    bool inLiquid; // check if in liquid to manipulate entity physics
 
     InputBundle()
         : wPressed(false), aPressed(false), sPressed(false), dPressed(false),
