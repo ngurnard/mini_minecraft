@@ -34,20 +34,18 @@ void Player::processInputs(InputBundle &inputs) {
         tune_max_accel *= accel_scaler; // this is acceleration of Usain Bolt scaled
 
         if (inputs.wPressed) {
-//            this->m_acceleration += tune_max_accel * this->m_forward;
-            this->m_acceleration -= tune_max_accel * glm::vec3(0, 0, 1);
+            this->m_acceleration += tune_max_accel * this->m_forward;
+            this->m_acceleration.y = 0; // move parallel to xz plane
         }
         if (inputs.sPressed) {
-//            this->m_acceleration -= tune_max_accel * this->m_forward;
-            this->m_acceleration += tune_max_accel * glm::vec3(0, 0, 1);
+            this->m_acceleration -= tune_max_accel * this->m_forward;
+            this->m_acceleration.y = 0; // move parallel to xz plane
         }
         if (inputs.dPressed) {
-//            this->m_acceleration += tune_max_accel * this->m_right;
-            this->m_acceleration += tune_max_accel * glm::vec3(1, 0, 0);
+            this->m_acceleration += tune_max_accel * this->m_right;
         }
         if (inputs.aPressed) {
-//            this->m_acceleration -= tune_max_accel * this->m_right;
-            this->m_acceleration -= tune_max_accel * glm::vec3(1, 0, 0);
+            this->m_acceleration -= tune_max_accel * this->m_right;
         }
         if (inputs.ePressed) {
             this->m_acceleration += tune_max_accel * glm::vec3(0, 1, 0);
@@ -220,20 +218,20 @@ void Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, Inp
                 glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
                 if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
                     if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
-                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.001);
+                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - 0.0001);
 //                        if (inputs)
                         this->m_velocity.x = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                     if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
-                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.001);
+                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - 0.0001);
                         this->m_velocity.y = 0;
                     }
                 }
                 if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
                     if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
-                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - 0.001);
+                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - 0.0001);
                         this->m_velocity.z = 0;
                     }
                 }
