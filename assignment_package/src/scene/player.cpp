@@ -218,10 +218,12 @@ const static vector<glm::vec3> playerCorners {
 };
 
 std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs)
-{   
+{
     // NOTE: the ray direction is the position based on the velocity because in gridmarch we check as far as this vector!
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
     float offset = 0.0001; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
+    float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+    glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
 
     std::array<bool, 3> collidedWithAxis{0, 0, 0}; // check if the axis was collided with. Used as a mask to change the speed
 
@@ -237,8 +239,6 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
         glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
         glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
 
-        float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
-        glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
         if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
             if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
 //                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
@@ -249,8 +249,6 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
             }
         }
 
-        out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
-        out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
         if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
             if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
 //                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
@@ -261,8 +259,6 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
             }
         }
 
-        out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
-        out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
         if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
             if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
 //                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
@@ -273,6 +269,7 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
             }
         }
     }
+
 
     return collidedWithAxis;
 }
