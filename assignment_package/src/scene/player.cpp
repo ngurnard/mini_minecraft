@@ -221,8 +221,6 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
 {   
     // NOTE: the ray direction is the position based on the velocity because in gridmarch we check as far as this vector!
     glm::vec3 playerVertOrigin = glm::vec3(this->m_position); // effetively the bottom left vertex of the 2 blocks stack (player)
-    float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
-    glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
     float offset = 0.0001; // so the player doesn't fall through the ground, and so it fits in a 2x1x1 space
 
     std::array<bool, 3> collidedWithAxis{0, 0, 0}; // check if the axis was collided with. Used as a mask to change the speed
@@ -232,37 +230,46 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
 
         glm::vec3 castedRayOrigin = glm::vec3(playerVertOrigin.x + corner.x,
                                               playerVertOrigin.y + corner.y,
-                                              playerVertOrigin.z + corner.z); // z is negative because the forward dir is -z
+                                              playerVertOrigin.z + corner.z);
 
         // positive direction collisions
         glm::vec3 rayX = rayDirection * glm::vec3(1, 0, 0); // get only the x component
         glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
         glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
+
+        float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+        glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
         if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
             if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
-                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
+//                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
                     rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
                     collidedWithAxis[0] = true;
 //                    std::cout << "colliding x" << std::endl;
-                }
+//                }
             }
         }
+
+        out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+        out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
         if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
             if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
-                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
+//                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
                     rayDirection.y = glm::sign(rayDirection.y) * (out_dist - offset);
                     collidedWithAxis[1] = true;
 //                    std::cout << "colliding y" << std::endl;
-                }
+//                }
             }
         }
+
+        out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+        out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
         if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
             if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
-                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
+//                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid or air
                     rayDirection.z = glm::sign(rayDirection.z) * (out_dist - offset);
                     collidedWithAxis[2] = true;
 //                    std::cout << "colliding z" << std::endl;
-                }
+//                }
             }
         }
     }
