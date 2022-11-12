@@ -1,5 +1,5 @@
 # Mini-Minecraft Project
-## Team O(idk): Benedict Florence, Evan Grant, Nicholas Gurnard
+## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 1:
 
 1. Procedural generation of terrain using noise functions (Evan)
@@ -25,6 +25,7 @@
 - Added a new drawInterleaved function in the ShaderProgram to read the new interleavedBuffer with interleaved data of positions, normals, color, uv coords and animatable job and render a Drawable that has been set up with the interleaved VBOs.
 - Terrain function was changed to accomodate terrain expansion to determine whether a new chunk should be added to Terrain based on the player's proximity to the edge of a Chunk without a neighbor. This was also added to MyGL::tick() so that it's being checked in every frame.
 - As terrain expands, even though our chunks are designed to create faces only between opaque and empty blocks, it still draws faces between opaque objects as chunks are drawn sequentially. To prevent this, through updateNeigbor function a new Chunk can tell preexisting neighbors to recompute their VBO data.
+- Added UNCERTAIN blocks to prevent subterranean blocks getting rendered below the terrain surface.
 
 3. Constructing a controllable Player class with simple physics (Nick)
 - Bound key presses to actions to move the player (jumps, fly, move in a certain direction).
