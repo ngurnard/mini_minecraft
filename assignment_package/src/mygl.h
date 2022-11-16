@@ -7,6 +7,7 @@
 #include "scene/camera.h"
 #include "scene/terrain.h"
 #include "scene/player.h"
+#include "texture.h"
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
@@ -39,6 +40,11 @@ private:
 
     qint64 prevTime; // the time in the last tick
 
+    //Evan's texture stuff
+    //std::vector<std::shared_ptr<Texture>> m_allTextures;
+    uPtr<Texture> mp_textureAtlas;
+
+    void createTexAtlas();
 
 public:
     explicit MyGL(QWidget *parent = nullptr);

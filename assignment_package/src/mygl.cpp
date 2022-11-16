@@ -12,7 +12,7 @@ MyGL::MyGL(QWidget *parent)
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
-      prevTime(QDateTime::currentMSecsSinceEpoch())
+      prevTime(QDateTime::currentMSecsSinceEpoch()), mp_textureAtlas(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -68,6 +68,7 @@ void MyGL::initializeGL()
     // your program to render Chunks with vertex colors
     // and UV coordinates
     m_progLambert.setGeometryColor(glm::vec4(0,1,0,1));
+    createTexAtlas();
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -150,6 +151,12 @@ void MyGL::renderTerrain() {
 
     int rend_dist = 2*256;
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
+}
+
+void MyGL::createTexAtlas()
+{
+    mp_textureAtlas = mkU<Texture>(this);
+    mp_textureAtlas->create(":/textures/minecraft_textures_all.png");
 }
 
 
