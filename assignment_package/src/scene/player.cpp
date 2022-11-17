@@ -319,10 +319,12 @@ BlockType Player::removeBlock(Terrain &terrain) {
         terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         chunk->destroyVBOdata();
-        chunk->createVBOdata();
+        chunk->generateVBOdata();
+        chunk->loadVBOdata();
         for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
             neighbor.second->destroyVBOdata();
-            neighbor.second->createVBOdata();
+            neighbor.second->generateVBOdata();
+            neighbor.second->loadVBOdata();
         }
         return block; // return the block type that was hit
     }
@@ -347,10 +349,12 @@ void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
         }
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         chunk->destroyVBOdata();
-        chunk->createVBOdata();
+        chunk->generateVBOdata();
+        chunk->loadVBOdata();
         for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
             neighbor.second->destroyVBOdata();
-            neighbor.second->createVBOdata();
+            neighbor.second->generateVBOdata();
+            neighbor.second->loadVBOdata();
         }
     }
 }

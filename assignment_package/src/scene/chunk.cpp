@@ -1,7 +1,7 @@
 #include "chunk.h"
 #include <iostream>
 
-Chunk::Chunk(OpenGLContext *context) : Drawable(context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
+Chunk::Chunk(OpenGLContext *context, int x, int z) : Drawable(context), m_xCorner(x), m_zCorner(z), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
@@ -11,6 +11,10 @@ BlockType Chunk::getBlockAt(unsigned int x, unsigned int y, unsigned int z) {
     return m_blocks.at(x + 16 * y + 16 * 256 * z);
 }
 
+glm::ivec2 Chunk::getCorners()
+{
+    return glm::ivec2(m_xCorner, m_zCorner);
+}
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion
 BlockType Chunk::getBlockAt(int x, int y, int z) {
     // Boundary constraints on y direction
@@ -20,7 +24,7 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(y < 0)
     {
-        return UNCERTAIN;
+        return EMPTY;
     }
     // Boundary constraints on x direction
     if(x < 0 && m_neighbors[XNEG] != nullptr)
@@ -41,7 +45,7 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {
-        return UNCERTAIN;
+        return EMPTY;
     }
     return getBlockAt(static_cast<unsigned int>(x), static_cast<unsigned int>(y), static_cast<unsigned int>(z));
 }
@@ -118,10 +122,10 @@ GLenum Chunk::drawMode() {
     return GL_TRIANGLES;
 }
 
-void Chunk::createVBOdata()
+void Chunk::generateVBOdata()
 {
-    vector<GLuint> indices;
-    vector<glm::vec4> interleavedList;
+    indices.clear();
+    interleavedList.clear();
     int running_index = 0;
     for(int x = 0; x < 16; x++)
     {
@@ -165,6 +169,9 @@ void Chunk::createVBOdata()
             }
         }
     }
+}
+void Chunk::loadVBOdata()
+{
     m_count = indices.size();
     // Create a VBO on our GPU and store its handle in bufIdx
     generateIdx();
@@ -178,6 +185,10 @@ void Chunk::createVBOdata()
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedList);
     mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedList.size() * sizeof(glm::vec4), interleavedList.data(), GL_STATIC_DRAW);
 }
-
+void Chunk::createVBOdata()
+{
+    generateVBOdata();
+    loadVBOdata();
+}
 Chunk::~Chunk()
 {}

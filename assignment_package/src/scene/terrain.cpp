@@ -1,16 +1,14 @@
 #include "terrain.h"
-#include "cube.h"
 #include <stdexcept>
 #include <iostream>
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true) //, m_geomCube(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true)
 {
     createHeightMaps();
 }
 
 Terrain::~Terrain() {
-//    m_geomCube.destroyVBOdata();
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -115,42 +113,21 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
                                 std::to_string(z) + " have no Chunk!");
     }
 }
-void Terrain::updateNeighbors(int x, int z) {
-    // TODO MS2: look into never drawing subterranean walls
-    // to begin with - check height map around chunk
-    if(hasChunkAt(x, z + 16)) {
-        m_chunks[toKey(x, z + 16)]->destroyVBOdata();
-        m_chunks[toKey(x, z + 16)]->createVBOdata();
-    }
-    if(hasChunkAt(x, z - 16)) {
-        m_chunks[toKey(x, z - 16)]->destroyVBOdata();
-        m_chunks[toKey(x, z - 16)]->createVBOdata();
-    }
-    if(hasChunkAt(x + 16, z)) {
-        m_chunks[toKey(x + 16, z)]->destroyVBOdata();
-        m_chunks[toKey(x + 16, z)]->createVBOdata();
-    }
-    if(hasChunkAt(x - 16, z)) {
-        m_chunks[toKey(x - 16, z)]->destroyVBOdata();
-        m_chunks[toKey(x - 16, z)]->createVBOdata();
-    }
-}
 
-void Terrain::setChunkBlocks(int x, int z) {
+void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
     int biomeBaseH = 129;   // Height below which there is only stone
     int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
-
-    // EVAN: fill w/ surface of terrain
     for(int i = x; i < x + 16; ++i) {
         for(int j = z; j < z + 16; ++j) {
             auto HB = computeHeight(i, j);
             float H = HB.first;
             float biome = HB.second;
-
+            glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
+            int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
             // Fill [0, 128] with STONE
             for (int y = 0; y <= biomeBaseH-1; y ++) {
-                setBlockAt(i, y, j, STONE);
+                chunk->setBlockAt(coord_x, y, coord_z, STONE);
             }
 
             if (biome == 0) {
@@ -158,18 +135,18 @@ void Terrain::setChunkBlocks(int x, int z) {
                 if (H <= waterH) {
                     // Blocks are underwater
                     for (int y = biomeBaseH; y < H; y++) {
-                        setBlockAt(i, y, j, DIRT);
+                        chunk->setBlockAt(coord_x, y, coord_z, DIRT);
                     }
-                    setBlockAt(i, H, j, SAND);
+                    chunk->setBlockAt(coord_x, H, coord_z, SAND);
                     for (int y = H+1; y <= waterH; y++) {
-                        setBlockAt(i, y, j, WATER);
+                        chunk->setBlockAt(coord_x, y, coord_z, WATER);
                     }
                 } else {
                     // Not underwater
                     for (int y = biomeBaseH; y < H; y++) {
-                        setBlockAt(i, y, j, DIRT);
+                        chunk->setBlockAt(coord_x, y, coord_z, DIRT);
                     }
-                    setBlockAt(i, H, j, GRASS);
+                    chunk->setBlockAt(coord_x, H, coord_z, GRASS);
                 }
 
             } else if (biome == 1) {
@@ -178,23 +155,23 @@ void Terrain::setChunkBlocks(int x, int z) {
                     // Snow-capped
                     int y = biomeBaseH;
                     for (; y < H; y++) {
-                        setBlockAt(i, y, j, STONE);
+                        chunk->setBlockAt(coord_x, y, coord_z, STONE);
                     }
                     if (H < snowH + 10) {
                         // Inject Noise to snow line
                         float rand = m_mountainHeightMap.noise2D({i,j});
                         if (float(snowH + 10 - H) / 10.f < pow(rand, 0.5)) {
-                            setBlockAt(i, H, j, SNOW);
+                            chunk->setBlockAt(coord_x, H, coord_z, SNOW);
                         } else {
-                            setBlockAt(i, H, j, STONE);
+                            chunk->setBlockAt(coord_x, H, coord_z, STONE);
                         }
                     } else {
-                        setBlockAt(i, H, j, SNOW);
+                        chunk->setBlockAt(coord_x, H, coord_z, SNOW);
                     }
                 } else {
                     // No Snow :(
                     for (int y = biomeBaseH; y <= H; y++) {
-                        setBlockAt(i, y, j, STONE);
+                        chunk->setBlockAt(coord_x, y, coord_z, STONE);
                     }
                 }
             }
@@ -202,11 +179,40 @@ void Terrain::setChunkBlocks(int x, int z) {
     }
 }
 
+void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev)
+{
+    tryExpansion(playerPos, playerPosPrev);
+    checkThreadResults();
+}
+
+std::unordered_set<int64_t> Terrain::terrainZonesBorderingZone(glm::vec2 zone_position, int num_zones)
+{
+    std::unordered_set<int64_t> terrainZonesBorderingPosition;
+    int half_length = 64.f * glm::floor(num_zones/2.f);
+    for(int i = zone_position.x - half_length; i <= zone_position.x + half_length; i += 64)
+    {
+        for(int j = zone_position.y - half_length; j <= zone_position.y + half_length; j += 64)
+        {
+            terrainZonesBorderingPosition.insert(toKey(i, j));
+        }
+    }
+    return terrainZonesBorderingPosition;
+}
+
+bool Terrain::terrainZoneExists(int64_t key)
+{
+    return m_generatedTerrain.find(key) != m_generatedTerrain.end();
+}
+
+bool Terrain::terrainZoneExists(int x, int z)
+{
+    return m_generatedTerrain.find(toKey(x, z)) != m_generatedTerrain.end();
+}
+
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>(mp_context);
+    uPtr<Chunk> chunk = mkU<Chunk>(mp_context, x, z);
     Chunk *cPtr = chunk.get();
     m_chunks[toKey(x, z)] = move(chunk);
-    // Set the neighbor pointers of itself and its neighbors
     if(hasChunkAt(x, z + 16)) {
         auto &chunkNorth = m_chunks[toKey(x, z + 16)];
         cPtr->linkNeighbor(chunkNorth, ZPOS);
@@ -223,31 +229,133 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-
-    if (this->m_drawFMB) {
-        setChunkBlocks(x, z);
-    }
-
-    cPtr->destroyVBOdata();
-    cPtr->createVBOdata();
-    updateNeighbors(x, z);
     return cPtr;
+}
+
+void Terrain::VBOWorker(Chunk* chunk)
+{
+    chunk->generateVBOdata();
+    m_chunksThatHaveVBODataLock.lock();
+    m_chunksThatHaveVBOData.insert(chunk);
+    m_chunksThatHaveVBODataLock.unlock();
+
+}
+
+void Terrain::blockTypeWorker(Chunk* chunk)
+{
+    int coord_x = chunk->getCorners().x, coord_z = chunk->getCorners().y;
+    setChunkBlocks(chunk, coord_x, coord_z);
+    m_chunksThatHaveBlockDataLock.lock();
+    m_chunksThatHaveBlockData.insert(chunk);
+    m_chunksThatHaveBlockDataLock.unlock();
+}
+
+
+void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
+{
+    // Find the player's position relative to their current terrain generation zone
+    glm::ivec2 currZone = glm::ivec2(64.f *glm::floor(playerPos.x / 64.f), 64.f * glm::floor(playerPos.z / 64.f));
+    glm::ivec2 prevZone = glm::ivec2(64.f * glm::floor(playerPosPrev.x / 64.f), 64.f * glm::floor(playerPosPrev.z / 64.f));
+    // Determine which terrain zones border our current and previous position
+    // This will include out ungenerated terrain zones
+    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 5);
+    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 5);
+    // Check which terrain zones need to be destroyed by determining which terrain zones were previously in our radius
+    // and are now not within radius
+    for(auto id : terrainZonesBorderingPrevPos)
+    {
+        if(terrainZonesBorderingCurrPos.find(id) == terrainZonesBorderingCurrPos.end())
+        {
+            glm::ivec2 coord = toCoords(id);
+            for(int x = coord.x; x < coord.x + 64; x += 16)
+            {
+                for(int z = coord.y; z < coord.y + 64; z += 16)
+                {
+                    auto &chunk = getChunkAt(x, z);
+                    chunk->destroyVBOdata();
+                }
+            }
+        }
+    }
+    // Determine if any terrain zones around our current position need VBO data
+    // Send these to VBOWorkers
+    // Do not send zones to workers if they do not exist in our global map. Instead, we send these to BlockTypeWorker
+    for(auto id : terrainZonesBorderingCurrPos)
+    {
+        glm::ivec2 coord = toCoords(id);
+        // If it exists already and is not in prev set, send it to VBOWorker
+        // If it's in the prev set, then it's already been sent to a VBOWorker at some point, and may even already have VBOs
+        if(terrainZoneExists(id))
+        {
+            if(terrainZonesBorderingPrevPos.find(id) == terrainZonesBorderingPrevPos.end())
+            {
+                for(int x = coord.x; x < coord.x + 64; x += 16)
+                {
+                    for(int z = coord.y; z < coord.y + 64; z += 16)
+                    {
+                        auto &chunk = getChunkAt(x, z);
+                        VBOWorkerThreads.push_back(std::thread(&Terrain::VBOWorker, this, chunk.get()));
+                    }
+                }
+            }
+        }
+        else
+        {
+            // If it doesn't exist yet, send it to a BlockTypeWorker. This also adds it to the set of generated terrain
+            // zones so that we don't try to repeatedly generate it
+            m_generatedTerrain.insert(id);
+            for(int x = coord.x; x < coord.x + 64; x += 16)
+            {
+                for(int z = coord.y; z < coord.y + 64; z += 16)
+                {
+                    instantiateChunkAt(x, z);
+                    auto &chunk = getChunkAt(x, z);
+                    blockTypeWorkerThreads.push_back(std::thread(&Terrain::blockTypeWorker, this, chunk.get()));
+                }
+            }
+
+        }
+    }
+}
+
+void Terrain::checkThreadResults()
+{
+    // Send chunks that have been processed by BlockTypeWorkers to VBOWorkers for VBO data
+    m_chunksThatHaveBlockDataLock.lock();
+    for(auto &chunk: m_chunksThatHaveBlockData)
+    {
+        VBOWorkerThreads.push_back(std::thread(&Terrain::VBOWorker, this, chunk));
+    }
+    m_chunksThatHaveBlockData.clear();
+    m_chunksThatHaveBlockDataLock.unlock();
+    m_chunksThatHaveVBODataLock.lock();
+    for(auto &chunk: m_chunksThatHaveVBOData)
+    {
+        chunk->loadVBOdata();
+    }
+    m_chunksThatHaveVBOData.clear();
+    m_chunksThatHaveVBODataLock.unlock();
 }
 
 // TODO: When you make Chunk inherit from Drawable, change this code so
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
+    m_chunksThatHaveBlockDataLock.lock();
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
             if(hasChunkAt(x, z))
             {
                 const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
-                shaderProgram->drawInterleaved(*chunk);
+                if(chunk->elemCount() >= 0)
+                {
+                    shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
+                    shaderProgram->drawInterleaved(*chunk);
+                }
             }
         }
     }
+    m_chunksThatHaveBlockDataLock.unlock();
 }
 
 void Terrain::createHeightMaps()

@@ -73,10 +73,8 @@ void MyGL::initializeGL()
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
-
 //    m_terrain.CreateTestScene();
-    m_terrain.CreateTestTerrainScene();
-
+//    m_terrain.CreateTestTerrainScene();
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -99,11 +97,15 @@ void MyGL::resizeGL(int w, int h) {
 // all per-frame actions here, such as performing physics updates on all
 // entities in the scene.
 void MyGL::tick() {
+    glm::vec3 playerPosPrev = m_player.mcr_position;
     qint64 currTime = QDateTime::currentMSecsSinceEpoch(); // time at this ticl
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     m_player.tick(dT, m_inputs); // tick the player
     // Uncomment this line to test terrain expansion
-    m_terrain.updateTerrain(m_player.mcr_position);
+//    m_terrain.updateTerrain(m_player.mcr_position);
+    // Check if the terrain should expand. This both checks to see if player is near the border of
+    // existing terrain and checks the status of any BlockType workers that are generating Chunks.
+    m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     prevTime = currTime; // update the previous time
@@ -149,7 +151,7 @@ void MyGL::renderTerrain() {
     int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
     int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
 
-    int rend_dist = 2*256;
+    int rend_dist = 256;
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
 }
 
@@ -244,8 +246,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-//    float dpi = 0.0005; // BENEDICT: sensitivity of moving the mouse around the screen
+//    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
+    float dpi = 0.0005; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.

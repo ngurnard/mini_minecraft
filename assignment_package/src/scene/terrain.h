@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "shaderprogram.h"
-#include "customfbm.h" // Evan's custom Noise Function Class
-
-
+#include "customfbm.h" // Custom Noise Function Class
+#include <thread>
+#include <mutex>
 //using namespace std;
 
 // Helper functions to convert (x, z) to and from hash map key
@@ -27,7 +27,12 @@ private:
     // so that we can use them as a key for the map, as objects like std::pairs or
     // glm::ivec2s are not hashable by default, so they cannot be used as keys.
     std::unordered_map<int64_t, uPtr<Chunk>> m_chunks;
-
+    std::unordered_set<Chunk*> m_chunksThatHaveBlockData;
+    std::mutex m_chunksThatHaveBlockDataLock;
+    std::unordered_set<Chunk*> m_chunksThatHaveVBOData;
+    std::mutex m_chunksThatHaveVBODataLock;
+    std::vector<std::thread> blockTypeWorkerThreads;
+    std::vector<std::thread> VBOWorkerThreads;
     // We will designate every 64 x 64 area of the world's x-z plane
     // as one "terrain generation zone". Every time the player moves
     // near a portion of the world that has not yet been generated
@@ -58,6 +63,7 @@ private:
     customFBM m_grasslandHeightMap;
     customFBM m_biomeMaskMap;
 
+
     void createHeightMaps();
     void mountainHeightPostProcess(float&);
     void grasslandHeightPostProcess(float&);
@@ -78,8 +84,7 @@ public:
     // Returns a pointer to the created Chunk.
     Chunk* instantiateChunkAt(int x, int z);
 
-    void setChunkBlocks(int x, int z);
-
+    void setChunkBlocks(Chunk* chunk, int x, int z);
     // Do these world-space coordinates lie within
     // a Chunk that exists?
     bool hasChunkAt(int x, int z) const;
@@ -114,4 +119,12 @@ public:
     */
     void updateTerrain(const glm::vec3 &player_pos);
     void updateNeighbors(int x, int z);
+    void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev);
+    void tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev);
+    void checkThreadResults();
+    std::unordered_set<int64_t> terrainZonesBorderingZone(glm::vec2 zone_position, int num_zones);
+    bool terrainZoneExists(int64_t key);
+    bool terrainZoneExists(int x, int z);
+    void VBOWorker(Chunk* chunk);
+    void blockTypeWorker(Chunk* chunk);
 };
