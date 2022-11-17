@@ -1,4 +1,5 @@
-#version 150
+//#version 150
+#version 330
 // ^ Change this to version 130 if you have compatibility issues
 
 // This is a fragment shader. If you've opened this file first, please
@@ -12,6 +13,7 @@
 // position, light position, and vertex color.
 
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
+uniform sampler2D textureSampler;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -19,6 +21,7 @@ in vec4 fs_Pos;
 in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
+in vec2 fs_UVs;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -73,6 +76,9 @@ void main()
     // Material base color (before shading)
         vec4 diffuseColor = fs_Col;
         diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
+
+//        vec4 diffuseColor = texture(textureSampler, fs_UVs);
+//        vec4 diffuseColor = vec4(1,1,1,1);
 
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));

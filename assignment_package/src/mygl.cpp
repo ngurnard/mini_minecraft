@@ -68,6 +68,9 @@ void MyGL::initializeGL()
     // your program to render Chunks with vertex colors
     // and UV coordinates
     m_progLambert.setGeometryColor(glm::vec4(0,1,0,1));
+
+    // Generate and bind Texture Atlas
+    // stored as uPtr mp_textureAtlas
     createTexAtlas();
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
@@ -157,6 +160,9 @@ void MyGL::renderTerrain() {
 
 void MyGL::createTexAtlas()
 {
+    // Create a texture to hold the 256x256px texture atlas.
+    // Loads in the image minecraft_textures_all.png and then
+    // places it in texture slot 0 to be accessed by frag shader
     mp_textureAtlas = mkU<Texture>(this);
     mp_textureAtlas->create(":/textures/minecraft_textures_all.png");
     mp_textureAtlas->load(0);
