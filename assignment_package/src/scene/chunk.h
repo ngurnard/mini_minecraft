@@ -108,7 +108,7 @@ const static array<BlockFace, 6> adjacentFaces
               VertexData(glm::vec4(1, 0, 1, 1), glm::vec2(BLK_UV, BLK_UV)),
               VertexData(glm::vec4(0, 0, 1, 1), glm::vec2(0, BLK_UV))
               ),
-    // +X
+    // +Z
     BlockFace(ZPOS,
               glm::vec3(0, 0, 1),
               VertexData(glm::vec4(0, 0, 1, 1), glm::vec2(0, 0)),
@@ -116,7 +116,7 @@ const static array<BlockFace, 6> adjacentFaces
               VertexData(glm::vec4(1, 1, 1, 1), glm::vec2(BLK_UV, BLK_UV)),
               VertexData(glm::vec4(0, 1, 1, 1), glm::vec2(0, BLK_UV))
               ),
-    // -X
+    // -Z
     BlockFace(ZNEG,
               glm::vec3(0, 0, -1),
               VertexData(glm::vec4(1, 0, 0, 1), glm::vec2(0, 0)),
@@ -181,15 +181,20 @@ private:
     // The third input to this map just lets us use a Direction as
     // a key for this map.
     // These allow us to properly determine
-
+    int m_xCorner, m_zCorner;
+    vector<GLuint> indices;
+    vector<glm::vec4> interleavedList;
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
-    Chunk(OpenGLContext* context);
+    Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner);
+    glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
     BlockType getBlockAt(int x, int y, int z);
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
     void virtual createVBOdata() override;
+    void generateVBOdata();
+    void loadVBOdata();
     GLenum drawMode() override;
     ~Chunk();
 };
