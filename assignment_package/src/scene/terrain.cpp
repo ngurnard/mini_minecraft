@@ -491,7 +491,7 @@ void Terrain::CreateTestTerrainScene()
     // instantiates chunks of the world immediately around
     // player spawn point
 
-    int range = 2*64; //normally 32
+    int range = 64; //normally 32
     for(int x = -range; x < range; x += 16) {
         for(int z = -range; z < range; z += 16) {
             instantiateChunkAt(x, z);
