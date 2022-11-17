@@ -294,7 +294,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                     for(int z = coord.y; z < coord.y + 64; z += 16)
                     {
                         auto &chunk = getChunkAt(x, z);
-                        VBOWorkerThreads.push_back(std::thread(&Terrain::VBOWorker, this, chunk.get()));
+                        std::thread t(&Terrain::VBOWorker, this, chunk.get());
+                        t.detach();
                     }
                 }
             }
@@ -310,7 +311,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                 {
                     instantiateChunkAt(x, z);
                     auto &chunk = getChunkAt(x, z);
-                    blockTypeWorkerThreads.push_back(std::thread(&Terrain::blockTypeWorker, this, chunk.get()));
+                    std::thread t(&Terrain::blockTypeWorker, this, chunk.get());
+                    t.detach();
                 }
             }
 
@@ -324,7 +326,8 @@ void Terrain::checkThreadResults()
     m_chunksThatHaveBlockDataLock.lock();
     for(auto &chunk: m_chunksThatHaveBlockData)
     {
-        VBOWorkerThreads.push_back(std::thread(&Terrain::VBOWorker, this, chunk));
+        std::thread t(&Terrain::VBOWorker, this, chunk);
+        t.detach();
     }
     m_chunksThatHaveBlockData.clear();
     m_chunksThatHaveBlockDataLock.unlock();

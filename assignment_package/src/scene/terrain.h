@@ -31,8 +31,6 @@ private:
     std::mutex m_chunksThatHaveBlockDataLock;
     std::unordered_set<Chunk*> m_chunksThatHaveVBOData;
     std::mutex m_chunksThatHaveVBODataLock;
-    std::vector<std::thread> blockTypeWorkerThreads;
-    std::vector<std::thread> VBOWorkerThreads;
     // We will designate every 64 x 64 area of the world's x-z plane
     // as one "terrain generation zone". Every time the player moves
     // near a portion of the world that has not yet been generated
