@@ -1,6 +1,7 @@
 #include "terrain.h"
 #include <stdexcept>
 #include <iostream>
+#include "cave.h"
 
 Terrain::Terrain(OpenGLContext *context)
     : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true)
@@ -127,7 +128,14 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
             // Fill [0, 128] with STONE
             for (int y = 0; y <= biomeBaseH-1; y ++) {
-                chunk->setBlockAt(coord_x, y, coord_z, STONE);
+                float caveNoise = cavePerlinNoise3D(glm::vec3(coord_x, y, coord_z));
+                if (caveNoise < 0.5) {
+                    chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
+                } else {
+                    chunk->setBlockAt(coord_x, y, coord_z, STONE);
+                }
+
+//                chunk->setBlockAt(coord_x, y, coord_z, STONE);
             }
 
             if (biome == 0) {
@@ -416,9 +424,9 @@ std::pair<int, int> Terrain::computeHeight(int x, int z)
 
     float mask = m_biomeMaskMap.computeFBM(x, z);
     biomeMaskPostProcess(mask);
-    int biome = 0;
+    int biome = 0; // grassland
     if (mask > 0.4) {
-        biome = 1;
+        biome = 1; // mtn
     }
     // mask should be [0,1] bounded...
 

@@ -2,6 +2,7 @@ INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 
 SOURCES += \
+    $$PWD/cave.cpp \
     $$PWD/customfbm.cpp \
     $$PWD/main.cpp \
     $$PWD/mainwindow.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
     $$PWD/texture.cpp
 
 HEADERS += \
+    $$PWD/cave.h \
     $$PWD/customfbm.h \
     $$PWD/mainwindow.h \
     $$PWD/mygl.h \
