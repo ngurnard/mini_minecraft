@@ -174,9 +174,12 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
     int waterH = 138;       // Height of water level
     for(int i = x; i < x + 16; ++i) {
         for(int j = z; j < z + 16; ++j) {
+
+            // Get height and biome as pair from terrain
             auto HB = computeHeight(i, j);
             int H = HB.first;
             int biome = HB.second;
+
             glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
             float snow_noise = m_mountainHeightMap.noise2D({x, z});

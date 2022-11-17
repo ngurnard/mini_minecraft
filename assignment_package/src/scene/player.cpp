@@ -97,7 +97,7 @@ void Player::processInputs(InputBundle &inputs) {
         if (inputs.spacePressed) {
             // jump if on the ground
             if (inputs.onGround && !inputs.inLiquid) {
-                this->m_acceleration.y = this->m_acceleration.y + 10*this->gravity;
+                this->m_acceleration.y = this->m_acceleration.y + 20*this->gravity;
                 inputs.onGround = false; // no longer on the ground (prevent flying)
             } else if (inputs.inLiquid) {
                 this->m_acceleration.y = this->m_acceleration.y + this->gravity;
@@ -118,7 +118,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
         tune_max_speed = 2 * tune_max_speed; // set the max speed for non-flight mode in the x and z directions
 
-        this->m_velocity *= 0.75f; // reduce velocity for friction and drag (slow down on release)
+        this->m_velocity *= 0.9f; // reduce velocity for friction and drag (slow down on release)
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation
 
         this->m_velocity = glm::clamp(this->m_velocity, -tune_max_speed, tune_max_speed); // ensure not too fast
@@ -129,10 +129,10 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
 
     } else { // if not in flight mode
 
-        this->m_velocity.x *= 0.75f; // reduce velocity for friction and drag (slow down on release)
+        this->m_velocity.x *= 0.85f; // reduce velocity for friction and drag (slow down on release)
         this->m_velocity.y *= 0.975f; // reduce velocity for friction and drag (slow down on release) -- allow terminal velocity to be reached
-        this->m_velocity.z *= 0.75f; // reduce velocity for friction and drag (slow down on release)
-        float terminal_speed = 0.1 * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
+        this->m_velocity.z *= 0.85f; // reduce velocity for friction and drag (slow down on release)
+        float terminal_speed = 6.6 * tune_max_speed; // max speed for y; the terminal velocity of falling is normally 66m/s
 
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
 
