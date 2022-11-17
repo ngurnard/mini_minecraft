@@ -157,6 +157,7 @@ void MyGL::createTexAtlas()
 {
     mp_textureAtlas = mkU<Texture>(this);
     mp_textureAtlas->create(":/textures/minecraft_textures_all.png");
+    mp_textureAtlas->load(0);
 }
 
 

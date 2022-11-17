@@ -35,7 +35,7 @@ struct EnumHash {
 };
 
 const static unordered_set<BlockType, EnumHash> transparent_blocks{
-    EMPTY, ICE //WATER, ICE
+    EMPTY, ICE, WATER
 };
 
 const static unordered_set<BlockType, EnumHash> animatable_blocks{
