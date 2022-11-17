@@ -115,74 +115,76 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     }
 }
 
-void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
+BlockType getBlockType(int height, int max_height, int biome, float snow_noise)
+{
     int biomeBaseH = 129;   // Height below which there is only stone
     int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
+    if(height  <= biomeBaseH - 1)
+        return STONE;
+    if(biome == 0)
+    {
+        if(max_height <= waterH)
+        {
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return SAND;
+            else if(height <= waterH)
+                return WATER;
+
+        }
+        else
+        {
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return GRASS;
+        }
+    }
+    else if(biome == 1)
+    {
+        if(max_height >= snowH)
+        {
+            if(height < max_height)
+                return STONE;
+            else if(height == max_height)
+            {
+                if(max_height < snowH + 10)
+                {
+
+                    if (float(snowH + 10 - max_height) / 10.f < pow(snow_noise, 0.5)) {
+                        return SNOW;
+                    } else {
+                        return STONE;
+                    }
+
+                }
+                else
+                    return SNOW;
+            }
+        }
+        else if(height <= max_height)
+            return STONE;
+    }
+    return EMPTY;
+}
+
+void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
+    int waterH = 138;       // Height of water level
     for(int i = x; i < x + 16; ++i) {
         for(int j = z; j < z + 16; ++j) {
             auto HB = computeHeight(i, j);
-            float H = HB.first;
-            float biome = HB.second;
+            int H = HB.first;
+            int biome = HB.second;
             glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
-            // Fill [0, 128] with STONE
-            for (int y = 0; y <= biomeBaseH-1; y ++) {
-                float caveNoise = cavePerlinNoise3D(glm::vec3(coord_x, y, coord_z));
-                if (caveNoise < 0.5) {
-                    chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
-                } else {
-                    chunk->setBlockAt(coord_x, y, coord_z, STONE);
-                }
-
-//                chunk->setBlockAt(coord_x, y, coord_z, STONE);
-            }
-
-            if (biome == 0) {
-                // Grassland
-                if (H <= waterH) {
-                    // Blocks are underwater
-                    for (int y = biomeBaseH; y < H; y++) {
-                        chunk->setBlockAt(coord_x, y, coord_z, DIRT);
-                    }
-                    chunk->setBlockAt(coord_x, H, coord_z, SAND);
-                    for (int y = H+1; y <= waterH; y++) {
-                        chunk->setBlockAt(coord_x, y, coord_z, WATER);
-                    }
-                } else {
-                    // Not underwater
-                    for (int y = biomeBaseH; y < H; y++) {
-                        chunk->setBlockAt(coord_x, y, coord_z, DIRT);
-                    }
-                    chunk->setBlockAt(coord_x, H, coord_z, GRASS);
-                }
-
-            } else if (biome == 1) {
-                // Mountains
-                if (H >= snowH) {
-                    // Snow-capped
-                    int y = biomeBaseH;
-                    for (; y < H; y++) {
-                        chunk->setBlockAt(coord_x, y, coord_z, STONE);
-                    }
-                    if (H < snowH + 10) {
-                        // Inject Noise to snow line
-                        float rand = m_mountainHeightMap.noise2D({i,j});
-                        if (float(snowH + 10 - H) / 10.f < pow(rand, 0.5)) {
-                            chunk->setBlockAt(coord_x, H, coord_z, SNOW);
-                        } else {
-                            chunk->setBlockAt(coord_x, H, coord_z, STONE);
-                        }
-                    } else {
-                        chunk->setBlockAt(coord_x, H, coord_z, SNOW);
-                    }
-                } else {
-                    // No Snow :(
-                    for (int y = biomeBaseH; y <= H; y++) {
-                        chunk->setBlockAt(coord_x, y, coord_z, STONE);
-                    }
-                }
-            }
+            float snow_noise = m_mountainHeightMap.noise2D({x, z});
+            int upper_bound = H;
+            if(biome == 0)
+                upper_bound = std::max(H, waterH);
+            for(int y = 0; y <= upper_bound; y++)
+                chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
         }
     }
 }
@@ -302,7 +304,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                     for(int z = coord.y; z < coord.y + 64; z += 16)
                     {
                         auto &chunk = getChunkAt(x, z);
-                        VBOWorkerThreads.push_back(std::thread(&Terrain::VBOWorker, this, chunk.get()));
+                        std::thread t(&Terrain::VBOWorker, this, chunk.get());
+                        t.detach();
                     }
                 }
             }
@@ -318,7 +321,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                 {
                     instantiateChunkAt(x, z);
                     auto &chunk = getChunkAt(x, z);
-                    blockTypeWorkerThreads.push_back(std::thread(&Terrain::blockTypeWorker, this, chunk.get()));
+                    std::thread t(&Terrain::blockTypeWorker, this, chunk.get());
+                    t.detach();
                 }
             }
 
@@ -332,7 +336,8 @@ void Terrain::checkThreadResults()
     m_chunksThatHaveBlockDataLock.lock();
     for(auto &chunk: m_chunksThatHaveBlockData)
     {
-        VBOWorkerThreads.push_back(std::thread(&Terrain::VBOWorker, this, chunk));
+        std::thread t(&Terrain::VBOWorker, this, chunk);
+        t.detach();
     }
     m_chunksThatHaveBlockData.clear();
     m_chunksThatHaveBlockDataLock.unlock();
