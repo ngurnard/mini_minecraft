@@ -23,6 +23,7 @@ in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec2 fs_UVs;
+in float fs_Anim;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -92,7 +93,17 @@ void main()
     //vec4 diffuseColor = texture(textureSampler, movingUVs);
 
     // NEW actual textures
+
     vec4 diffuseColor = texture(textureSampler, fs_UVs);
+
+    if (fs_Anim != 0) {
+        vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.05/16 * sin(0.01*u_Time),
+                              fs_UVs.y - fs_Anim * 0.05/16 * sin(0.01*u_Time + 3.14159/2));
+
+        diffuseColor = texture(textureSampler, movingUVs);
+        vec4 altColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
+        diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.5*sin(0.03*u_Time));
+    }
 
     // Calculate the diffuse term for Lambert shading
     float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));

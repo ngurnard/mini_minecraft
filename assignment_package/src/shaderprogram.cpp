@@ -240,6 +240,7 @@ void ShaderProgram::drawInterleaved(Drawable &d)
             context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 16 * sizeof(float), (void*)(12 * sizeof(float)));
         }
         if (attrAnim != -1) {
+            //std::cout << "ANIM SET" << std::endl;
             context->glEnableVertexAttribArray(attrAnim);
             context->glVertexAttribPointer(attrAnim, 1, GL_FLOAT, false, 16 * sizeof(float), (void*)(14 * sizeof(float)));
         }
