@@ -4,7 +4,7 @@
 #include "cave.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true)
+    : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true), m_tryExpansionTimer(0)
 {
     createHeightMaps();
 }
@@ -194,10 +194,14 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
     }
 }
 
-void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev)
+void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT)
 {
+    m_tryExpansionTimer += dT;
+    if(m_tryExpansionTimer < 0.5f)
+        return;
     tryExpansion(playerPos, playerPosPrev);
     checkThreadResults();
+    m_tryExpansionTimer = 0.f;
 }
 
 std::unordered_set<int64_t> Terrain::terrainZonesBorderingZone(glm::ivec2 zone_position, int num_zones)
