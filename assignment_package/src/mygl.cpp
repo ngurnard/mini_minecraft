@@ -108,7 +108,7 @@ void MyGL::tick() {
 //    m_terrain.updateTerrain(m_player.mcr_position);
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
-    m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev);
+    m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev, dT);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     prevTime = currTime; // update the previous time
