@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDateTime>
+#include <QDir>
 
 
 MyGL::MyGL(QWidget *parent)
@@ -57,12 +58,6 @@ void MyGL::initializeGL()
     //Create the instance of the world axes
     m_worldAxes.createVBOdata();
 
-    // Create and set up the diffuse shader
-    m_progLambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
-    // Create and set up the flat lighting shader
-    m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
-    m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
-
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
@@ -72,6 +67,12 @@ void MyGL::initializeGL()
     // Generate and bind Texture Atlas
     // stored as uPtr mp_textureAtlas
     createTexAtlas();
+
+    // Create and set up the diffuse shader
+    m_progLambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
+    // Create and set up the flat lighting shader
+    m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
+    m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -89,7 +90,6 @@ void MyGL::resizeGL(int w, int h) {
     // Upload the view-projection matrix to our shaders (i.e. onto the graphics card)
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
-
 
     printGLErrorLog();
 }
@@ -137,6 +137,7 @@ void MyGL::paintGL() {
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
 
+    mp_textureAtlas->bind(0); //must bind with every call to draw
     renderTerrain();
 
     glDisable(GL_DEPTH_TEST);
@@ -163,6 +164,7 @@ void MyGL::createTexAtlas()
     // Create a texture to hold the 256x256px texture atlas.
     // Loads in the image minecraft_textures_all.png and then
     // places it in texture slot 0 to be accessed by frag shader
+
     mp_textureAtlas = mkU<Texture>(this);
     mp_textureAtlas->create(":/textures/minecraft_textures_all.png");
     mp_textureAtlas->load(0);
