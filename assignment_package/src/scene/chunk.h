@@ -69,9 +69,9 @@ struct BlockFace
     {}
 };
 
-#define BLK_UVX * 0.03125f
-#define BLK_UVY * 0.03125f
-#define BLK_UV  0.03125f
+#define BLK_UVX * 0.03125f * 2
+#define BLK_UVY * 0.03125f * 2
+#define BLK_UV  0.03125f * 2
 
 // Iterate over this in Chunk::create() to check each block adjacent to block [x][y][z] get the relevant vertex info
 const static array<BlockFace, 6> adjacentFaces
@@ -163,6 +163,18 @@ static std::unordered_map<BlockType, std::unordered_map<Direction, glm::vec2, En
                                                               {YNEG, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
                                                               {ZPOS, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
                                                               {ZNEG, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)}}},
+    {SAND, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {XNEG, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {YPOS, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {YNEG, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {ZPOS, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {ZNEG, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)}}},
+    {SNOW, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {XNEG, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {YPOS, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {YNEG, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {ZPOS, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {ZNEG, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)}}},
 };
 
 // One Chunk is a 16 x 256 x 16 section of the world,

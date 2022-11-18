@@ -184,8 +184,10 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
             float snow_noise = m_mountainHeightMap.noise2D({x, z});
             int upper_bound = H;
+
             if(biome == 0)
                 upper_bound = std::max(H, waterH);
+
             for(int y = 0; y <= upper_bound; y++)
                 chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
         }

@@ -12,6 +12,7 @@ ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
+      unifSampler(-1),
       context(context)
 {}
 
@@ -194,6 +195,12 @@ void ShaderProgram::drawInterleaved(Drawable &d)
     if(d.elemCount() < 0) {
         throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
     }
+
+    int textureSlot = 0;
+    if (unifSampler != -1) {
+        context->glUniform1i(unifSampler, textureSlot);
+    }
+
     // Each of the following blocks checks that:
     //   * This shader has this attribute, and
     //   * This Drawable has a vertex buffer for this attribute.

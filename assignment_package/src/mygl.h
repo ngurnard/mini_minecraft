@@ -42,11 +42,13 @@ private:
 
     //Evan's texture stuff
     //std::vector<std::shared_ptr<Texture>> m_allTextures;
-    uPtr<Texture> mp_textureAtlas;
+
 
     void createTexAtlas();
 
 public:
+    uPtr<Texture> mp_textureAtlas;
+
     explicit MyGL(QWidget *parent = nullptr);
     ~MyGL();
 
