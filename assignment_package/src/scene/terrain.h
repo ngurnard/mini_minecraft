@@ -31,6 +31,7 @@ private:
     std::mutex m_chunksThatHaveBlockDataLock;
     std::unordered_set<Chunk*> m_chunksThatHaveVBOData;
     std::mutex m_chunksThatHaveVBODataLock;
+    float m_tryExpansionTimer;
     // We will designate every 64 x 64 area of the world's x-z plane
     // as one "terrain generation zone". Every time the player moves
     // near a portion of the world that has not yet been generated
@@ -117,7 +118,7 @@ public:
     */
     void updateTerrain(const glm::vec3 &player_pos);
     void updateNeighbors(int x, int z);
-    void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev);
+    void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT);
     void tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev);
     void checkThreadResults();
     std::unordered_set<int64_t> terrainZonesBorderingZone(glm::ivec2 zone_position, int num_zones);
