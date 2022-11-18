@@ -184,10 +184,38 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
             float snow_noise = m_mountainHeightMap.noise2D({x, z});
             int upper_bound = H;
-            if(biome == 0)
+            if(biome == 0) {
                 upper_bound = std::max(H, waterH);
-            for(int y = 0; y <= upper_bound; y++)
-                chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
+            }
+            for(int y = 0; y <= upper_bound; y++) {
+                /*
+                // Carve out the caves
+                float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/50.f, y/50.f, j/50.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+                caveNoiseVal += computeFBM3D(i, y, j);
+                caveNoiseVal = pow(caveNoiseVal, 8);
+//                caveNoiseVal = glm::smoothstep(0.05f, 0.95f, caveNoiseVal);
+                caveNoiseVal = glm::round(glm::abs(caveNoiseVal));
+                if (caveNoiseVal > 0.7) {
+                    chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
+                } else {
+                    chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
+                }
+                */
+
+                // Carve out the caves
+                float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+                float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
+                if (caveMask < 0.4) {
+                    if (caveNoiseVal > 0.4) {
+//                        chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
+                        chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
+                    } else {
+                        chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
+                    }
+                } else {
+                    chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
+                }
+            }
         }
     }
 }
