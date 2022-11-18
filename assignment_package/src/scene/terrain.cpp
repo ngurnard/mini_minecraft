@@ -113,7 +113,6 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     }
 }
 
-
 //void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
 //    int waterH = 138;       // Height of water level
 //    for(int i = x; i < x + 16; ++i) {

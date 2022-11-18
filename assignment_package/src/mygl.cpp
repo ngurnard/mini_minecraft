@@ -13,6 +13,7 @@ MyGL::MyGL(QWidget *parent)
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
+      m_time(0.f),
       prevTime(QDateTime::currentMSecsSinceEpoch()), mp_textureAtlas(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -145,6 +146,10 @@ void MyGL::paintGL() {
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progFlat.draw(m_worldAxes);
     glEnable(GL_DEPTH_TEST);
+
+    //TODO: add this for any other shaders which may need time update
+    m_progLambert.setTime(m_time);
+    m_time++;
 }
 
 // TODO: Change this so it renders the nine zones of generated

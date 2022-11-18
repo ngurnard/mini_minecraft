@@ -14,6 +14,7 @@
 
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
 uniform sampler2D textureSampler;
+uniform int u_Time;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -22,6 +23,7 @@ in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec2 fs_UVs;
+in float fs_Anim;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -29,6 +31,11 @@ out vec4 out_Col; // This is the final output color that you will see on your
 float random1(vec3 p) {
     return fract(sin(dot(p,vec3(127.1, 311.7, 191.999)))
                  *43758.5453);
+}
+
+float random1b(vec3 p) {
+    return fract(sin(dot(p,vec3(169.1, 355.7, 195.999)))
+                 *95751.5453);
 }
 
 float mySmoothStep(float a, float b, float t) {
@@ -74,12 +81,29 @@ float fbm(vec3 p) {
 void main()
 {
     // Material base color (before shading)
+
     // OLD single-color drawing below
     //      vec4 diffuseColor = fs_Col;
     //      diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
 
+    // CRAZY texture shifting to test time haha
+    // vec2 movingUVs = vec2(fs_UVs.x + 0.5*sin(0.01*u_Time), fs_UVs.y);
+    // vec2 movingUVs = vec2((fract(fs_UVs.x*16.f) + floor(16.f*(random1(vec3(floor(fs_UVs.x*16) + floor(0.05*u_Time))))))/16.f,
+    //                      (fract(fs_UVs.y*16.f) + floor(16.f*(random1b(vec3(floor(fs_UVs.y*16) + floor(0.05*u_Time))))))/16.f);
+    //vec4 diffuseColor = texture(textureSampler, movingUVs);
+
     // NEW actual textures
+
     vec4 diffuseColor = texture(textureSampler, fs_UVs);
+
+    if (fs_Anim != 0) {
+        vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.05/16 * sin(0.01*u_Time),
+                              fs_UVs.y - fs_Anim * 0.05/16 * sin(0.01*u_Time + 3.14159/2));
+
+        diffuseColor = texture(textureSampler, movingUVs);
+        vec4 altColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
+        diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.5*sin(0.03*u_Time));
+    }
 
     // Calculate the diffuse term for Lambert shading
     float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
