@@ -142,15 +142,15 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
     }
 }
 
-void ShaderProgram::setTime(int t)
-{
-    useMe();
+//void ShaderProgram::setTime(int t)
+//{
+//    useMe();
 
-    if(unifTime != -1)
-    {
-        context->glUniform1i(unifTime, t);
-    }
-}
+//    if(unifTime != -1)
+//    {
+//        context->glUniform1i(unifTime, t);
+//    }
+//}
 
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)

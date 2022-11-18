@@ -1,4 +1,4 @@
-#ifndef SHADERPROGRAM_H
+    #ifndef SHADERPROGRAM_H
 #define SHADERPROGRAM_H
 
 #include <openglcontext.h>
