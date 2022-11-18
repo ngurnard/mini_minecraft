@@ -1,6 +1,7 @@
 #include "texture.h"
 #include <QImage>
 #include <QOpenGLWidget>
+#include <iostream>
 
 Texture::Texture(OpenGLContext *context)
     : context(context), m_textureHandle(-1), m_textureImage(nullptr)
@@ -14,6 +15,10 @@ void Texture::create(const char *texturePath)
     context->printGLErrorLog();
 
     QImage img(texturePath);
+    if (img.width() == 0) {
+        throw std::invalid_argument( "Texture Path is not Correct" );
+    }
+
     img.convertToFormat(QImage::Format_ARGB32);
     img = img.mirrored();
     m_textureImage = std::make_shared<QImage>(img);
@@ -40,9 +45,11 @@ void Texture::load(int texSlot = 0)
 //    context->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 //                          m_textureImage->width(), m_textureImage->height(),
 //                          0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, m_textureImage->bits());
+
     context->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                           m_textureImage->width(), m_textureImage->height(),
                           0, GL_BGRA, GL_UNSIGNED_BYTE, m_textureImage->bits());
+
     context->printGLErrorLog();
 }
 
