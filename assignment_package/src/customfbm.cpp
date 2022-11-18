@@ -66,3 +66,4 @@ float customFBM::computeFBM(const int x, const int z) const
     //mapOutput2Range(noiseSum);
     return noiseSum;
 }
+

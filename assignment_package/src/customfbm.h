@@ -8,6 +8,7 @@ private:
 
 
     float interpNoise2D(float, float) const;
+    float interpNoise3D(float x, float y, float z) const;
 
     int octaves;
     float freq;
@@ -23,4 +24,7 @@ public:
     float noise2D(glm::vec2) const;
     void mapOutput2Range(float&) const;
     float computeFBM(int x, int z) const;
+
+    float noise3D(glm::vec3 p) const;
+    float computeFBM(int x, int y, int z) const;
 };
