@@ -198,7 +198,7 @@ void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev)
     checkThreadResults();
 }
 
-std::unordered_set<int64_t> Terrain::terrainZonesBorderingZone(glm::vec2 zone_position, int num_zones)
+std::unordered_set<int64_t> Terrain::terrainZonesBorderingZone(glm::ivec2 zone_position, int num_zones)
 {
     std::unordered_set<int64_t> terrainZonesBorderingPosition;
     int half_length = 64.f * glm::floor(num_zones/2.f);
@@ -285,6 +285,7 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                 for(int z = coord.y; z < coord.y + 64; z += 16)
                 {
                     auto &chunk = getChunkAt(x, z);
+                    chunk->isVBOready = false;
                     chunk->destroyVBOdata();
                 }
             }
@@ -357,13 +358,12 @@ void Terrain::checkThreadResults()
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
-    m_chunksThatHaveBlockDataLock.lock();
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
             if(hasChunkAt(x, z))
             {
                 const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                if(chunk->elemCount() >= 0)
+                if(chunk->isVBOready)
                 {
                     shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
                     shaderProgram->drawInterleaved(*chunk);
@@ -371,7 +371,6 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
             }
         }
     }
-    m_chunksThatHaveBlockDataLock.unlock();
 }
 
 void Terrain::createHeightMaps()

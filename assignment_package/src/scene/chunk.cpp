@@ -1,7 +1,7 @@
 #include "chunk.h"
 #include <iostream>
 
-Chunk::Chunk(OpenGLContext *context, int x, int z) : Drawable(context), m_xCorner(x), m_zCorner(z), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
+Chunk::Chunk(OpenGLContext *context, int x, int z) : Drawable(context), m_xCorner(x), m_zCorner(z), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}, isVBOready(false)
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
@@ -126,6 +126,7 @@ void Chunk::generateVBOdata()
 {
     indices.clear();
     interleavedList.clear();
+    isVBOready = false;
     int running_index = 0;
     for(int x = 0; x < 16; x++)
     {
@@ -184,6 +185,7 @@ void Chunk::loadVBOdata()
     generateInterleavedList();
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedList);
     mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedList.size() * sizeof(glm::vec4), interleavedList.data(), GL_STATIC_DRAW);
+    isVBOready = true;
 }
 void Chunk::createVBOdata()
 {
