@@ -198,6 +198,7 @@ private:
     vector<glm::vec4> interleavedList;
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
+    bool isVBOready;
     Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner);
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);

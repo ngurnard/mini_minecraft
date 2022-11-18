@@ -120,7 +120,7 @@ public:
     void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev);
     void tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev);
     void checkThreadResults();
-    std::unordered_set<int64_t> terrainZonesBorderingZone(glm::vec2 zone_position, int num_zones);
+    std::unordered_set<int64_t> terrainZonesBorderingZone(glm::ivec2 zone_position, int num_zones);
     bool terrainZoneExists(int64_t key);
     bool terrainZoneExists(int x, int z);
     void VBOWorker(Chunk* chunk);
