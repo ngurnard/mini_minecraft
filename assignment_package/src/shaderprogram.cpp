@@ -12,7 +12,7 @@ ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
-      unifSampler(-1),
+      unifSampler(-1), unifTime(-1),
       context(context)
 {}
 
@@ -77,6 +77,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
     unifSampler    = context->glGetUniformLocation(prog, "textureSampler");
+    unifTime       = context->glGetUniformLocation(prog, "u_Time");
 }
 
 void ShaderProgram::useMe()
@@ -142,15 +143,15 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
     }
 }
 
-//void ShaderProgram::setTime(int t)
-//{
-//    useMe();
+void ShaderProgram::setTime(int t)
+{
+    useMe();
 
-//    if(unifTime != -1)
-//    {
-//        context->glUniform1i(unifTime, t);
-//    }
-//}
+    if(unifTime != -1)
+    {
+        context->glUniform1i(unifTime, t);
+    }
+}
 
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
