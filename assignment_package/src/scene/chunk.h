@@ -1,4 +1,5 @@
 #pragma once
+#include "scene/noise.h"
 #include "openglcontext.h"
 #include "smartpointerhelp.h"
 #include "glm_includes.h"
@@ -13,11 +14,6 @@ using namespace std;
 // of memory to store our different block types. By default, the size of a C++ enum
 // is that of an int (so, usually four bytes). This *does* limit us to only 256 different
 // block types, but in the scope of this project we'll never get anywhere near that many.
-
-enum BlockType : unsigned char
-{
-    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND, UNCERTAIN, BEDROCK
-};
 
 // The six cardinal directions in 3D space
 enum Direction : unsigned char
@@ -196,6 +192,7 @@ private:
     int m_xCorner, m_zCorner;
     vector<GLuint> indices;
     vector<glm::vec4> interleavedList;
+    Noise noise;
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
     bool isVBOready;
@@ -203,6 +200,7 @@ public:
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
     BlockType getBlockAt(int x, int y, int z);
+    BlockType getWorldBlock(int x, int y, int z);
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
     void virtual createVBOdata() override;

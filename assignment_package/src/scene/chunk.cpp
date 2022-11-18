@@ -15,6 +15,20 @@ glm::ivec2 Chunk::getCorners()
 {
     return glm::ivec2(m_xCorner, m_zCorner);
 }
+
+BlockType Chunk::getWorldBlock(int x, int y, int z)
+{
+    x = m_xCorner + x;
+    z = m_zCorner + z;
+    auto HB = noise.computeHeight(x, z);
+    int H = HB.first;
+    int biome = HB.second;
+
+    glm::vec2 chunkOrigin = glm::vec2(floor(x / 16.f) * 16, floor(z / 16.f) * 16);
+    float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
+    return noise.getBlockType(y, H, biome, snow_noise);
+}
+
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion
 BlockType Chunk::getBlockAt(int x, int y, int z) {
     // Boundary constraints on y direction
@@ -24,7 +38,7 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(y < 0)
     {
-        return EMPTY;
+        return UNCERTAIN;
     }
     // Boundary constraints on x direction
     if(x < 0 && m_neighbors[XNEG] != nullptr)
@@ -45,7 +59,7 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {
-        return EMPTY;
+        return getWorldBlock(x, y, z);
     }
     return getBlockAt(static_cast<unsigned int>(x), static_cast<unsigned int>(y), static_cast<unsigned int>(z));
 }

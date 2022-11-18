@@ -4,10 +4,8 @@
 #include "cave.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), mp_context(context), m_drawFMB(true), m_tryExpansionTimer(0)
-{
-    createHeightMaps();
-}
+    : m_chunks(), m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
+{}
 
 Terrain::~Terrain() {
 }
@@ -115,60 +113,42 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     }
 }
 
-BlockType getBlockType(int height, int max_height, int biome, float snow_noise)
-{
-    int biomeBaseH = 129;   // Height below which there is only stone
-    int waterH = 138;       // Height of water level
-    int snowH = 200;        // Height where snow is possible
-    if(height  <= biomeBaseH - 1)
-        return STONE;
-    if(biome == 0)
-    {
-        if(max_height <= waterH)
-        {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return SAND;
-            else if(height <= waterH)
-                return WATER;
 
-        }
-        else
-        {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return GRASS;
-        }
-    }
-    else if(biome == 1)
-    {
-        if(max_height >= snowH)
-        {
-            if(height < max_height)
-                return STONE;
-            else if(height == max_height)
-            {
-                if(max_height < snowH + 10)
-                {
+//void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
+//    int waterH = 138;       // Height of water level
+//    for(int i = x; i < x + 16; ++i) {
+//        for(int j = z; j < z + 16; ++j) {
 
-                    if (float(snowH + 10 - max_height) / 10.f < pow(snow_noise, 0.5)) {
-                        return SNOW;
-                    } else {
-                        return STONE;
-                    }
+//            // Get height and biome as pair from terrain
+//            auto HB = computeHeight(i, j);
+//            int H = HB.first;
+//            int biome = HB.second;
 
-                }
-                else
-                    return SNOW;
-            }
-        }
-        else if(height <= max_height)
-            return STONE;
-    }
-    return EMPTY;
-}
+//            glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
+//            int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
+//            float snow_noise = m_mountainHeightMap.noise2D({x, z});
+//            int upper_bound = H;
+//            if(biome == 0) {
+//                upper_bound = std::max(H, waterH);
+//            }
+//            for(int y = 0; y <= upper_bound; y++) {
+
+//                // Carve out the caves
+//                float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+//                float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
+//                if (caveMask < 0.4 && y < H - 15 + 15* snow_noise) {
+//                    if (caveNoiseVal < 0.4) {
+//                        chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
+//                    } else {
+//                        chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
+//                    }
+//                } else {
+//                    chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
+//                }
+//            }
+//        }
+//    }
+//}
 
 void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
     int waterH = 138;       // Height of water level
@@ -176,32 +156,20 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
         for(int j = z; j < z + 16; ++j) {
 
             // Get height and biome as pair from terrain
-            auto HB = computeHeight(i, j);
+            auto HB = noise.computeHeight(i, j);
             int H = HB.first;
             int biome = HB.second;
 
             glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
-            float snow_noise = m_mountainHeightMap.noise2D({x, z});
+            float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
             int upper_bound = H;
-            if(biome == 0) {
-                upper_bound = std::max(H, waterH);
-            }
-            for(int y = 0; y <= upper_bound; y++) {
 
-                // Carve out the caves
-                float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
-                float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-                if (caveMask < 0.4 && y < H - 15 + 15* snow_noise) {
-                    if (caveNoiseVal < 0.4) {
-                        chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
-                    } else {
-                        chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
-                    }
-                } else {
-                    chunk->setBlockAt(coord_x, y, coord_z, getBlockType(y, H, biome, snow_noise));
-                }
-            }
+            if(biome == 0)
+                upper_bound = std::max(H, waterH);
+
+            for(int y = 0; y <= upper_bound; y++)
+                chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
         }
     }
 }
@@ -391,84 +359,9 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
     }
 }
 
-void Terrain::createHeightMaps()
-{
-    // Creates the FBM-based Height Maps for Mountains and Grassland
-    // as well as an FBM-based Mask which will interpolate between these regions
-
-    // y Height range where [0,128] should be stone, the rest is biome-specific
-    glm::vec2 range(129, 255);
-
-    // Generic FBM parameters
-    int mtn_octaves = 4; float mtn_freq = 0.05f;
-    float mtn_amp = 0.5; float mtn_persistance = 0.5;
-
-    m_mountainHeightMap = customFBM(mtn_octaves, mtn_freq, mtn_amp, mtn_persistance, range);
-
-    int grass_octaves = 8; float grass_freq = 0.03f;
-    float grass_amp = 0.5; float grass_persistance = 0.5;
-
-    m_grasslandHeightMap = customFBM(grass_octaves, grass_freq, grass_amp, grass_persistance, range);
-
-    int mask_octaves = 8; float mask_freq = 0.009;
-    float mask_amp = 0.5; float mask_persistance = 0.6; //very sensitive!!
-    glm::vec2 mask_range(0,1);
-
-    m_biomeMaskMap = customFBM(mask_octaves, mask_freq, mask_amp, mask_persistance, mask_range);
-}
-
-void Terrain::mountainHeightPostProcess(float& val)
-{
-    // Changes peak distribution to Gaussian
-    val = 0.95 * glm::exp(-pow(val, 2.f) / 0.65f);
-}
-
-void Terrain::grasslandHeightPostProcess(float& val)
-{
-    // flatten and lower terrain relative to mountains
-    val = 0.03 + 0.135 * (pow(val+.2, 2) - 0.5 * pow(val, 3));
-}
-
-void Terrain::biomeMaskPostProcess(float& val)
-{
-    // smoothstep to increase contrast
-    val = pow(val, 2.25);
-    val = glm::smoothstep(0.15f, 0.95f, val); // original
-}
-
-std::pair<int, int> Terrain::computeHeight(int x, int z)
-{
-    // Computes individual biome heights and blends w/ biomeMask
-    float mtnH = m_mountainHeightMap.computeFBM(x, z);
-    mountainHeightPostProcess(mtnH);
-    m_mountainHeightMap.mapOutput2Range(mtnH);
-
-    float grassH = m_grasslandHeightMap.computeFBM(x, z);
-    grasslandHeightPostProcess(grassH);
-    m_grasslandHeightMap.mapOutput2Range(grassH);
-
-    float mask = m_biomeMaskMap.computeFBM(x, z);
-    biomeMaskPostProcess(mask);
-    int biome = 0; // grassland
-    if (mask > 0.4) {
-        biome = 1; // mtn
-    }
-    // mask should be [0,1] bounded...
-
-    return {floor(glm::mix(grassH, mtnH, mask)), biome};
-}
-
-void Terrain::printHeight(int x, int z)
-{
-    auto blockInfo = computeHeight(x, z);
-    int H = blockInfo.first;
-    int biome = blockInfo.second;
-    std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << " --BIOME " << biome << std::endl;
-}
 
 void Terrain::CreateTestScene()
 {
-    this->m_drawFMB = false; //disable terrain
 
     int y_offset = 139;
     int x_offset = -32; // must be divisible by 16
@@ -516,7 +409,6 @@ void Terrain::CreateTestScene()
             chunk->createVBOdata();
         }
     }
-    this->m_drawFMB = true;
 }
 
 void Terrain::CreateTestTerrainScene()

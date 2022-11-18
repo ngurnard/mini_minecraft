@@ -1,4 +1,5 @@
 #pragma once
+#include "scene/noise.h"
 #include "smartpointerhelp.h"
 #include "glm_includes.h"
 #include "chunk.h"
@@ -6,7 +7,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "shaderprogram.h"
-#include "customfbm.h" // Custom Noise Function Class
 #include <thread>
 #include <mutex>
 //using namespace std;
@@ -46,7 +46,7 @@ private:
     // surrounding the Player should be rendered, the Chunks
     // in the Terrain will never be deleted until the program is terminated.
     std::unordered_set<int64_t> m_generatedTerrain;
-
+    Noise noise;
     // TODO: DELETE ALL REFERENCES TO m_geomCube AS YOU WILL NOT USE
     // IT IN YOUR FINAL PROGRAM!
     // The instance of a unit cube we can use to render any cube.
@@ -57,20 +57,6 @@ private:
 //    Cube m_geomCube;
 
     OpenGLContext* mp_context;
-
-    customFBM m_mountainHeightMap;
-    customFBM m_grasslandHeightMap;
-    customFBM m_biomeMaskMap;
-
-
-    void createHeightMaps();
-    void mountainHeightPostProcess(float&);
-    void grasslandHeightPostProcess(float&);
-    void biomeMaskPostProcess(float&);
-
-    std::pair<int, int> computeHeight(int x, int z); // returns H, biome
-
-    bool m_drawFMB;
 
 public:
     Terrain(OpenGLContext *context);
@@ -117,7 +103,6 @@ public:
     without a neighbor in a particular direction.
     */
     void updateTerrain(const glm::vec3 &player_pos);
-    void updateNeighbors(int x, int z);
     void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT);
     void tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev);
     void checkThreadResults();
