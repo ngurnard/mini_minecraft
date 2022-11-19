@@ -97,7 +97,6 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
                 return SAND;
             else if(height <= waterH)
                 return WATER;
-
         }
         else
         {

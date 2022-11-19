@@ -23,8 +23,6 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
     auto HB = noise.computeHeight(x, z);
     int H = HB.first;
     int biome = HB.second;
-
-    glm::vec2 chunkOrigin = glm::vec2(floor(x / 16.f) * 16, floor(z / 16.f) * 16);
     float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
     return noise.getBlockType(y, H, biome, snow_noise);
 }
@@ -39,23 +37,6 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     if(y < 0)
     {
         return UNCERTAIN;
-    }
-    // Boundary constraints on x direction
-    if(x < 0 && m_neighbors[XNEG] != nullptr)
-    {
-        return m_neighbors[XNEG]->getBlockAt(15, y, z);
-    }
-    if(x > 15 && m_neighbors[XPOS] != nullptr)
-    {
-        return m_neighbors[XPOS]->getBlockAt(0, y, z);
-    }
-    if(z < 0 && m_neighbors[ZNEG] != nullptr)
-    {
-        return m_neighbors[ZNEG]->getBlockAt(x, y, 15);
-    }
-    if(z > 15 && m_neighbors[ZPOS] != nullptr)
-    {
-        return m_neighbors[ZPOS]->getBlockAt(x, y, 0);
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {
