@@ -91,6 +91,8 @@ signals:
     void sig_sendPlayerLook(QString) const;
     void sig_sendPlayerChunk(QString) const;
     void sig_sendPlayerTerrainZone(QString) const;
+    void sig_sendLiquidBool(QString) const;
+    void sig_sendGroundBool(QString) const;
 };
 
 
