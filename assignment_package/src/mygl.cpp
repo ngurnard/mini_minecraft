@@ -125,6 +125,8 @@ void MyGL::sendPlayerDataToGUI() const {
     glm::ivec2 zone(64 * glm::ivec2(glm::floor(pPos / 64.f)));
     emit sig_sendPlayerChunk(QString::fromStdString("( " + std::to_string(chunk.x) + ", " + std::to_string(chunk.y) + " )"));
     emit sig_sendPlayerTerrainZone(QString::fromStdString("( " + std::to_string(zone.x) + ", " + std::to_string(zone.y) + " )"));
+    emit sig_sendLiquidBool(QString::number(m_player.playerInLiquid));
+    emit sig_sendGroundBool(QString::number(m_player.playerOnGround));
 }
 
 // This function is called whenever update() is called.

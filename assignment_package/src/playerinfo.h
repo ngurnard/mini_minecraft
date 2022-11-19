@@ -20,6 +20,8 @@ public slots:
     void slot_setLookText(QString);
     void slot_setChunkText(QString);
     void slot_setZoneText(QString);
+    void slot_setLiquidText(QString s);
+    void slot_setGroundText(QString s);
 
 private:
     Ui::PlayerInfo *ui;

@@ -25,7 +25,10 @@ public:
     virtual ~Player() override;
 
     bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, float *interfaceAxis = 0); // last argument is optional
+    bool gridMarchAxis(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, int axis, float *out_dist); // last argument is optional
     std::array<bool, 3> checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs);
+//    std::array<bool, 3> checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs, float dT);
+//    void checkCollision(const Terrain &terrain, InputBundle &inputs, float dT);
     void checkOnGround(InputBundle &inputs);
     void checkInLiquid(InputBundle &inputs); // check if player is IN liquid
     bool checkIsLiquid(float x, float y, float z); // check if block is liquid
@@ -63,4 +66,8 @@ public:
     QString velAsQString() const;
     QString accAsQString() const;
     QString lookAsQString() const;
+
+    // For displaying player info
+    bool playerInLiquid;
+    bool playerOnGround;
 };
