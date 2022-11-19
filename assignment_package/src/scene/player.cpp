@@ -424,7 +424,10 @@ BlockType Player::removeBlock(Terrain &terrain) {
 
     if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit)) { // if there is a detected block
         BlockType block = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z); // get the block type that we clicked
-        terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
+        if (block != BEDROCK) {
+            terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
+            block = EMPTY; // reset the block to EMPTY so the player can't hold bedrock
+        }
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         chunk->destroyVBOdata();
         chunk->generateVBOdata();
@@ -436,7 +439,7 @@ BlockType Player::removeBlock(Terrain &terrain) {
         }
         return block; // return the block type that was hit
     }
-    return EMPTY; // if not block hit, return empty block
+    return EMPTY; // if no block hit, return empty block
 }
 
 void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
