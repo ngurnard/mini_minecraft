@@ -70,4 +70,7 @@ public:
     // For displaying player info
     bool playerInLiquid;
     bool playerOnGround;
+
+    // For postprocess shader
+    BlockType headSpaceSight();
 };

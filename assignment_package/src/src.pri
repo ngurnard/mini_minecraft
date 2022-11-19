@@ -4,10 +4,13 @@ DEPENDPATH += $$PWD
 SOURCES += \
     $$PWD/cave.cpp \
     $$PWD/customfbm.cpp \
+    $$PWD/framebuffer.cpp \
     $$PWD/main.cpp \
     $$PWD/mainwindow.cpp \
     $$PWD/mygl.cpp \
+    $$PWD/postprocessshader.cpp \
     $$PWD/scene/noise.cpp \
+    $$PWD/scene/quad.cpp \
     $$PWD/shaderprogram.cpp \
     $$PWD/drawable.cpp \
     $$PWD/cameracontrolshelp.cpp \
@@ -25,10 +28,13 @@ SOURCES += \
 HEADERS += \
     $$PWD/cave.h \
     $$PWD/customfbm.h \
+    $$PWD/framebuffer.h \
     $$PWD/mainwindow.h \
     $$PWD/mygl.h \
+    $$PWD/postprocessshader.h \
     $$PWD/scene/block.h \
     $$PWD/scene/noise.h \
+    $$PWD/scene/quad.h \
     $$PWD/shaderprogram.h \
     $$PWD/drawable.h \
     $$PWD/cameracontrolshelp.h \

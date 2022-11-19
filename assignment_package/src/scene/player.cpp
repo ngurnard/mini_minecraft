@@ -405,8 +405,18 @@ void Player::checkInLiquid(InputBundle &inputs) {
     }
 }
 
+BlockType Player::headSpaceSight()
+{
+    // Get the block type where the player's camera is and check if it is lava or water
+//    BlockType block = this->mcr_terrain.getBlockAt(this->mcr_camera.mcr_position);
+//    BlockType block = this->mcr_terrain.getBlockAt(this->m_position.x, this->m_position.y + 1.5f, this->m_position.z);
+    BlockType block = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
+
+    return block;
+}
+
 bool Player::checkIsLiquid(float x, float y, float z) {
-    // Get the block type where the player is
+    // Get the block type at coords to see if it is liquid
     BlockType currBlock = this->mcr_terrain.getBlockAt(x, y, z);
 
     if (currBlock == WATER || currBlock == LAVA) {
