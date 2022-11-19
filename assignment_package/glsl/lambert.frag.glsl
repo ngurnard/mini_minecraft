@@ -25,6 +25,8 @@ in vec4 fs_Col;
 in vec2 fs_UVs;
 in float fs_Anim;
 
+in float fs_dimVal;
+
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 
@@ -86,7 +88,7 @@ void main()
     //      vec4 diffuseColor = fs_Col;
     //      diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
 
-    // CRAZY texture shifting to test time haha
+    // CRAZY texture shifting to test u_Time haha
     // vec2 movingUVs = vec2(fs_UVs.x + 0.5*sin(0.01*u_Time), fs_UVs.y);
     // vec2 movingUVs = vec2((fract(fs_UVs.x*16.f) + floor(16.f*(random1(vec3(floor(fs_UVs.x*16) + floor(0.05*u_Time))))))/16.f,
     //                      (fract(fs_UVs.y*16.f) + floor(16.f*(random1b(vec3(floor(fs_UVs.y*16) + floor(0.05*u_Time))))))/16.f);
@@ -97,12 +99,35 @@ void main()
     vec4 diffuseColor = texture(textureSampler, fs_UVs);
 
     if (fs_Anim != 0) {
-        vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.05/16 * sin(0.01*u_Time),
-                              fs_UVs.y - fs_Anim * 0.05/16 * sin(0.01*u_Time + 3.14159/2));
+        // check region in texture to decide which animatable type is drawn
+        bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
+        bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y < 4.f/16.f;
 
-        diffuseColor = texture(textureSampler, movingUVs);
-        vec4 altColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
-        diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.5*sin(0.03*u_Time));
+        if (lava) {
+            // slowly gyrate texture and lighten and darken with random dimVal from vert shader
+            vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.05/16 * sin(0.01*u_Time),
+                                  fs_UVs.y - fs_Anim * 0.05/16 * sin(0.01*u_Time + 3.14159/2));
+            diffuseColor = texture(textureSampler, movingUVs);
+            vec4 warmerColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
+            vec4 coolerColor = diffuseColor - vec4(0.1, 0.1, 0, 0);
+            diffuseColor = mix(warmerColor, coolerColor, 0.5 + fs_dimVal * 0.5*sin(0.02*u_Time));
+
+        } else if (water) {
+            // blend between 3 different points in texture to create a wavy subtle change over time
+            vec2 offsetUVs = vec2(fs_UVs.x - 0.5f/16.f, fs_UVs.y - 0.5f/16.f);
+            diffuseColor = texture(textureSampler, fs_UVs);
+            vec4 altColor = texture(textureSampler, offsetUVs);
+
+            altColor.x += fs_dimVal * pow(altColor.x+.15, 5);
+            altColor.y += fs_dimVal * pow(altColor.y+.15, 5);
+            altColor.z += fs_dimVal * pow(altColor.z+.15, 5);
+
+            diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.35*sin(0.05*u_Time));
+            offsetUVs -= 0.25f/16.f;
+            vec4 newColor = texture(textureSampler, offsetUVs);
+            diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time)) + fs_dimVal * vec4(0.015);
+
+        }
     }
 
     // Calculate the diffuse term for Lambert shading
@@ -111,7 +136,7 @@ void main()
     // Avoid negative lighting values
     diffuseTerm = clamp(diffuseTerm, 0, 1);
 
-    float ambientTerm = 0.2;
+    float ambientTerm = 0.3;
 
     float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                         //to simulate ambient lighting. This ensures that faces that are not
