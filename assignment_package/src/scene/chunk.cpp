@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include <iostream>
+#include "cave.h"
 
 Chunk::Chunk(OpenGLContext *context, int x, int z) : Drawable(context), m_xCorner(x), m_zCorner(z), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}, isVBOready(false)
 {
@@ -24,7 +25,9 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
     int H = HB.first;
     int biome = HB.second;
     float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
-    return noise.getBlockType(y, H, biome, snow_noise);
+    float caveNoiseVal = cavePerlinNoise3D(glm::vec3(x/25.f, y/16.f, z/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+    float caveMask = cavePerlinNoise3D(glm::vec3(z/100.f, x/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
+    return noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask);
 }
 
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion

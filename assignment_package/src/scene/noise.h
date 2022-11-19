@@ -19,7 +19,7 @@ public:
 
     std::pair<int, int> computeHeight(int x, int z); // returns H, biome
     void printHeight(int x, int z);
-    BlockType getBlockType(int height, int max_height, int biome, float snow_noise);
+    BlockType getBlockType(int height, int max_height, int biome, float snow_noise, float caveNoiseVal, float caveMask);
 
 };
 

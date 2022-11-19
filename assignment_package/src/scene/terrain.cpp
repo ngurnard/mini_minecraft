@@ -131,25 +131,11 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
             if(biome == 0) {
                 upper_bound = std::max(H, waterH);
             }
-            chunk->setBlockAt(coord_x, 0, coord_z, BEDROCK); // y=0 is only bedrock
-            for(int y = 1; y <= upper_bound; y++) {
-
+            for(int y = 0; y <= upper_bound; y++) {
                 // Carve out the caves
                 float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
                 float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-                if (caveMask < 0.4 && y < H - 15 + 15* snow_noise) { // make caves mostly under surface, but some noise to sometimes break surface
-                    if (caveNoiseVal < 0.4) {
-                        if (y > 25) {
-                            chunk->setBlockAt(coord_x, y, coord_z, EMPTY);
-                        } else {
-                            chunk->setBlockAt(coord_x, y, coord_z, LAVA);
-                        }
-                    } else {
-                        chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
-                    }
-                } else {
-                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
-                }
+                chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask));
             }
         }
     }

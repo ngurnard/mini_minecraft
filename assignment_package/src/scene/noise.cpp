@@ -80,56 +80,69 @@ void Noise::printHeight(int x, int z)
     std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << " --BIOME " << biome << std::endl;
 }
 
-BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise)
+BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise, float caveNoiseVal, float caveMask)
 {
     int biomeBaseH = 129;   // Height below which there is only stone
     int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
-    if(height  <= biomeBaseH - 1)
-        return STONE;
-    if(biome == 0)
+    if(height == 0)
+        return BEDROCK;
+    bool caveMaskCondition = caveMask < 0.4 && height < max_height - 15 + 15* snow_noise && caveNoiseVal < 0.4;
+    if (caveMaskCondition)  // make caves mostly under surface, but some noise to sometimes break surface
     {
-        if(max_height <= waterH)
-        {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return SAND;
-            else if(height <= waterH)
-                return WATER;
-        }
+        if (height > 25)
+            return LAVA;
         else
-        {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return GRASS;
-        }
+            return EMPTY;
     }
-    else if(biome == 1)
+    else
     {
-        if(max_height >= snowH)
+        if(height  < biomeBaseH - 1)
+            return STONE;
+        if(biome == 0)
         {
-            if(height < max_height)
-                return STONE;
-            else if(height == max_height)
+            if(max_height <= waterH)
             {
-                if(max_height < snowH + 10)
-                {
-
-                    if (float(snowH + 10 - max_height) / 10.f < pow(snow_noise, 0.5)) {
-                        return SNOW;
-                    } else {
-                        return STONE;
-                    }
-
-                }
-                else
-                    return SNOW;
+                if(height < max_height)
+                    return DIRT;
+                else if(height == max_height)
+                    return SAND;
+                else if(height <= waterH)
+                    return WATER;
+            }
+            else
+            {
+                if(height < max_height)
+                    return DIRT;
+                else if(height == max_height)
+                    return GRASS;
             }
         }
-        else if(height <= max_height)
-            return STONE;
+        else if(biome == 1)
+        {
+            if(max_height >= snowH)
+            {
+                if(height < max_height)
+                    return STONE;
+                else if(height == max_height)
+                {
+                    if(max_height < snowH + 10)
+                    {
+
+                        if (float(snowH + 10 - max_height) / 10.f < pow(snow_noise, 0.5)) {
+                            return SNOW;
+                        } else {
+                            return STONE;
+                        }
+
+                    }
+                    else
+                        return SNOW;
+                }
+            }
+            else if(height <= max_height)
+                return STONE;
+        }
     }
     return EMPTY;
 }
