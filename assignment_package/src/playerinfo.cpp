@@ -44,3 +44,7 @@ void PlayerInfo::slot_setGroundText(QString s) {
     ui->groundLabel->setText(s);
 }
 
+void PlayerInfo::slot_setcamBlockText(QString s) {
+    ui->camBlockLabel->setText(s);
+}
+

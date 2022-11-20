@@ -131,7 +131,7 @@ void MyGL::tick() {
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     m_player.tick(dT, m_inputs); // tick the player
     // Uncomment this line to test terrain expansion
-//    m_terrain.updateTerrain(m_player.mcr_position);
+    //    m_terrain.updateTerrain(m_player.mcr_position);
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
     m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev, dT);
@@ -152,6 +152,7 @@ void MyGL::sendPlayerDataToGUI() const {
     emit sig_sendPlayerTerrainZone(QString::fromStdString("( " + std::to_string(zone.x) + ", " + std::to_string(zone.y) + " )"));
     emit sig_sendLiquidBool(QString::number(m_player.playerInLiquid));
     emit sig_sendGroundBool(QString::number(m_player.playerOnGround));
+    emit sig_sendCamBlock(QString(m_player.camBlock));
 }
 
 // This function is called whenever update() is called.
@@ -170,9 +171,9 @@ void MyGL::paintGL() {
 
     // Post process render pass ///
     m_frameBuffer.bindFrameBuffer();
-    performPostprocessRenderPass();
     m_postLava.setTime(m_time);
     m_postWater.setTime(m_time);
+//    performPostprocessRenderPass();
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
@@ -221,14 +222,16 @@ void MyGL::performPostprocessRenderPass()
     // Texture already bound (thanks Evan I hope you find this :) - Nick)
 
     // Need logic of which postprocessor to draw since we no longer select a postprocess shader like hw04 ///
-    m_frameBuffer.bindToTextureSlot(5);
-    BlockType viewedBlock = this->m_player.headSpaceSight();
+    m_frameBuffer.bindToTextureSlot(3);
+//    BlockType viewedBlock = this->m_player.headSpaceSight();
+    BlockType viewedBlock = LAVA;
     if (viewedBlock == LAVA) {
-        m_postLava.draw(m_geomQuad, 5);
+//        std::cout << " In lava postprocessrenderpass" << std::endl;
+        m_postLava.draw(m_geomQuad, 3);
     } else if (viewedBlock == WATER) {
-        m_postWater.draw(m_geomQuad, 5);
+        m_postWater.draw(m_geomQuad, 3);
     } else {
-        m_noOp.draw(m_geomQuad, 5);
+        m_noOp.draw(m_geomQuad, 3);
     }
 }
 

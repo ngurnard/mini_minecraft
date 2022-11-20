@@ -19,6 +19,9 @@ void Player::processInputs(InputBundle &inputs) {
     // TODO: Update the Player's velocity and acceleration based on the
     // state of the inputs.
 
+    // DELETE ME LATER
+    BlockType TEMP = headSpaceSight();
+
     this->m_acceleration = glm::vec3(0, 0, 0); // ensure we dont accidentally keep accelerating
     float tune_max_accel = 9.5; // this is acceleration of Usain Bolt
     float accel_scaler;
@@ -405,12 +408,44 @@ void Player::checkInLiquid(InputBundle &inputs) {
     }
 }
 
+//QString Player::camSight() {
+
+
+//    // For Debugging in the player info panel
+//    // Get the block type where the player's camera is and check if it is lava or water
+//    int block = int(this->mcr_terrain.getBlockAt(this->m_position.x, this->m_position.y + 1.5f, this->m_position.z));
+//    this->camSight
+//    return type_enum_to_string[block];
+//}
+
+std::unordered_map<int, QString> type_enum_to_string = {
+    { 0, "EMPTY" },
+    { 1, "GRASS" },
+    { 2, "DIRT" },
+    { 3, "STONE" },
+    { 4, "WATER" },
+    { 5, "LAVA" },
+    { 6, "ICE" },
+    { 7, "SNOW" },
+    { 8, "SAND" },
+    { 9, "UNCERTAIN" },
+    { 10, "BEDROCK" },
+};
+
 BlockType Player::headSpaceSight()
 {
     // Get the block type where the player's camera is and check if it is lava or water
-//    BlockType block = this->mcr_terrain.getBlockAt(this->mcr_camera.mcr_position);
-//    BlockType block = this->mcr_terrain.getBlockAt(this->m_position.x, this->m_position.y + 1.5f, this->m_position.z);
-    BlockType block = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
+    //    BlockType block = this->mcr_terrain.getBlockAt(this->mcr_camera.mcr_position);
+    BlockType block;
+    try {
+        block = this->mcr_terrain.getBlockAt(this->m_position.x, this->m_position.y + 1.5f, this->m_position.z);
+        //    BlockType block = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
+
+        this->camBlock = type_enum_to_string[block];
+    } catch(const std::out_of_range &exception) {
+        this->camBlock = "NOCHUNK";
+        block = UNCERTAIN;
+    }
 
     return block;
 }

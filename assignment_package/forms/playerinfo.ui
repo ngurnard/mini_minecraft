@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>403</width>
-    <height>398</height>
+    <height>423</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -322,6 +322,42 @@
     <rect>
      <x>120</x>
      <y>340</y>
+     <width>271</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>UNK</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_7">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>380</y>
+     <width>141</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Cam Block</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="camBlockLabel">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>380</y>
      <width>271</width>
      <height>31</height>
     </rect>

@@ -70,6 +70,8 @@ public:
     // For displaying player info
     bool playerInLiquid;
     bool playerOnGround;
+    QString camBlock;
+//    QString camSight();
 
     // For postprocess shader
     BlockType headSpaceSight();

@@ -22,6 +22,7 @@ public slots:
     void slot_setZoneText(QString);
     void slot_setLiquidText(QString s);
     void slot_setGroundText(QString s);
+    void slot_setcamBlockText(QString s);
 
 private:
     Ui::PlayerInfo *ui;

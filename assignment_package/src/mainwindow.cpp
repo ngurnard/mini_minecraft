@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->mygl, SIGNAL(sig_sendPlayerTerrainZone(QString)), &playerInfoWindow, SLOT(slot_setZoneText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendLiquidBool(QString)), &playerInfoWindow, SLOT(slot_setLiquidText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendGroundBool(QString)), &playerInfoWindow, SLOT(slot_setGroundText(QString)));
+    connect(ui->mygl, SIGNAL(sig_sendCamBlock(QString)), &playerInfoWindow, SLOT(slot_setcamBlockText(QString)));
 }
 
 MainWindow::~MainWindow()

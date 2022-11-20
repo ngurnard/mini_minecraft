@@ -109,6 +109,7 @@ signals:
     void sig_sendPlayerTerrainZone(QString) const;
     void sig_sendLiquidBool(QString) const;
     void sig_sendGroundBool(QString) const;
+    void sig_sendCamBlock(QString) const;
 };
 
 
