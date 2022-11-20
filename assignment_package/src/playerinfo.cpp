@@ -36,3 +36,15 @@ void PlayerInfo::slot_setZoneText(QString s) {
     ui->zoneLabel->setText(s);
 }
 
+void PlayerInfo::slot_setLiquidText(QString s) {
+    ui->liquidLabel->setText(s);
+}
+
+void PlayerInfo::slot_setGroundText(QString s) {
+    ui->groundLabel->setText(s);
+}
+
+void PlayerInfo::slot_setcamBlockText(QString s) {
+    ui->camBlockLabel->setText(s);
+}
+

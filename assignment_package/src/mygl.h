@@ -7,7 +7,10 @@
 #include "scene/camera.h"
 #include "scene/terrain.h"
 #include "scene/player.h"
+#include "scene/quad.h"
 #include "texture.h"
+#include "postprocessshader.h"
+#include "framebuffer.h"
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
@@ -22,6 +25,11 @@ private:
     ShaderProgram m_progLambert;// A shader program that uses lambertian reflection
     ShaderProgram m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     ShaderProgram m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
+    FrameBuffer m_frameBuffer;
+    PostProcessShader m_noOp;
+    PostProcessShader m_postLava;
+    PostProcessShader m_postWater;
+
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
@@ -42,7 +50,12 @@ private:
     qint64 prevTime; // the time in the last tick
 
     //Evan's texture stuff
+    //std::vector<std::shared_ptr<Texture>> m_allTextures;
     void createTexAtlas();
+
+    // The screen-space quadrangle used to draw
+    // the scene with the post-process shaders.
+    Quad m_geomQuad;
 
 public:
     uPtr<Texture> mp_textureAtlas;
@@ -64,6 +77,12 @@ public:
     // Called from paintGL().
     // Calls Terrain::draw().
     void renderTerrain();
+
+    // A helper function that iterates through
+    // each of the render passes required by the
+    // currently bound post-process shader and
+    // invokes them.
+    void performPostprocessRenderPass();
 
 protected:
     // Automatically invoked when the user
@@ -88,6 +107,9 @@ signals:
     void sig_sendPlayerLook(QString) const;
     void sig_sendPlayerChunk(QString) const;
     void sig_sendPlayerTerrainZone(QString) const;
+    void sig_sendLiquidBool(QString) const;
+    void sig_sendGroundBool(QString) const;
+    void sig_sendCamBlock(QString) const;
 };
 
 

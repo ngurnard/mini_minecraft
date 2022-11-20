@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include <iostream>
+#include "cave.h"
 
 Chunk::Chunk(OpenGLContext *context, int x, int z)
     : Drawable(context), m_xCorner(x), m_zCorner(z),
@@ -26,10 +27,10 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
     auto HB = noise.computeHeight(x, z);
     int H = HB.first;
     int biome = HB.second;
-
-    glm::vec2 chunkOrigin = glm::vec2(floor(x / 16.f) * 16, floor(z / 16.f) * 16);
     float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
-    return noise.getBlockType(y, H, biome, snow_noise);
+    float caveNoiseVal = cavePerlinNoise3D(glm::vec3(x/25.f, y/16.f, z/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+    float caveMask = cavePerlinNoise3D(glm::vec3(z/100.f, x/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
+    return noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask);
 }
 
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion
@@ -42,23 +43,6 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     if(y < 0)
     {
         return UNCERTAIN;
-    }
-    // Boundary constraints on x direction
-    if(x < 0 && m_neighbors[XNEG] != nullptr)
-    {
-        return m_neighbors[XNEG]->getBlockAt(15, y, z);
-    }
-    if(x > 15 && m_neighbors[XPOS] != nullptr)
-    {
-        return m_neighbors[XPOS]->getBlockAt(0, y, z);
-    }
-    if(z < 0 && m_neighbors[ZNEG] != nullptr)
-    {
-        return m_neighbors[ZNEG]->getBlockAt(x, y, 15);
-    }
-    if(z > 15 && m_neighbors[ZPOS] != nullptr)
-    {
-        return m_neighbors[ZPOS]->getBlockAt(x, y, 0);
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {

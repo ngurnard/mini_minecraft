@@ -3,12 +3,12 @@
 
 Drawable::Drawable(OpenGLContext* context)
     : m_countOpq(-1), m_countTra(-1), m_bufIdxOpq(), m_bufIdxTra(),
-      m_bufPos(), m_bufNor(), m_bufCol(),
+      m_bufPos(), m_bufNor(), m_bufCol(), m_bufUV(),
       m_bufInterleavedOpq(-1), m_bufInterleavedTra(-1),
       m_idxOpqGenerated(false), m_idxTraGenerated(false),
       m_posGenerated(false), m_norGenerated(false), m_colGenerated(false),
       m_interleavedOpqGenerated(false), m_interleavedTraGenerated(false),
-      mp_context(context),
+      m_uvGenerated(false), mp_context(context),
       opaquePass(true)
 {}
 
@@ -23,10 +23,11 @@ void Drawable::destroyVBOdata()
     mp_context->glDeleteBuffers(1, &m_bufPos);
     mp_context->glDeleteBuffers(1, &m_bufNor);
     mp_context->glDeleteBuffers(1, &m_bufCol);
+    mp_context->glDeleteBuffers(1, &m_bufUV);
     mp_context->glDeleteBuffers(1, &m_bufInterleavedOpq);
     mp_context->glDeleteBuffers(1, &m_bufInterleavedTra);
     m_idxOpqGenerated = m_idxTraGenerated = m_posGenerated = m_norGenerated =
-        m_colGenerated = m_interleavedOpqGenerated = m_interleavedTraGenerated = false;
+        m_colGenerated = m_uvGenerated = m_interleavedOpqGenerated = m_interleavedTraGenerated = false;
     m_countOpq = m_countTra = -1;
 }
 
@@ -96,6 +97,13 @@ void Drawable::generateInterleavedList()
     }
 }
 
+void Drawable::generateUV()
+{
+    m_uvGenerated = true;
+    // Create a VBO on our GPU and store its handle in bufInterleavedList
+    mp_context->glGenBuffers(1, &m_bufUV);
+}
+
 bool Drawable::bindIdx()
 {
     if (opaquePass) {
@@ -150,6 +158,14 @@ bool Drawable::bindInterleavedList()
         }
         return m_interleavedTraGenerated;
     }
+}
+
+bool Drawable::bindUV()
+{
+    if(m_uvGenerated){
+        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufUV);
+    }
+    return m_uvGenerated;
 }
 
 InstancedDrawable::InstancedDrawable(OpenGLContext *context)

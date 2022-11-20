@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->mygl, SIGNAL(sig_sendPlayerLook(QString)), &playerInfoWindow, SLOT(slot_setLookText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendPlayerChunk(QString)), &playerInfoWindow, SLOT(slot_setChunkText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendPlayerTerrainZone(QString)), &playerInfoWindow, SLOT(slot_setZoneText(QString)));
+    connect(ui->mygl, SIGNAL(sig_sendLiquidBool(QString)), &playerInfoWindow, SLOT(slot_setLiquidText(QString)));
+    connect(ui->mygl, SIGNAL(sig_sendGroundBool(QString)), &playerInfoWindow, SLOT(slot_setGroundText(QString)));
+    connect(ui->mygl, SIGNAL(sig_sendCamBlock(QString)), &playerInfoWindow, SLOT(slot_setcamBlockText(QString)));
 }
 
 MainWindow::~MainWindow()
