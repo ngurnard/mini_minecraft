@@ -316,15 +316,24 @@ BlockType Player::removeBlock(Terrain &terrain) {
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
     glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
 
+    // TODO: consider passing chunk VBO regeneration to a VBO worker thread
     if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit)) { // if there is a detected block
         BlockType block = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z); // get the block type that we clicked
         terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         chunk->destroyVBOdata();
+        chunk->opaquePass = true;
+        chunk->generateVBOdata();
+        chunk->loadVBOdata();
+        chunk->opaquePass = false;
         chunk->generateVBOdata();
         chunk->loadVBOdata();
         for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
             neighbor.second->destroyVBOdata();
+            neighbor.second->opaquePass = true;
+            neighbor.second->generateVBOdata();
+            neighbor.second->loadVBOdata();
+            neighbor.second->opaquePass = false;
             neighbor.second->generateVBOdata();
             neighbor.second->loadVBOdata();
         }
@@ -349,12 +358,21 @@ void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
         } else if (interfaceAxis == 0) { // x-axis
             terrain.setBlockAt(out_blockHit.x - glm::sign(rayCamera.x), out_blockHit.y, out_blockHit.z, blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
         }
+        // TODO: consider passing chunk VBO regeneration to a VBO worker thread
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         chunk->destroyVBOdata();
+        chunk->opaquePass = true;
+        chunk->generateVBOdata();
+        chunk->loadVBOdata();
+        chunk->opaquePass = false;
         chunk->generateVBOdata();
         chunk->loadVBOdata();
         for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
             neighbor.second->destroyVBOdata();
+            neighbor.second->opaquePass = true;
+            neighbor.second->generateVBOdata();
+            neighbor.second->loadVBOdata();
+            neighbor.second->opaquePass = false;
             neighbor.second->generateVBOdata();
             neighbor.second->loadVBOdata();
         }

@@ -42,9 +42,6 @@ private:
     qint64 prevTime; // the time in the last tick
 
     //Evan's texture stuff
-    //std::vector<std::shared_ptr<Texture>> m_allTextures;
-
-
     void createTexAtlas();
 
 public:

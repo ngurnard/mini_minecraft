@@ -6,6 +6,7 @@
 #include <array>
 #include <unordered_map>
 #include <cstddef>
+#include <set>
 #include <unordered_set>
 #include "drawable.h"
 using namespace std;
@@ -30,8 +31,14 @@ struct EnumHash {
     }
 };
 
+static unordered_map<BlockType, int, EnumHash> transparent_block_order {
+    //Set priority for how to draw transparent blocks (if they are in-contact)
+
+    {EMPTY, 0}, {WATER, 1}, {ICE, 2}
+};
+
 const static unordered_set<BlockType, EnumHash> transparent_blocks{
-    EMPTY, ICE//, WATER
+    EMPTY, WATER, ICE
 };
 
 const static unordered_set<BlockType, EnumHash> animatable_blocks{
@@ -153,12 +160,12 @@ static std::unordered_map<BlockType, std::unordered_map<Direction, glm::vec2, En
                                                               {YNEG, glm::vec2(14.5f BLK_UVX, 0.5f  BLK_UVY)},
                                                               {ZPOS, glm::vec2(14.5f BLK_UVX, 0.5f  BLK_UVY)},
                                                               {ZNEG, glm::vec2(14.5f BLK_UVX, 0.5f  BLK_UVY)}}},
-    {ICE, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
-                                                              {XNEG, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
-                                                              {YPOS, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
-                                                              {YNEG, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
-                                                              {ZPOS, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)},
-                                                              {ZNEG, glm::vec2(4.f BLK_UVX, 11.f  BLK_UVY)}}},
+    {ICE, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(3.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {XNEG, glm::vec2(3.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {YPOS, glm::vec2(3.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {YNEG, glm::vec2(3.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {ZPOS, glm::vec2(3.f BLK_UVX, 11.f  BLK_UVY)},
+                                                              {ZNEG, glm::vec2(3.f BLK_UVX, 11.f  BLK_UVY)}}},
     {SAND, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
                                                               {XNEG, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
                                                               {YPOS, glm::vec2(2.f BLK_UVX, 14.f  BLK_UVY)},
@@ -190,12 +197,15 @@ private:
     // a key for this map.
     // These allow us to properly determine
     int m_xCorner, m_zCorner;
-    vector<GLuint> indices;
-    vector<glm::vec4> interleavedList;
+    vector<GLuint> indicesOpq;
+    vector<GLuint> indicesTra;
+    vector<glm::vec4> interleavedOpq;
+    vector<glm::vec4> interleavedTra;
     Noise noise;
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
-    bool isVBOready;
+    bool isOpqVBOready;
+    bool isTraVBOready;
     Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner);
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);

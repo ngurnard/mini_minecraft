@@ -29,8 +29,13 @@ private:
     std::unordered_map<int64_t, uPtr<Chunk>> m_chunks;
     std::unordered_set<Chunk*> m_chunksThatHaveBlockData;
     std::mutex m_chunksThatHaveBlockDataLock;
-    std::unordered_set<Chunk*> m_chunksThatHaveVBOData;
-    std::mutex m_chunksThatHaveVBODataLock;
+    std::unordered_set<Chunk*> m_chunksThatHaveVBODataOpq;
+    std::unordered_set<Chunk*> m_chunksThatHaveVBODataTra;
+    std::mutex m_chunksThatHaveVBODataOpqLock;
+    std::mutex m_chunksThatHaveVBODataTraLock;
+
+    bool m_permit_transparent_terrain;
+
     float m_tryExpansionTimer;
     // We will designate every 64 x 64 area of the world's x-z plane
     // as one "terrain generation zone". Every time the player moves
@@ -61,7 +66,7 @@ private:
 public:
     Terrain(OpenGLContext *context);
     ~Terrain();
-
+    void allowTransparent(bool);
     void printHeight(int x, int z);
 
     // Instantiates a new Chunk and stores it in
@@ -91,6 +96,7 @@ public:
     // Draws every Chunk that falls within the bounding box
     // described by the min and max coords, using the provided
     // ShaderProgram    
+    void drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram, bool opaque);
     void draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram);
 
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
@@ -104,6 +110,10 @@ public:
     */
     void updateTerrain(const glm::vec3 &player_pos);
     void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT);
+
+    void destroyOutOfRangeTerrainZoneVBOs(std::unordered_set<int64_t>& terrainZonesBorderingCurrPos,
+                                          std::unordered_set<int64_t>& terrainZonesBorderingPrevPos);
+
     void tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev);
     void checkThreadResults();
     std::unordered_set<int64_t> terrainZonesBorderingZone(glm::ivec2 zone_position, int num_zones);

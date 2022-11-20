@@ -139,13 +139,13 @@ void Cube::createVBOdata()
     createCubeVertexNormals(sph_vert_nor);
     createCubeIndices(sph_idx);
 
-    m_count = CUB_IDX_COUNT;
+    m_countOpq = CUB_IDX_COUNT;
 
     // Create a VBO on our GPU and store its handle in bufIdx
     generateIdx();
     // Tell OpenGL that we want to perform subsequent operations on the VBO referred to by bufIdx
     // and that it will be treated as an element array buffer (since it will contain triangle indices)
-    mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
+    mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdxOpq);
     // Pass the data stored in cyl_idx into the bound buffer, reading a number of bytes equal to
     // SPH_IDX_COUNT multiplied by the size of a GLuint. This data is sent to the GPU to be read by shader programs.
     mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, CUB_IDX_COUNT * sizeof(GLuint), sph_idx, GL_STATIC_DRAW);

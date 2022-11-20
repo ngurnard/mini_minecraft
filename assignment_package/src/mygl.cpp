@@ -44,10 +44,15 @@ void MyGL::initializeGL()
     // Print out some information about the current OpenGL context
     debugContextVersion();
 
+    // Alpha Blending functionality
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
     // Set the color with which the screen is filled at the start of each render call.
     glClearColor(0.37f, 0.74f, 1.0f, 1);
 
@@ -107,10 +112,10 @@ void MyGL::tick() {
     m_player.tick(dT, m_inputs); // tick the player
     // Uncomment this line to test terrain expansion
 //    m_terrain.updateTerrain(m_player.mcr_position);
-    // Check if the terrain should expand. This both checks to see if player is near the border of
-    // existing terrain and checks the status of any BlockType workers that are generating Chunks.
+
     m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev, dT);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
+
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     prevTime = currTime; // update the previous time
 }
@@ -152,15 +157,17 @@ void MyGL::paintGL() {
     m_time++;
 }
 
-// TODO: Change this so it renders the nine zones of generated
-// terrain that surround the player (refer to Terrain::m_generatedTerrain
-// for more info)
+
 void MyGL::renderTerrain() {
 //    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
     int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
     int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
 
     int rend_dist = 256;
+
+    // Check if the terrain should expand. This both checks to see if player is near the border of
+    // existing terrain and checks the status of any BlockType workers that are generating Chunks.
+    m_terrain.allowTransparent(true); // whether to draw transparent blocks or not
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
 }
 
@@ -273,7 +280,7 @@ void MyGL::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::LeftButton) { // if the player clicks the left mouse button, remove a block
         BlockType removedBlock = this->m_player.removeBlock(this->m_terrain);
     } else if (e->button() == Qt::RightButton) { // if the player clicks the right mouse, place a block
-        BlockType blockToPlace = GRASS;
+        BlockType blockToPlace = LAVA;//GRASS;
         this->m_player.placeBlock(this->m_terrain, blockToPlace);
     }
 }

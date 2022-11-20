@@ -1,7 +1,10 @@
 #include "chunk.h"
 #include <iostream>
 
-Chunk::Chunk(OpenGLContext *context, int x, int z) : Drawable(context), m_xCorner(x), m_zCorner(z), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}, isVBOready(false)
+Chunk::Chunk(OpenGLContext *context, int x, int z)
+    : Drawable(context), m_xCorner(x), m_zCorner(z),
+      m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}},
+      isOpqVBOready(false), isTraVBOready(false)
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
@@ -138,46 +141,151 @@ GLenum Chunk::drawMode() {
 
 void Chunk::generateVBOdata()
 {
-    indices.clear();
-    interleavedList.clear();
-    isVBOready = false;
-    int running_index = 0;
-    for(int x = 0; x < 16; x++)
+    //TODO: add difference between opaque and transparent block workflow
+
+    if (opaquePass)
     {
-        for(int y = 0; y < 256; y++)
+        isOpqVBOready = false;
+        indicesOpq.clear();
+        interleavedOpq.clear();
+        int running_index = 0;
+        for(int x = 0; x < 16; x++)
         {
-            for(int z = 0; z < 16; z++)
+            for(int y = 0; y < 256; y++)
             {
-                BlockType curr = getBlockAt(x, y, z);
-                if(isOpaque(curr))
+                for(int z = 0; z < 16; z++)
                 {
-                    glm::vec4 color = getColor(curr);
-                    for(auto &block : adjacentFaces)
+                    BlockType curr = getBlockAt(x, y, z);
+                    if(isOpaque(curr))
                     {
-                        glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
-                        if(!isOpaque(getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z)))
+                        glm::vec4 color = getColor(curr);
+                        for(auto &block : adjacentFaces)
                         {
-                            for(VertexData vertex : block.vertices)
+                            glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
+                            if(!isOpaque(getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z)))
                             {
-                                // Position
-                                interleavedList.push_back(glm::vec4(glm::vec3(x, y, z) + glm::vec3(vertex.pos), 1));
-                                // Color
-                                interleavedList.push_back(color);
-                                // Normal
-                                interleavedList.push_back(glm::vec4(block.directionVec, 0));
-                                // UV coordinates, Animatable flag
-                                glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];
-                                float animatable = isAnimatable(getBlockAt(x, y, z));
-                                interleavedList.push_back(glm::vec4(uv_coord, animatable, 1));
+                                for(VertexData vertex : block.vertices)
+                                {
+                                    // Position
+                                    interleavedOpq.push_back(glm::vec4(glm::vec3(x, y, z) + glm::vec3(vertex.pos), 1));
+                                    // Color
+                                    interleavedOpq.push_back(color);
+                                    // Normal
+                                    interleavedOpq.push_back(glm::vec4(block.directionVec, 0));
+                                    // UV coordinates, Animatable flag
+                                    glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];
+                                    float animatable = isAnimatable(getBlockAt(x, y, z));
+                                    interleavedOpq.push_back(glm::vec4(uv_coord, animatable, 0.f)); // last el zero bc of new dual-tranparent alpha setting
+                                }
+                                // Quadrangulated indicesOpq
+                                indicesOpq.push_back(running_index);
+                                indicesOpq.push_back(running_index + 1);
+                                indicesOpq.push_back(running_index + 2);
+                                indicesOpq.push_back(running_index);
+                                indicesOpq.push_back(running_index + 2);
+                                indicesOpq.push_back(running_index + 3);
+                                running_index += 4;
                             }
-                            // Quadrangulated indices
-                            indices.push_back(running_index);
-                            indices.push_back(running_index + 1);
-                            indices.push_back(running_index + 2);
-                            indices.push_back(running_index);
-                            indices.push_back(running_index + 2);
-                            indices.push_back(running_index + 3);
-                            running_index += 4;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else // Populating transparent VBO
+    {
+        isTraVBOready = false;
+        indicesTra.clear();
+        interleavedTra.clear();
+        int running_index = 0;
+        for(int x = 0; x < 16; x++)
+        {
+            for(int y = 0; y < 256; y++)
+            {
+                for(int z = 0; z < 16; z++)
+                {
+                    BlockType curr = getBlockAt(x, y, z);
+                    if(!isOpaque(curr) && curr != EMPTY)
+                    {
+                        glm::vec4 color = getColor(curr);
+                        for(auto &block : adjacentFaces)
+                        {
+                            glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
+                            BlockType curr_neighbor_type = getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z);
+
+                            if(!isOpaque(curr_neighbor_type) && curr_neighbor_type != curr)
+                            //if(curr_neighbor_type == EMPTY)
+                            {
+                                // INHERENT ISSUES WITH THIS (goal: showing ICE and WATER together when they touch)
+                                // 11/02 Lecture @ 1:15:00 onward discusses why the correct drawing order is only completed when looking
+                                // from a specific angle... Should probably just never draw face between adjacent transparent blocks
+                                // if the occluding fragments clogging the z-buffer are in fact fully clear, can use discard() in frag shader
+                                // visualize this by replacing sand with ice around water
+                                bool curr_has_priority = transparent_block_order[curr] > transparent_block_order[curr_neighbor_type];
+                                if(curr_has_priority)
+                                {
+                                    if (curr_neighbor_type == EMPTY)
+                                    {
+                                        // Draw transparent block normally
+                                        for(VertexData vertex : block.vertices)
+                                        {
+                                            // Position
+                                            interleavedTra.push_back(glm::vec4(glm::vec3(x, y, z) + glm::vec3(vertex.pos), 1));
+                                            // Color
+                                            interleavedTra.push_back(color);
+                                            // Normal
+                                            interleavedTra.push_back(glm::vec4(block.directionVec, 0));
+                                            // UV coordinates, Animatable flag
+                                            glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];
+                                            float animatable = isAnimatable(getBlockAt(x, y, z));
+
+                                            // Adding another float flag so that transparent blockfaces with priority between
+                                            // 2 transparent blocks are told to draw from texture with alpha set to 1
+                                            interleavedTra.push_back(glm::vec4(uv_coord, animatable, 0.f));
+                                        }
+                                        // Quadrangulated indicesTra
+                                        indicesTra.push_back(running_index);
+                                        indicesTra.push_back(running_index + 1);
+                                        indicesTra.push_back(running_index + 2);
+                                        indicesTra.push_back(running_index);
+                                        indicesTra.push_back(running_index + 2);
+                                        indicesTra.push_back(running_index + 3);
+                                        running_index += 4;
+                                    }
+                                    else
+                                    {
+                                        // Force dominant transparent blockface at face where two different transparent types
+                                        // meet to use an alpha value of 1 so it gets drawn through the weaker transparent block
+                                        // Goal is to show Ice and Water well together!
+                                        for(VertexData vertex : block.vertices)
+                                        {
+                                            // Position
+                                            interleavedOpq.push_back(glm::vec4(glm::vec3(x, y, z) + glm::vec3(vertex.pos), 1));
+                                            // Color
+                                            interleavedOpq.push_back(color);
+                                            // Normal
+                                            interleavedOpq.push_back(glm::vec4(block.directionVec, 0));
+                                            // UV coordinates, Animatable flag
+                                            glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];
+                                            float animatable = isAnimatable(getBlockAt(x, y, z));
+
+                                            // TODO: consider adding another float flag to pass to shader s.t.
+                                            // transparent blockface w/ priority between 2 transparent blocks
+                                            // are told to draw from texture with alpha set to 1
+
+                                            interleavedOpq.push_back(glm::vec4(uv_coord, animatable, 1.f));
+                                        }
+                                        // Quadrangulated indicesTra
+                                        int idx = indicesOpq.back()+1;
+                                        indicesOpq.push_back(idx);
+                                        indicesOpq.push_back(idx + 1);
+                                        indicesOpq.push_back(idx + 2);
+                                        indicesOpq.push_back(idx);
+                                        indicesOpq.push_back(idx + 2);
+                                        indicesOpq.push_back(idx + 3);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -185,21 +293,40 @@ void Chunk::generateVBOdata()
         }
     }
 }
+
 void Chunk::loadVBOdata()
 {
-    m_count = indices.size();
-    // Create a VBO on our GPU and store its handle in bufIdx
-    generateIdx();
-    // Tell OpenGL that we want to perform subsequent operations on the VBO referred to by bufIdx
-    // and that it will be treated as an element array buffer (since it will contain triangle indices)
-    mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
-    // Pass the data stored in cyl_idx into the bound buffer, reading a number of bytes equal to
-    // SPH_IDX_COUNT multiplied by the size of a GLuint. This data is sent to the GPU to be read by shader programs.
-    mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-    generateInterleavedList();
-    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedList);
-    mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedList.size() * sizeof(glm::vec4), interleavedList.data(), GL_STATIC_DRAW);
-    isVBOready = true;
+    if (opaquePass) {
+        m_countOpq = indicesOpq.size();
+        // Create a VBO on our GPU and store its handle in bufIdx
+        generateIdx();
+        // Tell OpenGL that we want to perform subsequent operations on the VBO referred to by bufIdx
+        // and that it will be treated as an element array buffer (since it will contain triangle indices)
+        mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdxOpq);
+        // Pass the data stored in cyl_idx into the bound buffer, reading a number of bytes equal to
+        // SPH_IDX_COUNT multiplied by the size of a GLuint. This data is sent to the GPU to be read by shader programs.
+        mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesOpq.size() * sizeof(GLuint), indicesOpq.data(), GL_STATIC_DRAW);
+        generateInterleavedList();
+        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedOpq);
+        mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedOpq.size() * sizeof(glm::vec4), interleavedOpq.data(), GL_STATIC_DRAW);
+        isOpqVBOready = true;
+    } else {
+        m_countTra = indicesTra.size();
+        // Create a VBO on our GPU and store its handle in bufIdx
+        generateIdx();
+        // Tell OpenGL that we want to perform subsequent operations on the VBO referred to by bufIdx
+        // and that it will be treated as an element array buffer (since it will contain triangle indicesTra)
+        mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdxTra);
+        // Pass the data stored in cyl_idx into the bound buffer, reading a number of bytes equal to
+        // SPH_IDX_COUNT multiplied by the size of a GLuint. This data is sent to the GPU to be read by shader programs.
+        mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesTra.size() * sizeof(GLuint), indicesTra.data(), GL_STATIC_DRAW);
+        generateInterleavedList();
+        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedTra);
+        mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedTra.size() * sizeof(glm::vec4), interleavedTra.data(), GL_STATIC_DRAW);
+        isTraVBOready = true;
+    }
+
+
 }
 void Chunk::createVBOdata()
 {

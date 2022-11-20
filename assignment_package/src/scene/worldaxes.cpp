@@ -14,10 +14,10 @@ void WorldAxes::createVBOdata()
                         glm::vec4(0,1,0,1), glm::vec4(0,1,0,1),
                         glm::vec4(0,0,1,1), glm::vec4(0,0,1,1)};
 
-    m_count = 6;
+    m_countOpq = 6;
 
     generateIdx();
-    mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
+    mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdxOpq);
     mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), idx, GL_STATIC_DRAW);
     generatePos();
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufPos);
