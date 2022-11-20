@@ -126,7 +126,7 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
 
             glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
-            float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
+            float snow_noise = noise.m_mountainHeightMap.noise2D({i, j});
             int upper_bound = H;
             if(biome == 0) {
                 upper_bound = std::max(H, waterH);
