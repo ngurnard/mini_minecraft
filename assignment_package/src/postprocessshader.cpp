@@ -17,7 +17,7 @@ void PostProcessShader::setupMemberVars()
     attrUV  = context->glGetAttribLocation(prog, "vs_UV");
 
     unifTime = context->glGetUniformLocation(prog, "u_Time");
-    unifSampler = context->glGetUniformLocation(prog, "u_RenderedTexture");
+    unifSampler2D = context->glGetUniformLocation(prog, "u_RenderedTexture");
 //    unifColor      = context->glGetUniformLocation(prog, "u_Color");
 //    unifSampler    = context->glGetUniformLocation(prog, "textureSampler");
 //    unifTime       = context->glGetUniformLocation(prog, "u_Time");
@@ -30,7 +30,7 @@ void PostProcessShader::draw(Drawable& d, int textureSlot = 0)
     useMe();
 
     // Set our "renderedTexture" sampler to user Texture Unit 0
-    context->glUniform1i(unifSampler, textureSlot);
+    context->glUniform1i(unifSampler2D, textureSlot);
 
     // Each of the following blocks checks that:
     //   * This shader has this attribute, and

@@ -17,7 +17,7 @@ public:
     // Sets up shader-specific handles
     void setupMemberVars() override;
     // Draw the given object to our screen using this ShaderProgram's shaders
-    void draw(Drawable &d, int textureSlot);
+    void draw(Drawable &d, int textureSlot) override;
 
     void setDimensions(glm::ivec2 dims);
 };

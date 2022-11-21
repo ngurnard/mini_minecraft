@@ -6,7 +6,7 @@
 #include <array>
 #include <unordered_map>
 #include <unordered_set>
-#include "shaderprogram.h"
+#include "surfaceshader.h"
 #include <thread>
 #include <mutex>
 //using namespace std;
@@ -94,8 +94,8 @@ public:
     // Draws every Chunk that falls within the bounding box
     // described by the min and max coords, using the provided
     // ShaderProgram    
-    void drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram, bool opaque);
-    void draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram);
+    void drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader, bool opaque);
+    void draw(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader);
 
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.

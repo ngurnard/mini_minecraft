@@ -351,7 +351,7 @@ void Terrain::checkThreadResults()
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
 
-void Terrain::drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram, bool opaque) {
+void Terrain::drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader, bool opaque) {
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
             if(hasChunkAt(x, z))
@@ -360,21 +360,21 @@ void Terrain::drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, Sh
                 if(chunk->isVBOready)
                 {
                     chunk->opaquePass = opaque;
-                    shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
-                    shaderProgram->drawInterleaved(*chunk);
+                    shader->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
+                    shader->drawInterleaved(*chunk, 0);
                 }
             }
         }
     }
 }
 
-void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
+void Terrain::draw(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader) {
     // Opaque pass
-    drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shaderProgram, true);
+    drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shader, true);
     if(m_permit_transparent_terrain)
     {
         // Transparent pass
-        drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shaderProgram, false);
+        drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shader, false);
     }
 }
 

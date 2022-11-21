@@ -181,15 +181,15 @@ void MyGL::paintGL() {
     renderTerrain();
 
     // Post process render pass ///
-    m_frameBuffer.bindFrameBuffer();
-    m_postLava.setTime(m_time);
-    m_postWater.setTime(m_time);
+//    m_frameBuffer.bindFrameBuffer();
+//    m_postLava.setTime(m_time);
+//    m_postWater.setTime(m_time);
     //performPostprocessRenderPass();
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progFlat.draw(m_worldAxes);
+    m_progFlat.draw(m_worldAxes, 0);
     glEnable(GL_DEPTH_TEST);
 
     //TODO: add this for any other shaders which may need time update

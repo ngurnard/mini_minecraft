@@ -157,6 +157,5 @@ void main()
         out_Col = vec4(col, 1.f);
     } else {
         out_Col = vec4(col, diffuseColor.a);
-
     }
 }

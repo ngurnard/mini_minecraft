@@ -23,6 +23,7 @@ SOURCES += \
     $$PWD/scene/camera.cpp \
     $$PWD/playerinfo.cpp \
     $$PWD/scene/chunk.cpp \
+    $$PWD/surfaceshader.cpp \
     $$PWD/texture.cpp
 
 HEADERS += \
@@ -49,4 +50,5 @@ HEADERS += \
     $$PWD/scene/camera.h \
     $$PWD/playerinfo.h \
     $$PWD/scene/chunk.h \
+    $$PWD/surfaceshader.h \
     $$PWD/texture.h

@@ -1,13 +1,13 @@
-#ifndef MYGL_H
-#define MYGL_H
+#pragma once
 
 #include "openglcontext.h"
-#include "shaderprogram.h"
+#include "surfaceshader.h"
 #include "scene/worldaxes.h"
 #include "scene/camera.h"
 #include "scene/terrain.h"
 #include "scene/player.h"
 #include "scene/quad.h"
+
 #include "texture.h"
 #include "postprocessshader.h"
 #include "framebuffer.h"
@@ -22,9 +22,9 @@ class MyGL : public OpenGLContext
     Q_OBJECT
 private:
     WorldAxes m_worldAxes; // A wireframe representation of the world axes. It is hard-coded to sit centered at (32, 128, 32).
-    ShaderProgram m_progLambert;// A shader program that uses lambertian reflection
-    ShaderProgram m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
-    ShaderProgram m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
+    SurfaceShader m_progLambert;// A shader program that uses lambertian reflection
+    SurfaceShader m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
+    SurfaceShader m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
 //    FrameBuffer m_frameBuffer;
 //    PostProcessShader m_noOp;
 //    PostProcessShader m_postLava;
@@ -111,6 +111,3 @@ signals:
     void sig_sendGroundBool(QString) const;
     void sig_sendCamBlock(QString) const;
 };
-
-
-#endif // MYGL_H
