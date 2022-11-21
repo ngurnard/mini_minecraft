@@ -88,14 +88,14 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
     if(height == 0)
         return BEDROCK;
     bool caveMaskCondition = caveMask < 0.4 && height < max_height - 15 + 15 * snow_noise && caveNoiseVal < 0.4 && height > 0;
-//    if (caveMaskCondition)  // make caves mostly under surface, but some noise to sometimes break surface
-//    {
-//        if (height < 25)
-//            return LAVA;
-//        else
-//            return EMPTY;
-//    }
-//    else
+    if (caveMaskCondition)  // make caves mostly under surface, but some noise to sometimes break surface
+    {
+        if (height < 25)
+            return LAVA;
+        else
+            return EMPTY;
+    }
+    else
     {
         if(height  < biomeBaseH - 1)
             return STONE;
