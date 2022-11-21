@@ -1,3 +1,24 @@
+Milestone 2:
+
+------------------------
+Evan:
+------------------------
+
+------------------------
+Nick:
+------------------------
+
+------------------------
+Benedict:
+------------------------
+Nov 16: Chun-Fu Yeh helped me in debugging weird holes on the terrain. Eventually we found that it was 
+due to not having an expansion timer and checking for expansion/spawning threads super-frequently.
+
+Other than that, I used C++ documentation for std::thread and std::mutex, and classroom lectures and boilerplate
+code given by Prof. Adam for the multithreading portion.
+
+Milestone 1:
+
 ------------------------
 Evan:
 ------------------------
