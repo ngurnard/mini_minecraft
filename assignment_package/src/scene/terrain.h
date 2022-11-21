@@ -29,10 +29,8 @@ private:
     std::unordered_map<int64_t, uPtr<Chunk>> m_chunks;
     std::unordered_set<Chunk*> m_chunksThatHaveBlockData;
     std::mutex m_chunksThatHaveBlockDataLock;
-    std::unordered_set<Chunk*> m_chunksThatHaveVBODataOpq;
-    std::unordered_set<Chunk*> m_chunksThatHaveVBODataTra;
-    std::mutex m_chunksThatHaveVBODataOpqLock;
-    std::mutex m_chunksThatHaveVBODataTraLock;
+    std::unordered_set<Chunk*> m_chunksThatHaveVBOData;
+    std::mutex m_chunksThatHaveVBODataLock;
 
     bool m_permit_transparent_terrain;
 

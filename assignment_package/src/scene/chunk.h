@@ -34,11 +34,11 @@ struct EnumHash {
 static unordered_map<BlockType, int, EnumHash> transparent_block_order {
     //Set priority for how to draw transparent blocks (if they are in-contact)
 
-    {EMPTY, 0}, {WATER, 1}, {ICE, 2}
+    {EMPTY, 0}, {WATER, 1}, {ICE, 2}, {LAVA, 3}
 };
 
 const static unordered_set<BlockType, EnumHash> transparent_blocks{
-    EMPTY, WATER, ICE
+    EMPTY, WATER, ICE, LAVA
 };
 
 const static unordered_set<BlockType, EnumHash> animatable_blocks{
@@ -204,8 +204,7 @@ private:
     Noise noise;
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
-    bool isOpqVBOready;
-    bool isTraVBOready;
+    bool isVBOready;
     Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner);
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
@@ -213,6 +212,7 @@ public:
     BlockType getWorldBlock(int x, int y, int z);
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
+    void recreateVBOdata();
     void virtual createVBOdata() override;
     void generateVBOdata();
     void loadVBOdata();

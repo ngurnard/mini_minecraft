@@ -139,7 +139,7 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
                 // Carve out the caves
                 float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
                 float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-                chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask));                        
+                chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask));
             }
         }
     }
@@ -231,20 +231,10 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 void Terrain::VBOWorker(Chunk* chunk)
 {
     // Generate Opaque VBO data
-    chunk->opaquePass = true;
     chunk->generateVBOdata();
-
-    m_chunksThatHaveVBODataOpqLock.lock();
-    m_chunksThatHaveVBODataOpq.insert(chunk);
-    m_chunksThatHaveVBODataOpqLock.unlock();
-
-    // Generate Transparent VBO data
-    chunk->opaquePass = false;
-    chunk->generateVBOdata();
-
-    m_chunksThatHaveVBODataTraLock.lock();
-    m_chunksThatHaveVBODataTra.insert(chunk);
-    m_chunksThatHaveVBODataTraLock.unlock();
+    m_chunksThatHaveVBODataLock.lock();
+    m_chunksThatHaveVBOData.insert(chunk);
+    m_chunksThatHaveVBODataLock.unlock();
 }
 
 void Terrain::blockTypeWorker(Chunk* chunk)
@@ -270,8 +260,7 @@ void Terrain::destroyOutOfRangeTerrainZoneVBOs(std::unordered_set<int64_t>& terr
                 for(int z = coord.y; z < coord.y + 64; z += 16)
                 {
                     auto &chunk = getChunkAt(x, z);
-                    chunk->isOpqVBOready = false;
-                    chunk->isTraVBOready = false;
+                    chunk->isVBOready = false;
                     chunk->destroyVBOdata();
                 }
             }
@@ -348,27 +337,13 @@ void Terrain::checkThreadResults()
 
 
     // load chunks with Opaque VBOs ready
-    m_chunksThatHaveVBODataOpqLock.lock();
-    for(auto &chunk: m_chunksThatHaveVBODataOpq)
+    m_chunksThatHaveVBODataLock.lock();
+    for(auto &chunk: m_chunksThatHaveVBOData)
     {
-        chunk->opaquePass = true;
         chunk->loadVBOdata();
     }
-    m_chunksThatHaveVBODataOpq.clear();
-    m_chunksThatHaveVBODataOpqLock.unlock();
-
-
-    // load chunks with Transparent VBOs ready
-    m_chunksThatHaveVBODataTraLock.lock();
-    for(auto &chunk: m_chunksThatHaveVBODataTra)
-    {
-        // never reaches this point... not filling member set...
-        //std::cout << "loading Tra VBO" << std::endl;
-        chunk->opaquePass = false;
-        chunk->loadVBOdata();
-    }
-    m_chunksThatHaveVBODataTra.clear();
-    m_chunksThatHaveVBODataTraLock.unlock();
+    m_chunksThatHaveVBOData.clear();
+    m_chunksThatHaveVBODataLock.unlock();
 }
 
 
@@ -382,7 +357,7 @@ void Terrain::drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, Sh
             if(hasChunkAt(x, z))
             {
                 const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                if(chunk->isTraVBOready && chunk->isOpqVBOready)
+                if(chunk->isVBOready)
                 {
                     chunk->opaquePass = opaque;
                     shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
