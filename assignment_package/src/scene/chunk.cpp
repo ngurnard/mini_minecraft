@@ -234,7 +234,7 @@ void Chunk::generateVBOdata()
                                     }
                                     else
                                     {
-                                        std::cout << "IN special Case" << std::endl;
+//                                        std::cout << "IN special Case" << std::endl;
                                         // Force dominant transparent blockface at face where two different transparent types
                                         // meet to use an alpha value of 1 so it gets drawn through the weaker transparent block
                                         // Goal is to show Ice and Water well together!

@@ -64,6 +64,10 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     // Get the handles to the variables stored in our shaders
     // See shaderprogram.h for more information about these variables
 
+    setupMemberVars();
+}
+
+void ShaderProgram::setupMemberVars() {
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");

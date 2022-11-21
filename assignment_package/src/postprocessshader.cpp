@@ -1,5 +1,6 @@
 #include "postprocessshader.h"
 #include <QDateTime>
+#include <iostream>
 
 PostProcessShader::PostProcessShader(OpenGLContext *context)
     : ShaderProgram(context),

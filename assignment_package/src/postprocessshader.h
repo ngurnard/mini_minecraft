@@ -15,9 +15,9 @@ public:
     virtual ~PostProcessShader();
 
     // Sets up shader-specific handles
-    void setupMemberVars();
+    void setupMemberVars() override;
     // Draw the given object to our screen using this ShaderProgram's shaders
-    void draw(Drawable &d, int textureSlot) ;
+    void draw(Drawable &d, int textureSlot);
 
     void setDimensions(glm::ivec2 dims);
 };
