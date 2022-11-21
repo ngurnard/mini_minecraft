@@ -1,8 +1,25 @@
 # Mini-Minecraft Project
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
+### Milestone 2:
+**1. Procedural generation of caves using 3D noise _(Nick)_**
+
+**2. Texturing and texture animation in OpenGL _(Evan)_**
+
+**3. Multithreading of terrain loading _(Benedict)_**
+- Used C++ standard library for multithreading functions (`std::thread`) and used standard library mutexes (`std::mutex`) for locking.
+- The multithreading parts were designed based on the code structure given in the class. Every tick we call the `multithreadedWork` function that checks if the terrain should expand.
+- We make sure we try expanding only once every tick using an expansion timer, that prevents frequent expansion checks which might lead to weird results.
+- For every terrain generation zone in this radius that does not yet exist in Terrain's `m_generatedTerrain`, we spawn a thread that calls `BlockTypeWorker` start routine to fill that zone's Chunks with procedural height field BlockType data. 
+- For every terrain generation zone in this radius that does exist in `m_generatedTerrain`, we check each Chunk it contains and see if it already has VBO data. If it does not, then we spawn another thread with `VBOWorker` start routine to compute the interleaved buffer and index buffer data for that Chunk. 
+- However, VBOWorkers will not pass data to the GPU as threads that are not the main thread do not have an OpenGL context from which to communicate with the GPU. 
+- Every tick after attempting to spawn additional threads, we check on the state of these data collections in `checkThreadResults` by sending filled Chunks to new VBOWorkers, and sending completed VBO data to the GPU.
+- We use mutexes for any access on `m_chunksThatHaveBlockData` and `m_chunksThatHaveVBOData` to prevent shared memory overwrites at the same instance.
+- Also, modified `chunk.cpp`'s `getBlockAt` method to prevent sub-terranean and wall rendering by having access to extra information of what block type the neighboring chunks blocks would have (using the deterministic noise function).
+- Challenges: Resolving various segfaults to make the multithreaded portion working was time-consuming (used unique pointer based approach initially with a lot of `std::move`s and later switched to raw pointer based approach). Not detaching the threads properly gave segfaults that were later resolved. Another major bottleneck was to remove sub-terranean and wall rendering that disrupted cave rendering to work properly. Fixed that after resolving a few weird bugs. 
+
 ### Milestone 1:
 
-1. Procedural generation of terrain using noise functions (Evan)
+**1. Procedural generation of terrain using noise functions _(Evan)_**
 - Created several fragment shaders in ShaderToy.pro to design and visualize various noise functions to be used for terrain
 - Wrote customFBM class as a template for the 3 FBM-based noise function I decided upon for mountains, grassland, and biomeMask
 - Made 3 post-process functions for each FBM function to further tailor the output to specific terrain and exponentiate/ smoothstep the mask
@@ -15,7 +32,7 @@
 - Added sand block option to surround water in the grassland
 - Challenges: Finding the proper look and distribution of terrain was exceptionally challenging, and I feel I could still improve the look considerably.
 
-2. Altering the provided Terrain system to efficiently store and render blocks (Benedict)
+**2. Altering the provided Terrain system to efficiently store and render blocks _(Benedict)_**
 - Chunk was made inheritable from Drawable
 - Wrote the createVBOdata() function according to the pseudocode given in the class lecture
 - Setup VertexData (that stores position and uv coord) and BlockFace (that stores direction, offset and vertex) structures based on the classroom suggestions
@@ -27,7 +44,7 @@
 - As terrain expands, even though our chunks are designed to create faces only between opaque and empty blocks, it still draws faces between opaque objects as chunks are drawn sequentially. To prevent this, through updateNeigbor function a new Chunk can tell preexisting neighbors to recompute their VBO data.
 - Added UNCERTAIN blocks to prevent subterranean blocks getting rendered below the terrain surface.
 
-3. Constructing a controllable Player class with simple physics (Nick)
+**3. Constructing a controllable Player class with simple physics _(Nick)_**
 - Bound key presses to actions to move the player (jumps, fly, move in a certain direction).
 - Recreated beleivable physics such that the player accelerated at the same acceleration as Usain bolt up to the maximum speed of Usain Bolt. Also made it such that the player fell at the terminal velocity similar to that of a real human. These quantaties were scaled to better reflect this mini block world.
 - Checked which blocks the player on top of to determine whether to jump. Also began implementing next milestone where player moves at different accelerations based on which block they are in (water and lava are slower).

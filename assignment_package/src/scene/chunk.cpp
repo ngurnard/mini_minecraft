@@ -42,7 +42,7 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(y < 0)
     {
-        return UNCERTAIN;
+        return EMPTY;
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {

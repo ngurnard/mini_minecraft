@@ -178,6 +178,12 @@ static std::unordered_map<BlockType, std::unordered_map<Direction, glm::vec2, En
                                                               {YNEG, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
                                                               {ZPOS, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)},
                                                               {ZNEG, glm::vec2(2.f BLK_UVX, 11.f  BLK_UVY)}}},
+    {BEDROCK, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {XNEG, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {YPOS, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {YNEG, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {ZPOS, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
+                                                              {ZNEG, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)}}},
 };
 
 // One Chunk is a 16 x 256 x 16 section of the world,
