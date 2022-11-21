@@ -314,7 +314,6 @@ void Chunk::recreateVBOdata()
     destroyVBOdata();
     generateVBOdata();
     loadVBOdata();
-
 }
 
 void Chunk::createVBOdata()

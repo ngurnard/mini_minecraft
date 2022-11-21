@@ -180,7 +180,7 @@ void MyGL::paintGL() {
     m_frameBuffer.bindFrameBuffer();
     m_postLava.setTime(m_time);
     m_postWater.setTime(m_time);
-//    performPostprocessRenderPass();
+    //performPostprocessRenderPass();
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
