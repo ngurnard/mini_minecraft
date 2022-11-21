@@ -275,8 +275,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
     glm::ivec2 prevZone = glm::ivec2(64.f * glm::floor(playerPosPrev.x / 64.f), 64.f * glm::floor(playerPosPrev.z / 64.f));
     // Determine which terrain zones border our current and previous position
     // This will include out ungenerated terrain zones
-    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 5);
-    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 5);
+    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 2);
+    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 2);
 
     destroyOutOfRangeTerrainZoneVBOs(terrainZonesBorderingCurrPos, terrainZonesBorderingPrevPos);
 

@@ -18,14 +18,10 @@ void PostProcessShader::setupMemberVars()
 
     unifTime = context->glGetUniformLocation(prog, "u_Time");
     unifSampler2D = context->glGetUniformLocation(prog, "u_RenderedTexture");
-//    unifColor      = context->glGetUniformLocation(prog, "u_Color");
-//    unifSampler    = context->glGetUniformLocation(prog, "textureSampler");
-//    unifTime       = context->glGetUniformLocation(prog, "u_Time");
-
     unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
 }
 
-void PostProcessShader::draw(Drawable& d, int textureSlot = 0)
+void PostProcessShader::draw(Drawable& d, int textureSlot)
 {
     useMe();
 

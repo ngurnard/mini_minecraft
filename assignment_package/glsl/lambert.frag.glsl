@@ -1,5 +1,5 @@
-//#version 150
 #version 330
+//#version 150
 // ^ Change this to version 130 if you have compatibility issues
 
 // This is a fragment shader. If you've opened this file first, please

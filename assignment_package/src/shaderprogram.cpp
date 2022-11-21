@@ -18,6 +18,7 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::create(const char *vertfile, const char *fragfile)
 {
+
     // Allocate space on our GPU for a vertex shader and a fragment shader and a shader program to manage the two
     vertShader = context->glCreateShader(GL_VERTEX_SHADER);
     fragShader = context->glCreateShader(GL_FRAGMENT_SHADER);
@@ -63,7 +64,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
 
     // Get the handles to the variables stored in our shaders
     // See shaderprogram.h for more information about these variables
-
+//    std::cout << "invoking create from superclass" << std::endl;
     setupMemberVars();
 }
 
@@ -155,5 +156,6 @@ void ShaderProgram::printLinkInfoLog(int prog)
         context->glGetProgramInfoLog(prog, infoLogLen, &charsWritten, infoLog);
         qDebug() << "LinkInfoLog:" << "\n" << infoLog << "\n";
         delete [] infoLog;
+//        throw "Linker error in shaderprogram.cpp";
     }
 }

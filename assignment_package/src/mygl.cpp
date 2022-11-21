@@ -12,11 +12,11 @@
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
-      m_progLambert(this), m_progFlat(this), m_progInstanced(this), //m_frameBuffer(this, width(), height(), devicePixelRatio()),
-      //m_noOp(this), m_postLava(this), m_postWater(this),
+      m_progLambert(this), m_progFlat(this), m_progInstanced(this), m_frameBuffer(this, width(), height(), 1.0f),
+      m_noOp(this), m_postLava(this), m_postWater(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
       m_time(0.f),
-      prevTime(QDateTime::currentMSecsSinceEpoch()), //m_geomQuad(this),
+      prevTime(QDateTime::currentMSecsSinceEpoch()), m_geomQuad(this),
       mp_textureAtlas(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -32,9 +32,9 @@ MyGL::MyGL(QWidget *parent)
 MyGL::~MyGL() {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
-    // m_geomQuad.destroy();
+     m_geomQuad.destroyVBOdata();
     // Deallocate all GPU-side data
-//    m_frameBuffer.destroy();
+    m_frameBuffer.destroy();
 }
 
 
@@ -86,15 +86,14 @@ void MyGL::initializeGL()
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
 
-//    // Create and set up the frame buffer ///
-//    m_frameBuffer.create();
+    // Create and set up the frame buffer ///
+    m_frameBuffer.create();
 
-//    // Create and set up the post process shaders ///
-//    m_geomQuad.create(); // create the quadrangle over the whole screen
-//    m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
-//    m_noOp.setupMemberVars(); // need to setup member vars because not called in ShaderProgram unlike hw04 in ShaderProgram w/ virtual function
-//    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
-//    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
+    // Create and set up the post process shaders ///
+    m_geomQuad.create(); // create the quadrangle over the whole screen
+    m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
+    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
+    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -113,13 +112,15 @@ void MyGL::resizeGL(int w, int h) {
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
 
-//    // Resize the frame buffer
-//    m_frameBuffer.resize(w, h, devicePixelRatio());
+    // Resize the frame buffer
+    m_frameBuffer.resize(w, h, 1.f);
+    m_frameBuffer.destroy();
+    m_frameBuffer.create();
 
-//    // Resize the postprocess shaders
-//    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio())); ///
-//    m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
-//    m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    // Resize the postprocess shaders
+    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio())); ///
+    m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
 
     printGLErrorLog();
 }
@@ -172,19 +173,17 @@ void MyGL::paintGL() {
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
 
-//    // Post process render pass ///
-//    m_frameBuffer.bindFrameBuffer();
-//    m_postLava.setTime(m_time);
-//    m_postWater.setTime(m_time);
-
+    m_frameBuffer.bindFrameBuffer();
+    glViewport(0,0,this->width(), this->height());
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     mp_textureAtlas->bind(0); //must bind with every call to draw
     renderTerrain();
 
     // Post process render pass ///
-//    m_frameBuffer.bindFrameBuffer();
-//    m_postLava.setTime(m_time);
-//    m_postWater.setTime(m_time);
-    //performPostprocessRenderPass();
+    m_postLava.setTime(m_time);
+    m_postWater.setTime(m_time);
+    performPostprocessRenderPass();
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
@@ -222,7 +221,7 @@ void MyGL::createTexAtlas()
     mp_textureAtlas->load(0);
 }
 
-/* void MyGL::performPostprocessRenderPass()
+void MyGL::performPostprocessRenderPass()
 {
     // Render the frame buffer as a texture on a screen-size quad
 
@@ -236,19 +235,20 @@ void MyGL::createTexAtlas()
 
     // Need logic of which postprocessor to draw since we no longer select a postprocess shader like hw04 ///
     m_frameBuffer.bindToTextureSlot(2);
-    m_postLava.draw(m_geomQuad, 2);
-////    BlockType viewedBlock = this->m_player.headSpaceSight();
+//    m_postLava.draw(m_geomQuad, 2);
+
+    BlockType viewedBlock = this->m_player.headSpaceSight();
 //    BlockType viewedBlock = LAVA;
-//    if (viewedBlock == LAVA) {
-////        std::cout << " In lava postprocessrenderpass" << std::endl;
-//        m_postLava.draw(m_geomQuad, 2);
-//    } else if (viewedBlock == WATER) {
-//        m_postWater.draw(m_geomQuad, 2);
-//    } else {
-//        m_noOp.draw(m_geomQuad, 2); // no post process
-//    }
+    if (viewedBlock == LAVA) {
+//        std::cout << " In lava postprocessrenderpass" << std::endl;
+        m_postLava.draw(m_geomQuad, 2);
+    } else if (viewedBlock == WATER) {
+        m_postWater.draw(m_geomQuad, 2);
+    } else {
+        m_noOp.draw(m_geomQuad, 2); // no post process
+    }
 }
-*/
+
 
 
 void MyGL::keyPressEvent(QKeyEvent *e) {

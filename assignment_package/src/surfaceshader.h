@@ -6,9 +6,9 @@
 class SurfaceShader: public ShaderProgram
 {
 public:
-GLuint vertShader; // A handle for the vertex shader stored in this shader program
-GLuint fragShader; // A handle for the fragment shader stored in this shader program
-GLuint prog;       // A handle for the linked shader program stored in this class
+//GLuint vertShader; // A handle for the vertex shader stored in this shader program
+//GLuint fragShader; // A handle for the fragment shader stored in this shader program
+//GLuint prog;       // A handle for the linked shader program stored in this class
 
 int attrPos; // A handle for the "in" vec4 representing vertex position in the vertex shader
 int attrNor; // A handle for the "in" vec4 representing vertex normal in the vertex shader

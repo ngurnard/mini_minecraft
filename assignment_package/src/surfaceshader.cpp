@@ -18,8 +18,9 @@ SurfaceShader::~SurfaceShader()
 {}
 
 void SurfaceShader::setupMemberVars() {
-
+//    std::cout << "BEFORE: " << attrPos << std::endl;
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
+//    std::cout << "AFTER: " << attrPos << std::endl;
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
     attrUV = context->glGetAttribLocation(prog, "vs_UV");
@@ -34,10 +35,6 @@ void SurfaceShader::setupMemberVars() {
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
     unifSampler2D    = context->glGetUniformLocation(prog, "textureSampler");
     unifTime       = context->glGetUniformLocation(prog, "u_Time");
-
-    if (attrPos == -1) {
-     std::cout << "attrPos Not found/working" << std::endl;
-    }
 }
 
 void SurfaceShader::setModelMatrix(const glm::mat4 &model)

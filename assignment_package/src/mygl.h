@@ -25,10 +25,10 @@ private:
     SurfaceShader m_progLambert;// A shader program that uses lambertian reflection
     SurfaceShader m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     SurfaceShader m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
-//    FrameBuffer m_frameBuffer;
-//    PostProcessShader m_noOp;
-//    PostProcessShader m_postLava;
-//    PostProcessShader m_postWater;
+    FrameBuffer m_frameBuffer;
+    PostProcessShader m_noOp;
+    PostProcessShader m_postLava;
+    PostProcessShader m_postWater;
 
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
@@ -55,7 +55,7 @@ private:
 
     // The screen-space quadrangle used to draw
     // the scene with the post-process shaders.
-//    Quad m_geomQuad;
+    Quad m_geomQuad;
 
 public:
     uPtr<Texture> mp_textureAtlas;
