@@ -19,9 +19,6 @@ void Player::processInputs(InputBundle &inputs) {
     // TODO: Update the Player's velocity and acceleration based on the
     // state of the inputs.
 
-    // DELETE ME LATER
-    BlockType TEMP = headSpaceSight();
-
     this->m_acceleration = glm::vec3(0, 0, 0); // ensure we dont accidentally keep accelerating
     float tune_max_accel = 9.5; // this is acceleration of Usain Bolt
     float accel_scaler;

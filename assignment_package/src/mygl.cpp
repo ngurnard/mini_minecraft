@@ -34,7 +34,7 @@ MyGL::~MyGL() {
     glDeleteVertexArrays(1, &vao);
     // m_geomQuad.destroy();
     // Deallocate all GPU-side data
-    m_frameBuffer.destroy();
+//    m_frameBuffer.destroy();
 }
 
 
@@ -87,15 +87,14 @@ void MyGL::initializeGL()
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
 
     // Create and set up the frame buffer ///
-//    m_frameBuffer = FrameBuffer(this, width(), height(), devicePixelRatio());
     m_frameBuffer.create();
 
-    // Create and set up the post process shaders
+    // Create and set up the post process shaders ///
     m_geomQuad.create(); // create the quadrangle over the whole screen
     m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
     m_noOp.setupMemberVars(); // need to setup member vars because not called in ShaderProgram unlike hw04 in ShaderProgram w/ virtual function
-    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
-    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
+    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
+    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -118,7 +117,7 @@ void MyGL::resizeGL(int w, int h) {
     m_frameBuffer.resize(w, h, devicePixelRatio());
 
     // Resize the postprocess shaders
-    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio())); ///
     m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
 
@@ -177,10 +176,11 @@ void MyGL::paintGL() {
     m_frameBuffer.bindFrameBuffer();
     m_postLava.setTime(m_time);
     m_postWater.setTime(m_time);
-    performPostprocessRenderPass();
 
     mp_textureAtlas->bind(0); //must bind with every call to draw
     renderTerrain();
+
+    performPostprocessRenderPass(); // render after terrain render
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
@@ -232,16 +232,17 @@ void MyGL::performPostprocessRenderPass()
 
     // Need logic of which postprocessor to draw since we no longer select a postprocess shader like hw04 ///
     m_frameBuffer.bindToTextureSlot(2);
-//    BlockType viewedBlock = this->m_player.headSpaceSight();
-    BlockType viewedBlock = LAVA;
-    if (viewedBlock == LAVA) {
-//        std::cout << " In lava postprocessrenderpass" << std::endl;
-        m_postLava.draw(m_geomQuad, 2);
-    } else if (viewedBlock == WATER) {
-        m_postWater.draw(m_geomQuad, 2);
-    } else {
-        m_noOp.draw(m_geomQuad, 2);
-    }
+    m_postLava.draw(m_geomQuad, 2);
+////    BlockType viewedBlock = this->m_player.headSpaceSight();
+//    BlockType viewedBlock = LAVA;
+//    if (viewedBlock == LAVA) {
+////        std::cout << " In lava postprocessrenderpass" << std::endl;
+//        m_postLava.draw(m_geomQuad, 2);
+//    } else if (viewedBlock == WATER) {
+//        m_postWater.draw(m_geomQuad, 2);
+//    } else {
+//        m_noOp.draw(m_geomQuad, 2); // no post process
+//    }
 }
 
 
