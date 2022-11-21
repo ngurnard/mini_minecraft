@@ -82,7 +82,7 @@ void MyGL::initializeGL()
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
 
     // Create and set up the frame buffer ///
-    m_frameBuffer = FrameBuffer(this, width(), height(), devicePixelRatio());
+//    m_frameBuffer = FrameBuffer(this, width(), height(), devicePixelRatio());
     m_frameBuffer.create();
 
     // Create and set up the post process shaders
@@ -166,14 +166,14 @@ void MyGL::paintGL() {
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
 
-    mp_textureAtlas->bind(0); //must bind with every call to draw
-    renderTerrain();
-
     // Post process render pass ///
     m_frameBuffer.bindFrameBuffer();
     m_postLava.setTime(m_time);
     m_postWater.setTime(m_time);
-//    performPostprocessRenderPass();
+    performPostprocessRenderPass();
+
+    mp_textureAtlas->bind(0); //must bind with every call to draw
+    renderTerrain();
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
@@ -222,16 +222,16 @@ void MyGL::performPostprocessRenderPass()
     // Texture already bound (thanks Evan I hope you find this :) - Nick)
 
     // Need logic of which postprocessor to draw since we no longer select a postprocess shader like hw04 ///
-    m_frameBuffer.bindToTextureSlot(3);
+    m_frameBuffer.bindToTextureSlot(2);
 //    BlockType viewedBlock = this->m_player.headSpaceSight();
     BlockType viewedBlock = LAVA;
     if (viewedBlock == LAVA) {
 //        std::cout << " In lava postprocessrenderpass" << std::endl;
-        m_postLava.draw(m_geomQuad, 3);
+        m_postLava.draw(m_geomQuad, 2);
     } else if (viewedBlock == WATER) {
-        m_postWater.draw(m_geomQuad, 3);
+        m_postWater.draw(m_geomQuad, 2);
     } else {
-        m_noOp.draw(m_geomQuad, 3);
+        m_noOp.draw(m_geomQuad, 2);
     }
 }
 
