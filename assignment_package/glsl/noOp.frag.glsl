@@ -14,5 +14,5 @@ uniform sampler2D u_RenderedTexture;
 
 void main()
 {
-    out_Col = vec4(texture(u_RenderedTexture, fs_UV).rgb,1);
+    out_Col = vec4(texture(u_RenderedTexture, fs_UV).rgb, 1);
 }
