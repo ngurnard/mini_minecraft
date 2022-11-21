@@ -24,6 +24,7 @@ in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec2 fs_UVs;
 in float fs_Anim;
+in float fs_T2O;
 
 in float fs_dimVal;
 
@@ -89,15 +90,15 @@ void main()
     //      diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
 
     // CRAZY texture shifting to test u_Time haha
-    // vec2 movingUVs = vec2(fs_UVs.x + 0.5*sin(0.01*u_Time), fs_UVs.y);
-    // vec2 movingUVs = vec2((fract(fs_UVs.x*16.f) + floor(16.f*(random1(vec3(floor(fs_UVs.x*16) + floor(0.05*u_Time))))))/16.f,
-    //                      (fract(fs_UVs.y*16.f) + floor(16.f*(random1b(vec3(floor(fs_UVs.y*16) + floor(0.05*u_Time))))))/16.f);
-    //vec4 diffuseColor = texture(textureSampler, movingUVs);
+//     vec2 movingUVs = vec2(fs_UVs.x + 0.5*sin(0.01*u_Time), fs_UVs.y);
+//     vec2 movingUVs = vec2((fract(fs_UVs.x*16.f) + floor(16.f*(random1(vec3(floor(fs_UVs.x*16) + floor(0.05*u_Time))))))/16.f,
+//                          (fract(fs_UVs.y*16.f) + floor(16.f*(random1b(vec3(floor(fs_UVs.y*16) + floor(0.05*u_Time))))))/16.f);
+//    vec4 diffuseColor = texture(textureSampler, movingUVs);
 
     // NEW actual textures
 
     vec4 diffuseColor = texture(textureSampler, fs_UVs);
-
+    bool apply_lambert = true;
     if (fs_Anim != 0) {
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
@@ -112,6 +113,8 @@ void main()
             vec4 coolerColor = diffuseColor - vec4(0.1, 0.1, 0, 0);
             diffuseColor = mix(warmerColor, coolerColor, 0.5 + fs_dimVal * 0.5*sin(0.02*u_Time));
 
+            apply_lambert = false;
+
         } else if (water) {
             // blend between 3 different points in texture to create a wavy subtle change over time
             vec2 offsetUVs = vec2(fs_UVs.x - 0.5f/16.f, fs_UVs.y - 0.5f/16.f);
@@ -120,7 +123,7 @@ void main()
 
             altColor.x += fs_dimVal * pow(altColor.x+.15, 5);
             altColor.y += fs_dimVal * pow(altColor.y+.15, 5);
-            altColor.z += fs_dimVal * pow(altColor.z+.15, 5);
+            altColor.z += 0.5 * fs_dimVal * pow(altColor.z+.15, 5);
 
             diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.35*sin(0.05*u_Time));
             offsetUVs -= 0.25f/16.f;
@@ -141,6 +144,19 @@ void main()
     float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                         //to simulate ambient lighting. This ensures that faces that are not
                                                         //lit by our point light are not completely black.
+
+    vec3 col = diffuseColor.rgb;
     // Compute final shaded color
-    out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+    if (apply_lambert) {
+        col *= lightIntensity;
+    }
+
+    // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
+
+    if (fs_T2O != 0) {
+        out_Col = vec4(col, 1.f);
+    } else {
+        out_Col = vec4(col, diffuseColor.a);
+
+    }
 }

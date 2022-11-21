@@ -16,8 +16,8 @@ MyGL::MyGL(QWidget *parent)
       m_noOp(this), m_postLava(this), m_postWater(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
       m_time(0.f),
-      prevTime(QDateTime::currentMSecsSinceEpoch()), mp_textureAtlas(nullptr),
-      m_geomQuad(this)
+      prevTime(QDateTime::currentMSecsSinceEpoch()), m_geomQuad(this),
+      mp_textureAtlas(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -50,10 +50,15 @@ void MyGL::initializeGL()
     // Print out some information about the current OpenGL context
     debugContextVersion();
 
+    // Alpha Blending functionality
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
     // Set the color with which the screen is filled at the start of each render call.
     glClearColor(0.37f, 0.74f, 1.0f, 1);
 
@@ -87,10 +92,10 @@ void MyGL::initializeGL()
 
     // Create and set up the post process shaders
     m_geomQuad.create(); // create the quadrangle over the whole screen
-    m_noOp.create(":/glsl/post/passthrough.vert.glsl", ":/glsl/post/noOp.frag.glsl");
+    m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
     m_noOp.setupMemberVars(); // need to setup member vars because not called in ShaderProgram unlike hw04 in ShaderProgram w/ virtual function
-    m_postLava.create(":/glsl/post/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
-    m_postWater.create(":/glsl/post/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
+    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
+    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -131,11 +136,13 @@ void MyGL::tick() {
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     m_player.tick(dT, m_inputs); // tick the player
     // Uncomment this line to test terrain expansion
-    //    m_terrain.updateTerrain(m_player.mcr_position);
+//    m_terrain.updateTerrain(m_player.mcr_position);
+
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
     m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev, dT);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
+
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     prevTime = currTime; // update the previous time
 }
@@ -186,15 +193,17 @@ void MyGL::paintGL() {
     m_time++;
 }
 
-// TODO: Change this so it renders the nine zones of generated
-// terrain that surround the player (refer to Terrain::m_generatedTerrain
-// for more info)
+
 void MyGL::renderTerrain() {
 //    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
     int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
     int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
 
     int rend_dist = 256;
+
+    // Check if the terrain should expand. This both checks to see if player is near the border of
+    // existing terrain and checks the status of any BlockType workers that are generating Chunks.
+    m_terrain.allowTransparent(true); // whether to draw transparent blocks or not
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
 }
 
@@ -333,7 +342,7 @@ void MyGL::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::LeftButton) { // if the player clicks the left mouse button, remove a block
         BlockType removedBlock = this->m_player.removeBlock(this->m_terrain);
     } else if (e->button() == Qt::RightButton) { // if the player clicks the right mouse, place a block
-        BlockType blockToPlace = GRASS;
+        BlockType blockToPlace = LAVA;//GRASS;
         this->m_player.placeBlock(this->m_terrain, blockToPlace);
     }
 }

@@ -4,10 +4,14 @@
 #include "cave.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
+    : m_chunks(), m_permit_transparent_terrain(true), m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
 {}
 
 Terrain::~Terrain() {
+}
+
+void Terrain::allowTransparent(bool t) {
+    this->m_permit_transparent_terrain = t;
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -169,11 +173,12 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
 void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT)
 {
     m_tryExpansionTimer += dT;
-    if(m_tryExpansionTimer < 0.5f)
-        return;
+    if(m_tryExpansionTimer < 0.5f) {return;}
+
     tryExpansion(playerPos, playerPosPrev);
-    checkThreadResults();
+
     m_tryExpansionTimer = 0.f;
+    checkThreadResults();
 }
 
 std::unordered_set<int64_t> Terrain::terrainZonesBorderingZone(glm::ivec2 zone_position, int num_zones)
@@ -225,11 +230,21 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 
 void Terrain::VBOWorker(Chunk* chunk)
 {
+    // Generate Opaque VBO data
+    chunk->opaquePass = true;
     chunk->generateVBOdata();
-    m_chunksThatHaveVBODataLock.lock();
-    m_chunksThatHaveVBOData.insert(chunk);
-    m_chunksThatHaveVBODataLock.unlock();
 
+    m_chunksThatHaveVBODataOpqLock.lock();
+    m_chunksThatHaveVBODataOpq.insert(chunk);
+    m_chunksThatHaveVBODataOpqLock.unlock();
+
+    // Generate Transparent VBO data
+    chunk->opaquePass = false;
+    chunk->generateVBOdata();
+
+    m_chunksThatHaveVBODataTraLock.lock();
+    m_chunksThatHaveVBODataTra.insert(chunk);
+    m_chunksThatHaveVBODataTraLock.unlock();
 }
 
 void Terrain::blockTypeWorker(Chunk* chunk)
@@ -241,16 +256,8 @@ void Terrain::blockTypeWorker(Chunk* chunk)
     m_chunksThatHaveBlockDataLock.unlock();
 }
 
-
-void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
+void Terrain::destroyOutOfRangeTerrainZoneVBOs(std::unordered_set<int64_t>& terrainZonesBorderingCurrPos, std::unordered_set<int64_t>& terrainZonesBorderingPrevPos)
 {
-    // Find the player's position relative to their current terrain generation zone
-    glm::ivec2 currZone = glm::ivec2(64.f *glm::floor(playerPos.x / 64.f), 64.f * glm::floor(playerPos.z / 64.f));
-    glm::ivec2 prevZone = glm::ivec2(64.f * glm::floor(playerPosPrev.x / 64.f), 64.f * glm::floor(playerPosPrev.z / 64.f));
-    // Determine which terrain zones border our current and previous position
-    // This will include out ungenerated terrain zones
-    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 5);
-    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 5);
     // Check which terrain zones need to be destroyed by determining which terrain zones were previously in our radius
     // and are now not within radius
     for(auto id : terrainZonesBorderingPrevPos)
@@ -263,12 +270,27 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                 for(int z = coord.y; z < coord.y + 64; z += 16)
                 {
                     auto &chunk = getChunkAt(x, z);
-                    chunk->isVBOready = false;
+                    chunk->isOpqVBOready = false;
+                    chunk->isTraVBOready = false;
                     chunk->destroyVBOdata();
                 }
             }
         }
     }
+}
+
+void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
+{
+    // Find the player's position relative to their current terrain generation zone
+    glm::ivec2 currZone = glm::ivec2(64.f *glm::floor(playerPos.x / 64.f), 64.f * glm::floor(playerPos.z / 64.f));
+    glm::ivec2 prevZone = glm::ivec2(64.f * glm::floor(playerPosPrev.x / 64.f), 64.f * glm::floor(playerPosPrev.z / 64.f));
+    // Determine which terrain zones border our current and previous position
+    // This will include out ungenerated terrain zones
+    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 5);
+    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 5);
+
+    destroyOutOfRangeTerrainZoneVBOs(terrainZonesBorderingCurrPos, terrainZonesBorderingPrevPos);
+
     // Determine if any terrain zones around our current position need VBO data
     // Send these to VBOWorkers
     // Do not send zones to workers if they do not exist in our global map. Instead, we send these to BlockTypeWorker
@@ -307,7 +329,6 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                     t.detach();
                 }
             }
-
         }
     }
 }
@@ -315,6 +336,7 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
 void Terrain::checkThreadResults()
 {
     // Send chunks that have been processed by BlockTypeWorkers to VBOWorkers for VBO data
+
     m_chunksThatHaveBlockDataLock.lock();
     for(auto &chunk: m_chunksThatHaveBlockData)
     {
@@ -323,31 +345,61 @@ void Terrain::checkThreadResults()
     }
     m_chunksThatHaveBlockData.clear();
     m_chunksThatHaveBlockDataLock.unlock();
-    m_chunksThatHaveVBODataLock.lock();
-    for(auto &chunk: m_chunksThatHaveVBOData)
+
+
+    // load chunks with Opaque VBOs ready
+    m_chunksThatHaveVBODataOpqLock.lock();
+    for(auto &chunk: m_chunksThatHaveVBODataOpq)
     {
+        chunk->opaquePass = true;
         chunk->loadVBOdata();
     }
-    m_chunksThatHaveVBOData.clear();
-    m_chunksThatHaveVBODataLock.unlock();
+    m_chunksThatHaveVBODataOpq.clear();
+    m_chunksThatHaveVBODataOpqLock.unlock();
+
+
+    // load chunks with Transparent VBOs ready
+    m_chunksThatHaveVBODataTraLock.lock();
+    for(auto &chunk: m_chunksThatHaveVBODataTra)
+    {
+        // never reaches this point... not filling member set...
+        //std::cout << "loading Tra VBO" << std::endl;
+        chunk->opaquePass = false;
+        chunk->loadVBOdata();
+    }
+    m_chunksThatHaveVBODataTra.clear();
+    m_chunksThatHaveVBODataTraLock.unlock();
 }
+
 
 // TODO: When you make Chunk inherit from Drawable, change this code so
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
-void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
+
+void Terrain::drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram, bool opaque) {
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
             if(hasChunkAt(x, z))
             {
                 const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                if(chunk->isVBOready)
+                if(chunk->isTraVBOready && chunk->isOpqVBOready)
                 {
+                    chunk->opaquePass = opaque;
                     shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
                     shaderProgram->drawInterleaved(*chunk);
                 }
             }
         }
+    }
+}
+
+void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
+    // Opaque pass
+    drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shaderProgram, true);
+    if(m_permit_transparent_terrain)
+    {
+        // Transparent pass
+        drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shaderProgram, false);
     }
 }
 

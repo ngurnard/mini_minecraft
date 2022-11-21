@@ -2,11 +2,14 @@
 #include <glm_includes.h>
 
 Drawable::Drawable(OpenGLContext* context)
-    : m_count(-1), m_bufIdx(), m_bufPos(), m_bufNor(), m_bufCol(), m_bufInterleavedList(-1),
-      m_bufUV(),
-      m_idxGenerated(false), m_posGenerated(false), m_norGenerated(false), m_colGenerated(false),
-      m_interleavedListGenerated(false),
-      mp_context(context)
+    : m_countOpq(-1), m_countTra(-1), m_bufIdxOpq(), m_bufIdxTra(),
+      m_bufPos(), m_bufNor(), m_bufCol(), m_bufUV(),
+      m_bufInterleavedOpq(-1), m_bufInterleavedTra(-1),
+      m_idxOpqGenerated(false), m_idxTraGenerated(false),
+      m_posGenerated(false), m_norGenerated(false), m_colGenerated(false),
+      m_interleavedOpqGenerated(false), m_interleavedTraGenerated(false),
+      m_uvGenerated(false), mp_context(context),
+      opaquePass(true)
 {}
 
 Drawable::~Drawable()
@@ -15,14 +18,17 @@ Drawable::~Drawable()
 
 void Drawable::destroyVBOdata()
 {
-    mp_context->glDeleteBuffers(1, &m_bufIdx);
+    mp_context->glDeleteBuffers(1, &m_bufIdxOpq);
+    mp_context->glDeleteBuffers(1, &m_bufIdxTra);
     mp_context->glDeleteBuffers(1, &m_bufPos);
     mp_context->glDeleteBuffers(1, &m_bufNor);
     mp_context->glDeleteBuffers(1, &m_bufCol);
-    mp_context->glDeleteBuffers(1, &m_bufInterleavedList);
     mp_context->glDeleteBuffers(1, &m_bufUV);
-    m_idxGenerated = m_posGenerated = m_norGenerated = m_colGenerated = m_interleavedListGenerated = m_uvGenerated = false;
-    m_count = -1;
+    mp_context->glDeleteBuffers(1, &m_bufInterleavedOpq);
+    mp_context->glDeleteBuffers(1, &m_bufInterleavedTra);
+    m_idxOpqGenerated = m_idxTraGenerated = m_posGenerated = m_norGenerated =
+        m_colGenerated = m_uvGenerated = m_interleavedOpqGenerated = m_interleavedTraGenerated = false;
+    m_countOpq = m_countTra = -1;
 }
 
 GLenum Drawable::drawMode()
@@ -38,14 +44,23 @@ GLenum Drawable::drawMode()
 
 int Drawable::elemCount()
 {
-    return m_count;
+    if (opaquePass) {
+        return m_countOpq;
+    } else {
+        return m_countTra;
+    }
 }
 
 void Drawable::generateIdx()
 {
-    m_idxGenerated = true;
-    // Create a VBO on our GPU and store its handle in bufIdx
-    mp_context->glGenBuffers(1, &m_bufIdx);
+    // Create a VBO on our GPU and store its handle in bufIdxOpq or bufIdxTra
+    if (opaquePass) {
+        m_idxOpqGenerated = true;
+        mp_context->glGenBuffers(1, &m_bufIdxOpq);
+    } else {
+        m_idxTraGenerated = true;
+        mp_context->glGenBuffers(1, &m_bufIdxTra);
+    }
 }
 
 void Drawable::generatePos()
@@ -71,9 +86,15 @@ void Drawable::generateCol()
 
 void Drawable::generateInterleavedList()
 {
-    m_interleavedListGenerated = true;
-    // Create a VBO on our GPU and store its handle in bufInterleavedList
-    mp_context->glGenBuffers(1, &m_bufInterleavedList);
+    // Create a VBO on our GPU and store its handle in bufInterleaved lists
+    // depending on whethere we're building opaque or transparent VBO
+    if (opaquePass) {
+        m_interleavedOpqGenerated = true;
+        mp_context->glGenBuffers(1, &m_bufInterleavedOpq);
+    } else {
+        m_interleavedTraGenerated = true;
+        mp_context->glGenBuffers(1, &m_bufInterleavedTra);
+    }
 }
 
 void Drawable::generateUV()
@@ -85,10 +106,18 @@ void Drawable::generateUV()
 
 bool Drawable::bindIdx()
 {
-    if(m_idxGenerated) {
-        mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
+    if (opaquePass) {
+        if(m_idxOpqGenerated) {
+            mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdxOpq);
+        }
+        return m_idxOpqGenerated;
+
+    } else {
+        if(m_idxTraGenerated) {
+            mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdxTra);
+        }
+        return m_idxTraGenerated;
     }
-    return m_idxGenerated;
 }
 
 bool Drawable::bindPos()
@@ -117,10 +146,18 @@ bool Drawable::bindCol()
 
 bool Drawable::bindInterleavedList()
 {
-    if(m_interleavedListGenerated){
-        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedList);
+    if (opaquePass) {
+        if(m_interleavedOpqGenerated){
+            mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedOpq);
+        }
+        return m_interleavedOpqGenerated;
+
+    } else {
+        if(m_interleavedTraGenerated){
+            mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedTra);
+        }
+        return m_interleavedTraGenerated;
     }
-    return m_interleavedListGenerated;
 }
 
 bool Drawable::bindUV()

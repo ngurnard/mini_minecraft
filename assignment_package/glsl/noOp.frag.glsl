@@ -1,4 +1,5 @@
-#version 150
+//#version 150
+#version 330
 // noOp.vert.glsl:
 // A fragment shader used for post-processing that simply reads the
 // image produced in the first render pass by the surface shader
@@ -13,5 +14,5 @@ uniform sampler2D u_RenderedTexture;
 
 void main()
 {
-    out_Col = texture(u_RenderedTexture, fs_UV).rgb;
+    out_Col = vec4(texture(u_RenderedTexture, fs_UV).rgb,1);
 }

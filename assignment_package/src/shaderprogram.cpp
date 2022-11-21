@@ -10,7 +10,7 @@
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
-      attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1),
+      attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1), attrTra2Opq(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
       unifSampler(-1), unifTime(-1),
       context(context)
@@ -69,6 +69,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
     attrUV = context->glGetAttribLocation(prog, "vs_UV");
     attrAnim = context->glGetAttribLocation(prog, "vs_Anim");
+    attrTra2Opq = context->glGetAttribLocation(prog, "vs_T2O");
     if(attrCol == -1) attrCol = context->glGetAttribLocation(prog, "vs_ColInstanced");
     attrPosOffset = context->glGetAttribLocation(prog, "vs_OffsetInstanced");
 
@@ -240,9 +241,12 @@ void ShaderProgram::drawInterleaved(Drawable &d)
             context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 16 * sizeof(float), (void*)(12 * sizeof(float)));
         }
         if (attrAnim != -1) {
-            //std::cout << "ANIM SET" << std::endl;
             context->glEnableVertexAttribArray(attrAnim);
             context->glVertexAttribPointer(attrAnim, 1, GL_FLOAT, false, 16 * sizeof(float), (void*)(14 * sizeof(float)));
+        }
+        if (attrTra2Opq != -1) {
+            context->glEnableVertexAttribArray(attrTra2Opq);
+            context->glVertexAttribPointer(attrTra2Opq, 1, GL_FLOAT, false, 16 * sizeof(float), (void*)(15 * sizeof(float)));
         }
     }
     // Bind the index buffer and then draw shapes from it.
@@ -255,6 +259,7 @@ void ShaderProgram::drawInterleaved(Drawable &d)
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
     if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
     if (attrAnim != -1) context->glDisableVertexAttribArray(attrAnim);
+    if (attrTra2Opq != -1) context->glDisableVertexAttribArray(attrTra2Opq);
     context->printGLErrorLog();
 }
 

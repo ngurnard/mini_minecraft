@@ -20,7 +20,8 @@ public:
     int attrCol; // A handle for the "in" vec4 representing vertex color in the vertex shader
     int attrPosOffset; // A handle for a vec3 used only in the instanced rendering shader
     int attrUV;
-    int attrAnim;
+    int attrAnim; // handle to tell fragment shader this part of texture is animatable
+    int attrTra2Opq; // handle to tell fragment to draw faces between transparent blocks with alpha=1 opacity instead
 
     int unifModel; // A handle for the "uniform" mat4 representing model matrix in the vertex shader
     int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader

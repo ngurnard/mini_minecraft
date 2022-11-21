@@ -7,19 +7,33 @@
 class Drawable
 {
 protected:
-    int m_count;     // The number of indices stored in bufIdx.
-    GLuint m_bufIdx; // A Vertex Buffer Object that we will use to store triangle indices (GLuints)
-    GLuint m_bufPos; // A Vertex Buffer Object that we will use to store mesh vertices (vec4s)
-    GLuint m_bufNor; // A Vertex Buffer Object that we will use to store mesh normals (vec4s)
-    GLuint m_bufCol; // Can be used to pass per-vertex color information to the shader, but is currently unused.
-                   // Instead, we use a uniform vec4 in the shader to set an overall color for the geometry
-    GLuint m_bufInterleavedList;
-    GLuint m_bufUV; // A VBO that we will use to store quadrangle textures for postprocess shaders
-    bool m_idxGenerated; // Set to TRUE by generateIdx(), returned by bindIdx().
+    int m_countOpq;            // The number of indices stored in bufIdx.
+    int m_countTra;
+    GLuint m_bufIdxOpq;        // A Vertex Buffer Object that we will use to store triangle indices (GLuints)
+    GLuint m_bufIdxTra;     // A Vertex Buffer Object that we will use to store triangle indices (GLuints)
+
+    GLuint m_bufPos;        // A Vertex Buffer Object that we will use to store mesh vertices (vec4s)
+    GLuint m_bufNor;        // A Vertex Buffer Object that we will use to store mesh normals (vec4s)
+    GLuint m_bufCol;        // Can be used to pass per-vertex color information to the shader, but is currently unused.
+                            // Instead, we use a uniform vec4 in the shader to set an overall color for the geometry
+    GLuint m_bufUV;         // A VBO that we will use to store quadrangle textures for postprocess shaders
+
+    GLuint m_bufInterleavedOpq;
+    GLuint m_bufInterleavedTra;
+
+
+
+    bool m_idxOpqGenerated; // Set to TRUE by generateIdx(), returned by bindIdx().
+    bool m_idxTraGenerated; // Set to TRUE by generateIdx(), returned by bindIdx().
+
+
     bool m_posGenerated;
     bool m_norGenerated;
     bool m_colGenerated;
-    bool m_interleavedListGenerated;
+
+    bool m_interleavedOpqGenerated;
+    bool m_interleavedTraGenerated;
+
     bool m_uvGenerated;
 
     OpenGLContext* mp_context; // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,
@@ -28,6 +42,8 @@ protected:
 
 
 public:
+    bool opaquePass;
+
     Drawable(OpenGLContext* mp_context);
     virtual ~Drawable();
 
