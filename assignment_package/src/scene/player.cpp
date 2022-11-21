@@ -475,21 +475,10 @@ BlockType Player::removeBlock(Terrain &terrain) {
             block = EMPTY; // reset the block to EMPTY so the player can't hold bedrock
         }
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
-        chunk->destroyVBOdata();
-        chunk->opaquePass = true;
-        chunk->generateVBOdata();
-        chunk->loadVBOdata();
-        chunk->opaquePass = false;
-        chunk->generateVBOdata();
-        chunk->loadVBOdata();
+        chunk->recreateVBOdata();
+
         for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
-            neighbor.second->destroyVBOdata();
-            neighbor.second->opaquePass = true;
-            neighbor.second->generateVBOdata();
-            neighbor.second->loadVBOdata();
-            neighbor.second->opaquePass = false;
-            neighbor.second->generateVBOdata();
-            neighbor.second->loadVBOdata();
+            neighbor.second->recreateVBOdata();
         }
         return block; // return the block type that was hit
     }
@@ -514,21 +503,10 @@ void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
             }
             // TODO: consider passing chunk VBO regeneration to a VBO worker thread
             const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
-            chunk->destroyVBOdata();
-            chunk->opaquePass = true;
-            chunk->generateVBOdata();
-            chunk->loadVBOdata();
-            chunk->opaquePass = false;
-            chunk->generateVBOdata();
-            chunk->loadVBOdata();
+            chunk->recreateVBOdata();
+
             for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
-                neighbor.second->destroyVBOdata();
-                neighbor.second->opaquePass = true;
-                neighbor.second->generateVBOdata();
-                neighbor.second->loadVBOdata();
-                neighbor.second->opaquePass = false;
-                neighbor.second->generateVBOdata();
-                neighbor.second->loadVBOdata();
+                neighbor.second->recreateVBOdata();
             }
 //      }
     }

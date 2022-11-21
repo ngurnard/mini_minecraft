@@ -5,7 +5,7 @@
 Chunk::Chunk(OpenGLContext *context, int x, int z)
     : Drawable(context), m_xCorner(x), m_zCorner(z),
       m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}},
-      isOpqVBOready(false), isTraVBOready(false)
+      isVBOready(false)
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
@@ -125,11 +125,9 @@ GLenum Chunk::drawMode() {
 
 void Chunk::generateVBOdata()
 {
-    //TODO: add difference between opaque and transparent block workflow
+    isVBOready = false;
+    // OPAQUE PASS
 
-    if (opaquePass)
-    {
-        isOpqVBOready = false;
         indicesOpq.clear();
         interleavedOpq.clear();
         int running_index = 0;
@@ -175,13 +173,11 @@ void Chunk::generateVBOdata()
                 }
             }
         }
-    }
-    else // Populating transparent VBO
-    {
-        isTraVBOready = false;
+
+    // TRANSPARENT PASS
         indicesTra.clear();
         interleavedTra.clear();
-        int running_index = 0;
+        running_index = 0;
         for(int x = 0; x < 16; x++)
         {
             for(int y = 0; y < 256; y++)
@@ -238,6 +234,7 @@ void Chunk::generateVBOdata()
                                     }
                                     else
                                     {
+                                        std::cout << "IN special Case" << std::endl;
                                         // Force dominant transparent blockface at face where two different transparent types
                                         // meet to use an alpha value of 1 so it gets drawn through the weaker transparent block
                                         // Goal is to show Ice and Water well together!
@@ -275,12 +272,12 @@ void Chunk::generateVBOdata()
                 }
             }
         }
-    }
 }
 
 void Chunk::loadVBOdata()
 {
-    if (opaquePass) {
+    // OPAQUE PASS
+    opaquePass = true;
         m_countOpq = indicesOpq.size();
         // Create a VBO on our GPU and store its handle in bufIdx
         generateIdx();
@@ -293,8 +290,10 @@ void Chunk::loadVBOdata()
         generateInterleavedList();
         mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedOpq);
         mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedOpq.size() * sizeof(glm::vec4), interleavedOpq.data(), GL_STATIC_DRAW);
-        isOpqVBOready = true;
-    } else {
+        //isOpqVBOready = true;
+
+    // TRANSPARENT PASS
+    opaquePass = false;
         m_countTra = indicesTra.size();
         // Create a VBO on our GPU and store its handle in bufIdx
         generateIdx();
@@ -307,15 +306,22 @@ void Chunk::loadVBOdata()
         generateInterleavedList();
         mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufInterleavedTra);
         mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedTra.size() * sizeof(glm::vec4), interleavedTra.data(), GL_STATIC_DRAW);
-        isTraVBOready = true;
-    }
 
+        isVBOready = true;
+}
+void Chunk::recreateVBOdata()
+{
+    destroyVBOdata();
+    generateVBOdata();
+    loadVBOdata();
 
 }
+
 void Chunk::createVBOdata()
 {
     generateVBOdata();
     loadVBOdata();
 }
+
 Chunk::~Chunk()
 {}
