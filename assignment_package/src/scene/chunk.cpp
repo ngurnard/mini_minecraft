@@ -34,7 +34,7 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
 }
 
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion
-BlockType Chunk::getBlockAt(int x, int y, int z) {
+BlockType Chunk::getBlockAt(int x, int y, int z, bool isModified = false) {
     // Boundary constraints on y direction
     if(y > 255)
     {
@@ -42,11 +42,32 @@ BlockType Chunk::getBlockAt(int x, int y, int z) {
     }
     if(y < 0)
     {
-        return EMPTY;
+        return UNCERTAIN;
     }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {
-        return getWorldBlock(x, y, z);
+        if(!isModified)
+            return getWorldBlock(x, y, z);
+        else
+        {
+            if(x < 0 && m_neighbors[XNEG] != nullptr)
+            {
+                return m_neighbors[XNEG]->getBlockAt(15, y, z);
+            }
+            if(x > 15 && m_neighbors[XPOS] != nullptr)
+            {
+                return m_neighbors[XPOS]->getBlockAt(0, y, z);
+            }
+            if(z < 0 && m_neighbors[ZNEG] != nullptr)
+            {
+                return m_neighbors[ZNEG]->getBlockAt(x, y, 15);
+            }
+            if(z > 15 && m_neighbors[ZPOS] != nullptr)
+            {
+                return m_neighbors[ZPOS]->getBlockAt(x, y, 0);
+            }
+            return getWorldBlock(x, y, z);
+        }
     }
     return getBlockAt(static_cast<unsigned int>(x), static_cast<unsigned int>(y), static_cast<unsigned int>(z));
 }
@@ -123,7 +144,7 @@ GLenum Chunk::drawMode() {
     return GL_TRIANGLES;
 }
 
-void Chunk::generateVBOdata()
+void Chunk::generateVBOdata(bool isModified)
 {
     isVBOready = false;
     // OPAQUE PASS
@@ -144,7 +165,7 @@ void Chunk::generateVBOdata()
                         for(auto &block : adjacentFaces)
                         {
                             glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
-                            if(!isOpaque(getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z)))
+                            if(!isOpaque(getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z, isModified)))
                             {
                                 for(VertexData vertex : block.vertices)
                                 {
@@ -191,7 +212,7 @@ void Chunk::generateVBOdata()
                         for(auto &block : adjacentFaces)
                         {
                             glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
-                            BlockType curr_neighbor_type = getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z);
+                            BlockType curr_neighbor_type = getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z, isModified);
 
                             if(!isOpaque(curr_neighbor_type) && curr_neighbor_type != curr)
                             //if(curr_neighbor_type == EMPTY)
@@ -292,8 +313,8 @@ void Chunk::loadVBOdata()
         mp_context->glBufferData(GL_ARRAY_BUFFER, interleavedOpq.size() * sizeof(glm::vec4), interleavedOpq.data(), GL_STATIC_DRAW);
         //isOpqVBOready = true;
 
-    // TRANSPARENT PASS
-    opaquePass = false;
+        // TRANSPARENT PASS
+        opaquePass = false;
         m_countTra = indicesTra.size();
         // Create a VBO on our GPU and store its handle in bufIdx
         generateIdx();
@@ -312,7 +333,7 @@ void Chunk::loadVBOdata()
 void Chunk::recreateVBOdata()
 {
     destroyVBOdata();
-    generateVBOdata();
+    generateVBOdata(true);
     loadVBOdata();
 
 }

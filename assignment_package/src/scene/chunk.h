@@ -214,13 +214,13 @@ public:
     Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner);
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
-    BlockType getBlockAt(int x, int y, int z);
+    BlockType getBlockAt(int x, int y, int z, bool isModified);
     BlockType getWorldBlock(int x, int y, int z);
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
     void recreateVBOdata();
     void virtual createVBOdata() override;
-    void generateVBOdata();
+    void generateVBOdata(bool isModified = false);
     void loadVBOdata();
     GLenum drawMode() override;
     ~Chunk();
