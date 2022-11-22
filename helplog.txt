@@ -77,3 +77,9 @@ What is the acceleration of Usain Bolt? Of a human falling?
 Answer (Nov 6, 22:46)
 https://www.science.org/content/article/scienceshot-physics-usain-bolt
 https://www.gigacalculator.com/calculators/terminal-velocity-calculator.php
+
+Question 6
+Why is my postprocess shader only showing blue sky?
+Answer (Nov 21, 21:20)
+Talked to Adam, had to bind the frame buffer before rendering terrain.
+Also had to extensively debug with team (thank you team this one was tough)
