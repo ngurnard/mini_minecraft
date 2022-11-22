@@ -2,8 +2,17 @@
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 2:
 **1. Procedural generation of caves using 3D noise _(Nick)_**
-
+- 
 **2. Texturing and texture animation in OpenGL _(Evan)_**
+- Created Texture class as a way of loading images into OpenGL
+- Troubleshooted and developed pipeline for creating, loading, and binding the texture atlas to slot0
+- Implemented time variable and animatible flag such that lava and water textures could be animated
+- Created custom (intentionally subtle, so look closely!) animations for lava and water blocks (and decoupled lava shading from lambert to give it a uniform, unshaded look which resembles illumination/glow)
+- Enabled alpha blending in myGL and extensively updated drawable/chunk/terrain/multithreading code to split the vbo construction and drawing for the opaque and transparent block passes.
+- Created new shader variable to handle passing per-vertex random noise to the fragment shader for animatable blocks
+- Added new VBO element (utilizing the unused float in vec4 already being sent) as a flag to identify if a face of a transparent block is in contact with another transparent block of a different type. I then set that block's alpha channel to 1 if it has a higher display priority (e.g. ice should be more opaque and show through water), and have some complicated logic in generateVBOdata() for the transparent pass to instead push back that tranparent block onto the opaque VBO. This is a complicated method to get around the OpenGL arbitrary transparency rendering order for blocks where discarding a fragment is not possible. Essentially, looking at Ice underneath water will now make the ice opaque so that it is guarnteed to be rendered instead of invisible (I'm hoping to make an icy river biome in the future)
+- Challenges: understanding the requisite ordering of OpenGL functions to properly create and bind a texture was time consuming and led to no visible output and no errors with which to debug. Also, in order to properly split VBOs, I felt I needed to fully understand Benedict's multithreading code and this was challenging as an additional task. Otherwise, I'm enjoying the satisfying texturing results.
+- Also worked with Nick to re-factor ShaderProgram to be a generic parent class from which SurfaceShader and PostProcessShader could inherit for our two respective parts.
 
 **3. Multithreading of terrain loading _(Benedict)_**
 - Used C++ standard library for multithreading functions (`std::thread`) and used standard library mutexes (`std::mutex`) for locking.

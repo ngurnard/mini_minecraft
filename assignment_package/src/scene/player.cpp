@@ -438,8 +438,7 @@ BlockType Player::headSpaceSight()
     //    BlockType block = this->mcr_terrain.getBlockAt(this->mcr_camera.mcr_position);
     BlockType block;
     try {
-        block = this->mcr_terrain.getBlockAt(this->m_position.x, this->m_position.y + 1.5f, this->m_position.z);
-        //    BlockType block = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
+        block = this->mcr_terrain.getBlockAt(glm::floor(this->mcr_camera.mcr_position));
 
         this->camBlock = type_enum_to_string[block];
     } catch(const std::out_of_range &exception) {

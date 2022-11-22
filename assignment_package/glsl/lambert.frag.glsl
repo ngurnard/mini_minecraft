@@ -106,12 +106,12 @@ void main()
 
         if (lava) {
             // slowly gyrate texture and lighten and darken with random dimVal from vert shader
-            vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.05/16 * sin(0.01*u_Time),
-                                  fs_UVs.y - fs_Anim * 0.05/16 * sin(0.01*u_Time + 3.14159/2));
+            vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.065/16 * sin(0.01*u_Time),
+                                  fs_UVs.y - fs_Anim * 0.065/16 * sin(0.01*u_Time + 3.14159/2));
             diffuseColor = texture(textureSampler, movingUVs);
             vec4 warmerColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
             vec4 coolerColor = diffuseColor - vec4(0.1, 0.1, 0, 0);
-            diffuseColor = mix(warmerColor, coolerColor, 0.5 + fs_dimVal * 0.5*sin(0.02*u_Time));
+            diffuseColor = mix(warmerColor, coolerColor, 0.5 + fs_dimVal * 0.65*sin(0.02*u_Time));
 
             apply_lambert = false;
 
@@ -128,8 +128,8 @@ void main()
             diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.35*sin(0.05*u_Time));
             offsetUVs -= 0.25f/16.f;
             vec4 newColor = texture(textureSampler, offsetUVs);
-            diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time)) + fs_dimVal * vec4(0.015);
-
+            diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time)) + fs_dimVal * vec4(0.025);
+            diffuseColor.a = 0.7;
         }
     }
 
