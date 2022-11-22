@@ -1,8 +1,17 @@
 # Mini-Minecraft Project
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 2:
-**1. Procedural generation of caves using 3D noise _(Nick)_**
-- 
+**1. Procedural generation of caves using 3D noise and PostProcess Shaders _(Nick)_**
+- Created 2 noise function consisting of 3D perlin noise to create cave logic (exists in cave files). One mask is used as the cave generation, the other is a bigger version but rotated such that the first cave function can only exist within this bigger mask. This avoids the extra computation of FBM (although small, more optimal is always better). 
+- Refactored shaderprogram.cpp to be a base superclass with 2 subclasses: surfaceshader.h and postprocessshader.h. This way it is easier to keep track of member variables and the memeber functions are more relevant to the shader being implemented.
+- Created 2 postprocess shader files: 1 for lava and 1 for water when the players camera position is under water.
+- Made the postt process shaders change relative to time such that there is a complex noise effect that more realistically simulated travelling through a fluid. The colors were determined with a cosine palette and the noise function was constructed with Worley Noise and an FBM.
+- Made a frame buffer class that stores the output of the 3D terrain as a 2D image. This image is then passed through a "passthrough" vertex shader that does no operation to the terrain, but allows the postprocess shaders to manipulate the appearance of the terrain. If no changes are made, it passes through the "noOp" fragment shader which applies no changes to the scene.
+- Made it such that the player swims in liquids such as water and lava. The player's overall speed and acceleration are accurately decreased to simulate the drag which a liquid would apply. 
+- The player information log was updated to inform the player what block their camera is within and whether or not they are on the ground or in a liquid.
+- Challenges: The postprocess render pipeline was often returning nothing (blue sky) because the frame buffer was improperly being stored after the 3D scene was rendered (was not able to use the screen as input). Additionally, the openGL context was accidentally getting reset in the post process shader class that was causing many errors.
+
+
 **2. Texturing and texture animation in OpenGL _(Evan)_**
 - Created Texture class as a way of loading images into OpenGL
 - Troubleshooted and developed pipeline for creating, loading, and binding the texture atlas to slot0
@@ -67,3 +76,4 @@
 - When the player is in flight mode, translations occur parallel to each of the cardinal planes (xy, xz, yz) intentially such that easy world viewing is achievable. It was tested such that the player moved along its local axes, but that produces unfavorable gameplay.
 - The Entity class was edited to hold useful values to any future entities such as button presses and bools to determine whether on ground.  
 - Currently cannot jump on water or lava since that doesn't make physical sense.
+- Challenges: collision with corners
