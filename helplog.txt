@@ -3,11 +3,13 @@ Milestone 2:
 ------------------------
 Evan:
 ------------------------
-
+Nov 20-21: Nick and I worked together to understand why nothing was showing with post-process shaders.
+Additionally, refactored ShaderProgram and broke everything. Ultimately we fixed our issue together and
+then got advice from Adam on post-process rendering pipeline.
 ------------------------
 Nick:
 ------------------------
-
+see bottom
 ------------------------
 Benedict:
 ------------------------
