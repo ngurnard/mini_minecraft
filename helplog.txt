@@ -45,43 +45,13 @@ Rendering and Chunking to implement the code.
 Nick:
 ------------------------
 
-Question 1
-What is the most efficient way to swap a boolean variable?
-Answer (Nov 6, 18:07)
-https://stackoverflow.com/questions/610916/easiest-way-to-flip-a-boolean-value
-
-Question 2
-How can I change the value of an inherted memeber variable?
-Answer (Nov 6, 18:43)
-https://stackoverflow.com/questions/3984215/c-initialization-of-inherited-field
-
-For example:
-InputBundle(bool flightModeChange)
-    : InputBundle()
-{
-    flightMode = flightModeChange; // for the player class so it can change the false to true at initialization
-};
-
-
-Question 3
-QDateTime::currentMSecsSinceEpoch() explained
-Answer (Nov 6, 20:31)
-https://stackoverflow.com/questions/2781119/how-to-get-the-current-timestamp
-
-Question 4
-Why is normalize returning NaN?
-Answer (nov 6, 21:35)
-https://stackoverflow.com/questions/68820113/get-nan-error-for-the-result-of-the-normalization-function-in-c
-https://stackoverflow.com/questions/49661585/how-to-use-glmisnan
-
-Question 5
-What is the acceleration of Usain Bolt? Of a human falling?
-Answer (Nov 6, 22:46)
-https://www.science.org/content/article/scienceshot-physics-usain-bolt
-https://www.gigacalculator.com/calculators/terminal-velocity-calculator.php
+I followed some youtube tutrials on understanding some shader functions like smoothstep (I forget which one but there are tons online) (November 19, 17: 03)
 
 Question 6
 Why is my postprocess shader only showing blue sky?
 Answer (Nov 21, 21:20)
 Talked to Adam, had to bind the frame buffer before rendering terrain.
 Also had to extensively debug with team (thank you team this one was tough)
+
+Other than that I mostly used Documentation online for c++
+
