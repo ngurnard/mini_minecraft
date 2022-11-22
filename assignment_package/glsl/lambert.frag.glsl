@@ -1,5 +1,5 @@
-//#version 150
 #version 330
+//#version 150
 // ^ Change this to version 130 if you have compatibility issues
 
 // This is a fragment shader. If you've opened this file first, please
@@ -157,6 +157,5 @@ void main()
         out_Col = vec4(col, 1.f);
     } else {
         out_Col = vec4(col, diffuseColor.a);
-
     }
 }
