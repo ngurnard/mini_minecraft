@@ -100,6 +100,9 @@ void MyGL::initializeGL()
     glBindVertexArray(vao);
     //    m_terrain.CreateTestScene();
     //    m_terrain.CreateTestTerrainScene();
+
+    m_terrain.allowTransparent(true);   // whether to draw transparent blocks
+    m_terrain.allowCaves(false);        // whether to draw caves
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -206,7 +209,6 @@ void MyGL::renderTerrain() {
 
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
-    m_terrain.allowTransparent(true); // whether to draw transparent blocks or not
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
 }
 

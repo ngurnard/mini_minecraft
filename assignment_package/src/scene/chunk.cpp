@@ -2,8 +2,8 @@
 #include <iostream>
 #include "cave.h"
 
-Chunk::Chunk(OpenGLContext *context, int x, int z)
-    : Drawable(context), m_xCorner(x), m_zCorner(z),
+Chunk::Chunk(OpenGLContext *context, int x, int z, Noise* N)
+    : Drawable(context), m_xCorner(x), m_zCorner(z), noise(N),
       m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}},
       isVBOready(false)
 {
@@ -24,13 +24,21 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
 {
     x = m_xCorner + x;
     z = m_zCorner + z;
-    auto HB = noise.computeHeight(x, z);
+    auto HB = noise->computeHeight(x, z);
     int H = HB.first;
     int biome = HB.second;
-    float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
-    float caveNoiseVal = cavePerlinNoise3D(glm::vec3(x/25.f, y/16.f, z/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
-    float caveMask = cavePerlinNoise3D(glm::vec3(z/100.f, x/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-    return noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask);
+    float snow_noise = noise->m_mountainHeightMap.noise2D({x, z});
+    if (noise->m_permit_caves)
+    {
+        float caveNoiseVal = cavePerlinNoise3D(glm::vec3(x/25.f, y/16.f, z/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+        float caveMask = cavePerlinNoise3D(glm::vec3(z/100.f, x/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
+        return noise->getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask);
+    } else
+    {
+        return noise->getBlockType(y, H, biome, snow_noise);
+    }
+
+
 }
 
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion

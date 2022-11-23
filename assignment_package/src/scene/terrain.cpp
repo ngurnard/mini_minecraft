@@ -1,10 +1,12 @@
 #include "terrain.h"
+#include "chunk.h"
 #include <stdexcept>
 #include <iostream>
 #include "cave.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_permit_transparent_terrain(true), m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
+    : m_chunks(), m_permit_transparent_terrain(true), m_permit_caves(true),
+      m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
 {}
 
 Terrain::~Terrain() {
@@ -12,6 +14,11 @@ Terrain::~Terrain() {
 
 void Terrain::allowTransparent(bool t) {
     this->m_permit_transparent_terrain = t;
+}
+
+void Terrain::allowCaves(bool c) {
+    this->m_permit_caves = c;
+    this->noise.m_permit_caves = c;
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -136,39 +143,20 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
                 upper_bound = std::max(H, waterH);
             }
             for(int y = 0; y <= upper_bound; y++) {
-                // Carve out the caves
-                float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
-                float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-                chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask));
+                if (m_permit_caves)
+                {
+                    // Carve out the caves
+                    float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
+                    float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
+                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask));
+                } else
+                {
+                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
+                }
             }
         }
     }
 }
-
-// uncomment for no caves
-//void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
-//    int waterH = 138;       // Height of water level
-//    for(int i = x; i < x + 16; ++i) {
-//        for(int j = z; j < z + 16; ++j) {
-
-//            // Get height and biome as pair from terrain
-//            auto HB = noise.computeHeight(i, j);
-//            int H = HB.first;
-//            int biome = HB.second;
-
-//            glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
-//            int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
-//            float snow_noise = noise.m_mountainHeightMap.noise2D({x, z});
-//            int upper_bound = H;
-
-//            if(biome == 0)
-//                upper_bound = std::max(H, waterH);
-
-//            for(int y = 0; y <= upper_bound; y++)
-//                chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
-//        }
-//    }
-//}
 
 void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT)
 {
@@ -206,7 +194,7 @@ bool Terrain::terrainZoneExists(int x, int z)
 }
 
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>(mp_context, x, z);
+    uPtr<Chunk> chunk = mkU<Chunk>(mp_context, x, z, &noise);
     Chunk *cPtr = chunk.get();
     m_chunks[toKey(x, z)] = move(chunk);
     if(hasChunkAt(x, z + 16)) {

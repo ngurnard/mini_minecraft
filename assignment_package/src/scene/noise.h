@@ -11,6 +11,7 @@ public:
     customFBM m_grasslandHeightMap;
     customFBM m_biomeMaskMap;
 
+    bool m_permit_caves;
 
     void createHeightMaps();
     void mountainHeightPostProcess(float&);
@@ -19,7 +20,11 @@ public:
 
     std::pair<int, int> computeHeight(int x, int z); // returns H, biome
     void printHeight(int x, int z);
+
+    // yes caves
     BlockType getBlockType(int height, int max_height, int biome, float snow_noise, float caveNoiseVal, float caveMask);
+    // no caves
+    BlockType getBlockType(int height, int max_height, int biome, float snow_noise);
 
 };
 

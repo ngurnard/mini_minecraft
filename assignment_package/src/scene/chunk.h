@@ -203,15 +203,17 @@ private:
     // a key for this map.
     // These allow us to properly determine
     int m_xCorner, m_zCorner;
+    Noise* noise;
+
     vector<GLuint> indicesOpq;
     vector<GLuint> indicesTra;
     vector<glm::vec4> interleavedOpq;
     vector<glm::vec4> interleavedTra;
-    Noise noise;
+
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
     bool isVBOready;
-    Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner);
+    Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner, Noise* N);
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
     BlockType getBlockAt(int x, int y, int z, bool isModified);

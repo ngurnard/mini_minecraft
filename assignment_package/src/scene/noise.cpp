@@ -82,6 +82,7 @@ void Noise::printHeight(int x, int z)
 
 BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise, float caveNoiseVal, float caveMask)
 {
+    // Includes caves
     int biomeBaseH = 129;   // Height below which there is only stone
     int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
@@ -143,6 +144,63 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
             else if(height <= max_height)
                 return STONE;
         }
+    }
+    return EMPTY;
+}
+
+BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise)
+{
+    // Excludes caves
+    int biomeBaseH = 129;   // Height below which there is only stone
+    int waterH = 138;       // Height of water level
+    int snowH = 200;        // Height where snow is possible
+
+    if(height == 0) {return BEDROCK;}
+    if(height  < biomeBaseH - 1) {return STONE;}
+
+    if(biome == 0)
+    {
+        if(max_height <= waterH)
+        {
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return SAND;
+            else if(height <= waterH)
+                return WATER;
+        }
+        else
+        {
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return GRASS;
+        }
+    }
+    else if(biome == 1)
+    {
+        if(max_height >= snowH)
+        {
+            if(height < max_height)
+                return STONE;
+            else if(height == max_height)
+            {
+                if(max_height < snowH + 10)
+                {
+
+                    if (float(snowH + 10 - max_height) / 10.f < pow(snow_noise, 0.5)) {
+                        return SNOW;
+                    } else {
+                        return STONE;
+                    }
+
+                }
+                else
+                    return SNOW;
+            }
+        }
+        else if(height <= max_height)
+            return STONE;
     }
     return EMPTY;
 }
