@@ -15,6 +15,8 @@
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
 uniform sampler2D textureSampler;
 uniform int u_Time;
+uniform mat4 u_ViewProj;
+uniform mat4 u_Model;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -98,7 +100,9 @@ void main()
     // NEW actual textures
 
     vec4 diffuseColor = texture(textureSampler, fs_UVs);
+
     bool apply_lambert = true;
+
     if (fs_Anim != 0) {
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
@@ -135,7 +139,6 @@ void main()
 
     // Calculate the diffuse term for Lambert shading
     float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-
     // Avoid negative lighting values
     diffuseTerm = clamp(diffuseTerm, 0, 1);
 
@@ -146,16 +149,23 @@ void main()
                                                         //lit by our point light are not completely black.
 
     vec3 col = diffuseColor.rgb;
+
     // Compute final shaded color
     if (apply_lambert) {
         col *= lightIntensity;
     }
 
     // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
-
     if (fs_T2O != 0) {
         out_Col = vec4(col, 1.f);
     } else {
         out_Col = vec4(col, diffuseColor.a);
     }
+
+    // distance fog!
+    vec4 fogColor = vec4(0.6, 0.75, 0.9, 1.0);
+    float FC = gl_FragCoord.z / gl_FragCoord.w / 124.f;
+    float falloff = clamp(1.05 - exp(-1.05f * (FC - 0.9f)), 0.f, 1.f);
+    out_Col = mix(out_Col, fogColor, falloff);
+
 }

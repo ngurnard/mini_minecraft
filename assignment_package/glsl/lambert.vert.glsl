@@ -59,8 +59,6 @@ void main()
     fs_Anim = vs_Anim;
     fs_T2O = vs_T2O;
 
-    vec4 dim = u_Model * vs_Pos;
-    fs_dimVal = random1(dim.xyz/100.f);
 
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
@@ -71,6 +69,8 @@ void main()
 
 
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
+
+    fs_dimVal = random1(modelposition.xyz/100.f);
 
     fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
 
