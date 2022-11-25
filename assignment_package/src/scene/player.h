@@ -2,6 +2,7 @@
 #include "entity.h"
 #include "camera.h"
 #include "terrain.h"
+#include <QSoundEffect>
 
 class Player : public Entity {
 private:
@@ -21,6 +22,16 @@ public:
     // for easy access from MyGL
     const Camera& mcr_camera;
 
+    // For sounds
+    QSoundEffect walk_grass;
+//    QSoundEffect walk_snow;
+    QSoundEffect walk_snow_sand;
+    QSoundEffect walk_stone;
+    QSoundEffect swim_water;
+    QSoundEffect swim_lava;
+    QSoundEffect flying;
+    QSoundEffect toggle_flying;
+
     Player(glm::vec3 pos, const Terrain &terrain);
     virtual ~Player() override;
 
@@ -29,11 +40,13 @@ public:
     std::array<bool, 3> checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs);
 //    std::array<bool, 3> checkCollision(glm::vec3 &rayDirection, const Terrain &terrain, InputBundle &inputs, float dT);
 //    void checkCollision(const Terrain &terrain, InputBundle &inputs, float dT);
-    void checkOnGround(InputBundle &inputs);
-    void checkInLiquid(InputBundle &inputs); // check if player is IN liquid
+    BlockType checkOnGround(InputBundle &inputs);
+    BlockType checkInLiquid(InputBundle &inputs); // check if player is IN liquid
     bool checkIsLiquid(float x, float y, float z); // check if block is liquid
     BlockType removeBlock(Terrain &terrain); // remove block on left mouse click
     void placeBlock(Terrain &terrain, BlockType &blockToPlace); // remove block on right mouse click
+    void playSoundsGround(BlockType footBlock);
+    void playSoundsFlight();
 
     void setCameraWidthHeight(unsigned int w, unsigned int h);
 

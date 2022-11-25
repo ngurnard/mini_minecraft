@@ -1,4 +1,6 @@
 QT += core widgets openglwidgets
+# Need the following to play sounds
+QT += multimedia
 
 TARGET = MiniMinecraft
 TEMPLATE = app
@@ -21,6 +23,7 @@ FORMS += forms/mainwindow.ui \
     forms/playerinfo.ui
 
 RESOURCES += glsl.qrc \
+    sounds.qrc \
     textures.qrc
 
 *-clang*|*-g++* {
@@ -53,6 +56,6 @@ HEADERS +=
 
 SOURCES +=
 
-DISTFILES += \
-    textures/minecraft_normals_all.png \
-    textures/minecraft_textures_all.png
+#DISTFILES += \
+#    textures/minecraft_normals_all.png \
+#    textures/minecraft_textures_all.png
