@@ -43,6 +43,8 @@ public:
     BlockType checkOnGround(InputBundle &inputs);
     BlockType checkInLiquid(InputBundle &inputs); // check if player is IN liquid
     bool checkIsLiquid(float x, float y, float z); // check if block is liquid
+
+    glm::ivec3 getViewedBlockCoord(Terrain &terrain);
     BlockType removeBlock(Terrain &terrain); // remove block on left mouse click
     void placeBlock(Terrain &terrain, BlockType &blockToPlace); // remove block on right mouse click
     void playSoundsGround(BlockType footBlock);

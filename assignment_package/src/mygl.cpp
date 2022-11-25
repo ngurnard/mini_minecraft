@@ -11,7 +11,7 @@
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      m_worldAxes(this), m_hud(this),
+      m_worldAxes(this), m_hud(this), m_viewedBlock(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this), m_frameBuffer(this, width(), height(), 1.0f),
       m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
@@ -196,6 +196,10 @@ void MyGL::paintGL() {
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progFlat.draw(m_worldAxes, 0);
+
+    // if in selection range of a block, draw wireframe around it
+    drawBlockWireframe();
+
     glEnable(GL_DEPTH_TEST);
 
     //TODO: add this for any other shaders which may need time update
@@ -256,7 +260,15 @@ void MyGL::performPostprocessRenderPass()
     m_HUD.draw(m_hud, 2);
 }
 
-
+void MyGL::drawBlockWireframe()
+{
+    glm::ivec3 blockpos = m_player.getViewedBlockCoord(m_terrain);
+    if (blockpos.x != NULL)
+    {
+        m_viewedBlock.update(blockpos);
+        m_progFlat.draw(m_viewedBlock, 0);
+    }
+}
 
 void MyGL::keyPressEvent(QKeyEvent *e) {
     float amount = 2.0f;

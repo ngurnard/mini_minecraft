@@ -8,6 +8,7 @@
 #include "scene/player.h"
 #include "scene/quad.h"
 #include "scene/hud.h"
+#include "scene/blockwireframe.h"
 
 #include "texture.h"
 #include "postprocessshader.h"
@@ -24,6 +25,8 @@ class MyGL : public OpenGLContext
 private:
     WorldAxes m_worldAxes; // A wireframe representation of the world axes. It is hard-coded to sit centered at (32, 128, 32).
     HUD m_hud; // contains crosshair
+    BlockWireframe m_viewedBlock; // white frame around current block in view range
+
     SurfaceShader m_progLambert;// A shader program that uses lambertian reflection
     SurfaceShader m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     SurfaceShader m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
@@ -32,6 +35,7 @@ private:
     PostProcessShader m_postLava;
     PostProcessShader m_postWater;
     PostProcessShader m_HUD;
+
 
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
@@ -86,6 +90,8 @@ public:
     // currently bound post-process shader and
     // invokes them.
     void performPostprocessRenderPass();
+
+    void drawBlockWireframe();
 
 protected:
     // Automatically invoked when the user
