@@ -301,6 +301,9 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     } else if (e->key() == Qt::Key_F) {
         m_inputs.fPressed = true;
         m_inputs.flightMode = !m_inputs.flightMode;
+        if (m_inputs.flightMode) {
+            m_player.toggle_flying.play();
+        }
     }
 }
 

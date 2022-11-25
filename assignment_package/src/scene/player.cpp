@@ -5,7 +5,34 @@ Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
       mcr_camera(m_camera)
-{}
+{
+    // set up sounds
+    walk_grass.setSource(QUrl::fromLocalFile(":/sounds/footsteps_woods_grass.wav"));
+    walk_grass.setLoopCount(QSoundEffect::Infinite);
+
+    walk_snow_sand.setSource(QUrl::fromLocalFile(":/sounds/footsteps_snow_sand.wav"));
+    walk_snow_sand.setLoopCount(QSoundEffect::Infinite);
+
+    walk_stone.setSource(QUrl::fromLocalFile(":/sounds/footsteps_stone.wav"));
+    walk_stone.setLoopCount(QSoundEffect::Infinite);
+
+    swim_water.setSource(QUrl::fromLocalFile(":/sounds/underwater.wav"));
+    swim_water.setLoopCount(QSoundEffect::Infinite);
+    swim_water.setVolume(0.1f);
+
+    swim_lava.setSource(QUrl::fromLocalFile(":/sounds/lava_scream.wav"));
+    swim_lava.setLoopCount(QSoundEffect::Infinite);
+    swim_lava.setVolume(1.0f);
+
+    flying.setSource(QUrl::fromLocalFile(":/sounds/flying.wav"));
+    flying.setLoopCount(QSoundEffect::Infinite);
+    flying.setVolume(0.05f);
+
+    toggle_flying.setSource(QUrl::fromLocalFile(":/sounds/flightmode.wav"));
+    toggle_flying.setLoopCount(1);
+    toggle_flying.setVolume(0.1f);
+
+}
 
 Player::~Player()
 {}
@@ -20,7 +47,7 @@ void Player::processInputs(InputBundle &inputs) {
     // state of the inputs.
 
     // DELETE ME LATER (WHEN DONE WITH POSPROCSSING SHADERS)
-    BlockType TEMP = headSpaceSight();
+//    BlockType TEMP = headSpaceSight();
 
     this->m_acceleration = glm::vec3(0, 0, 0); // ensure we dont accidentally keep accelerating
     float tune_max_accel = 9.5; // this is acceleration of Usain Bolt
@@ -130,6 +157,8 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         this->moveUpGlobal(this->m_velocity.y * dT);
         this->moveForwardGlobal(this->m_velocity.z * dT);
 
+        playSoundsFlight();
+
     } else { // if not in flight mode
 
 //        std::cout << "acceleration: {" << m_acceleration.x << ", " << m_acceleration.y << ", " << m_acceleration.z << "}" << std::endl;
@@ -141,7 +170,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         float terminal_speed = 6.6 * tune_max_speed;
 
         this->m_velocity = this->m_velocity + this->m_acceleration * dT; // kinematics equation for all dirs
-        checkOnGround(inputs); // check if the player is on the ground
+        BlockType footBlock = checkOnGround(inputs); // check if the player is on the ground
         // Ensure not going too fast
         glm::clamp(this->m_velocity.x, -tune_max_speed, tune_max_speed);
         glm::clamp(this->m_velocity.z, -tune_max_speed, tune_max_speed);
@@ -157,6 +186,10 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         this->m_velocity = this->m_velocity * glm::vec3(!collidedAxesMask[0], !collidedAxesMask[1], !collidedAxesMask[2]); // zero out the velocity vector is colliding with solid block
 
 //        checkCollision(terrain, inputs, dT); // adams implementation
+
+        // Update player sounds
+        playSoundsGround(footBlock);
+
     }
 }
 
@@ -380,10 +413,11 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
 //}
 
 
-void Player::checkOnGround(InputBundle &inputs)
+BlockType Player::checkOnGround(InputBundle &inputs)
 {
     // Get the block type below the player (just barely below the foot of the player) to see if on the ground
     BlockType blockBelow = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
+//    BlockType blockBelow = this->mcr_terrain.getBlockAt(this->m_position.x, this->m_position.y - 0.05, this->m_position.z);
 
     if (blockBelow != EMPTY && blockBelow != WATER && blockBelow != LAVA) {
         inputs.onGround = true;
@@ -393,9 +427,33 @@ void Player::checkOnGround(InputBundle &inputs)
         inputs.onGround = false;
         playerOnGround = false;
     }
+
+//    // Alternative way, but slower
+//    // Get the 4 corners of the players foot to check if any are on the ground
+//    BlockType foot1 = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z));
+//    BlockType foot2 = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x) + 1, this->m_position.y - 0.05, glm::floor(this->m_position.z));
+//    BlockType foot3 = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x), this->m_position.y - 0.05, glm::floor(this->m_position.z) + 1);
+//    BlockType foot4 = this->mcr_terrain.getBlockAt(glm::floor(this->m_position.x) + 1, this->m_position.y - 0.05, glm::floor(this->m_position.z) + 1);
+//    BlockType blockBelow;
+//    std::array<BlockType, 4> majority_vote = {foot1, foot2, foot3, foot4}; // then find the most occuring. Too much work
+
+//    bool condition1 = foot1 != EMPTY && foot2 != EMPTY && foot3 != EMPTY && foot4 != EMPTY;
+//    bool condition2 = foot1 != WATER && foot2 != WATER && foot3 != WATER && foot4 != WATER;
+//    bool condition3 = foot1 != LAVA && foot2 != LAVA && foot3 != LAVA && foot4 != LAVA;
+
+//    if (condition1 && condition2 && condition3) {
+//        inputs.onGround = true;
+//        //        m_velocity.y = 0;
+//        playerOnGround = true;
+//    } else {
+//        inputs.onGround = false;
+//        playerOnGround = false;
+//    }
+
+    return blockBelow;
 }
 
-void Player::checkInLiquid(InputBundle &inputs) {
+BlockType Player::checkInLiquid(InputBundle &inputs) {
     // Get the block type where the player is
     BlockType currBlock = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
 
@@ -406,6 +464,8 @@ void Player::checkInLiquid(InputBundle &inputs) {
         inputs.inLiquid = false;
         playerInLiquid = false;
     }
+
+    return currBlock;
 }
 
 //QString Player::camSight() {
@@ -509,6 +569,109 @@ void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
             }
 //      }
     }
+}
+
+void Player::playSoundsGround(BlockType footBlock) {
+
+    // Cut flying sounds
+//    flying.stop();
+
+//    // Grass sounds
+//    if (glm::length(this->m_velocity) > 0.01 && (footBlock == GRASS || footBlock == DIRT)) { // if moving at a threshold of epsilon = 0.1
+//        walk_grass.setMuted(false);
+//        // dynamically set the volume based on player speed
+//        float volume = glm::length(this->m_velocity)/50;
+//        walk_grass.setVolume(volume);
+//        if (!walk_grass.isPlaying()) { // do not reloop if already playing
+//            walk_grass.play();
+//        }
+//    } else if (walk_grass.isPlaying() && footBlock != GRASS && footBlock != DIRT) {
+//        walk_grass.setMuted(true); // instead of replaying the walking just mute it or "pause"
+//    } else {
+//        walk_grass.stop();
+//    }
+
+    // Grass sounds
+    if (glm::length(this->m_velocity) > 0.01 && (footBlock == GRASS || footBlock == DIRT)) { // if moving at a threshold of epsilon = 0.1
+        walk_grass.setMuted(false);
+        // dynamically set the volume based on player speed
+        float volume = glm::length(this->m_velocity)/50;
+        walk_grass.setVolume(volume);
+        if (!walk_grass.isPlaying()) { // do not reloop if already playing
+            walk_grass.play();
+        }
+    } else {
+        walk_grass.setMuted(true); // instead of replaying the walking just mute it or "pause", sounds more natural
+    }
+
+    // Snow/Sand sounds
+    if (glm::length(this->m_velocity) > 0.01 && (footBlock == SNOW || footBlock ==SAND)) { // if moving at a threshold of epsilon = 0.1
+        walk_snow_sand.setMuted(false);
+        // dynamically set the volume based on player speed
+        walk_snow_sand.setVolume(0.75f);
+        if (!walk_snow_sand.isPlaying()) { // do not reloop if already playing
+            walk_snow_sand.play();
+        }
+    } else {
+        walk_snow_sand.setMuted(true); // instead of replaying the walking just mute it or "pause", sounds more natural
+    }
+
+    // Stone sounds
+    if (glm::length(this->m_velocity) > 0.01 && footBlock == STONE) { // if moving at a threshold of epsilon = 0.1
+        walk_stone.setMuted(false);
+        // dynamically set the volume based on player speed
+        walk_stone.setVolume(0.01f);
+        if (!walk_stone.isPlaying()) { // do not reloop if already playing
+            walk_stone.play();
+        }
+    } else {
+        walk_stone.setMuted(true); // instead of replaying the walking just mute it or "pause", sounds more natural
+    }
+
+    // Check headpace
+    BlockType headSpace = headSpaceSight();
+    BlockType currBlock = this->mcr_terrain.getBlockAt(glm::floor(this->m_position));
+
+    // If in water or lava
+    if (headSpace == WATER) {
+        if (!swim_water.isPlaying()) {
+            swim_water.play();
+        }
+    } else if (headSpace == LAVA || currBlock == LAVA) {
+        if (!swim_lava.isPlaying()) {
+            swim_lava.play();
+        }
+    } else {
+        swim_water.stop();
+        swim_lava.stop();
+    }
+
+    // If very high up
+    if (this->mcr_camera.mcr_position.y >= 200) {
+        if (!flying.isPlaying()) {
+            flying.play();
+        }
+    } else {
+        flying.stop();
+    }
+}
+
+void Player::playSoundsFlight() {
+    // Cut ground sounds
+    walk_grass.stop();
+    walk_snow_sand.stop();
+    walk_stone.stop();
+    swim_water.stop();
+    swim_lava.stop();
+
+    if (glm::length(this->m_velocity) > 0.01) {
+        if (!flying.isPlaying()) {
+            flying.play();
+        }
+    } else {
+        flying.stop();
+    }
+
 }
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {

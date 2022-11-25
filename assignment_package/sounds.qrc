@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>sounds/underwater.wav</file>
+        <file>sounds/flightmode.wav</file>
+        <file>sounds/flying.wav</file>
+        <file>sounds/footsteps_snow.wav</file>
+        <file>sounds/footsteps_woods_grass.wav</file>
+        <file>sounds/lava_scream.wav</file>
+        <file>sounds/footsteps_woods_grass2.wav</file>
+        <file>sounds/footsteps_snow_sand.wav</file>
+        <file>sounds/footsteps_stone.wav</file>
+    </qresource>
+</RCC>
