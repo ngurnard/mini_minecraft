@@ -5,6 +5,7 @@ SOURCES += \
     $$PWD/cave.cpp \
     $$PWD/customfbm.cpp \
     $$PWD/framebuffer.cpp \
+    $$PWD/inventory.cpp \
     $$PWD/main.cpp \
     $$PWD/mainwindow.cpp \
     $$PWD/mygl.cpp \
@@ -32,6 +33,7 @@ HEADERS += \
     $$PWD/cave.h \
     $$PWD/customfbm.h \
     $$PWD/framebuffer.h \
+    $$PWD/inventory.h \
     $$PWD/mainwindow.h \
     $$PWD/mygl.h \
     $$PWD/postprocessshader.h \

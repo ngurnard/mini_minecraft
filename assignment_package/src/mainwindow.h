@@ -1,15 +1,13 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include "cameracontrolshelp.h"
 #include "playerinfo.h"
-
+#include "inventory.h"
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
-
 
 class MainWindow : public QMainWindow
 {
@@ -21,14 +19,13 @@ public:
 
 private slots:
     void on_actionQuit_triggered();
-
     void on_actionCamera_Controls_triggered();
+    void slot_showInventory(bool);
 
 private:
     Ui::MainWindow *ui;
     CameraControlsHelp cHelp;
     PlayerInfo playerInfoWindow;
+    Inventory inventoryWindow;
 };
 
-
-#endif // MAINWINDOW_H

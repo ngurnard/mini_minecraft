@@ -20,6 +20,7 @@ include(src/src.pri)
 
 FORMS += forms/mainwindow.ui \
     forms/cameracontrolshelp.ui \
+    forms/inventory.ui \
     forms/playerinfo.ui
 
 RESOURCES += glsl.qrc \

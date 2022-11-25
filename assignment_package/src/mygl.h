@@ -65,6 +65,9 @@ private:
     // the scene with the post-process shaders.
     Quad m_geomQuad;
 
+    // inventory stuff
+    bool showInventory;
+
 public:
     uPtr<Texture> mp_textureAtlas;
 
@@ -120,4 +123,7 @@ signals:
     void sig_sendLiquidBool(QString) const;
     void sig_sendGroundBool(QString) const;
     void sig_sendCamBlock(QString) const;
+
+    // inventory
+    void sig_showInventory(bool showInventory);
 };

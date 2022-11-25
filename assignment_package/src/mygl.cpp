@@ -6,7 +6,7 @@
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QDir>
-
+#include "inventory.h"
 
 
 MyGL::MyGL(QWidget *parent)
@@ -18,7 +18,7 @@ MyGL::MyGL(QWidget *parent)
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
       m_time(0.f),
       prevTime(QDateTime::currentMSecsSinceEpoch()), m_geomQuad(this),
-      mp_textureAtlas(nullptr)
+      showInventory(false), mp_textureAtlas(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -156,6 +156,7 @@ void MyGL::tick() {
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
 
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
+//    sendInventoryDataToGUI();
     prevTime = currTime; // update the previous time
 }
 
@@ -338,6 +339,9 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
         if (m_inputs.flightMode) {
             m_player.toggle_flying.play();
         }
+    } else if (e->key() == Qt::Key_I) {
+        showInventory = !showInventory; // switch it from whatever it was before
+        emit sig_showInventory(showInventory);
     }
 }
 

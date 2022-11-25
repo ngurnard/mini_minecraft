@@ -54,4 +54,11 @@ Answer (Nov 24, 19:57)
 https://stuff.mit.edu/afs/athena/software/texmaker_v5.0.2/qt57/doc/qtmultimedia/qsoundeffect.html
 https://www.youtube.com/watch?v=DS7CDpIrwN4&ab_channel=Abdullah
 
-
+How do I open another window on top of or in place of the main window in Qt?
+Answer (Nov 25, 16:27)
+https://www.youtube.com/watch?v=VigUMAfE2q4&list=PLS1QulWo1RIZiBcTr5urECberTITj7gjA&index=9&ab_channel=ProgrammingKnowledge
+https://stackoverflow.com/questions/2994949/how-to-generate-a-window-widget-on-button-press-in-qt
+https://www.google.com/search?client=firefox-b-1-d&q=replace+main+window+on+pushbutton+click+qt
+https://stackoverflow.com/questions/17988292/how-to-open-a-new-window-from-the-main-window-in-qt
+https://stackoverflow.com/questions/20583860/ui-header-file-ui-name-h-not-found
+https://forum.qt.io/topic/122810/error-cannot-initialize-object-parameter-of-type-ui_mainwindow-with-an-expression-of-type-ui-mainwindow

@@ -21,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->mygl, SIGNAL(sig_sendLiquidBool(QString)), &playerInfoWindow, SLOT(slot_setLiquidText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendGroundBool(QString)), &playerInfoWindow, SLOT(slot_setGroundText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendCamBlock(QString)), &playerInfoWindow, SLOT(slot_setcamBlockText(QString)));
+
+    // Inventory specific
+    connect(ui->mygl, SIGNAL(sig_showInventory(bool)), this, SLOT(slot_showInventory(bool)));
 }
 
 MainWindow::~MainWindow()
@@ -36,4 +39,8 @@ void MainWindow::on_actionQuit_triggered()
 void MainWindow::on_actionCamera_Controls_triggered()
 {
     cHelp.show();
+}
+
+void MainWindow::slot_showInventory(bool) {
+    std::cout << "I am in this slot" << std::endl;
 }
