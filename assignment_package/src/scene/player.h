@@ -50,6 +50,8 @@ public:
     void playSoundsGround(BlockType footBlock);
     void playSoundsFlight();
 
+    glm::vec3 getCamPos();
+
     void setCameraWidthHeight(unsigned int w, unsigned int h);
 
     void tick(float dT, InputBundle &input) override;

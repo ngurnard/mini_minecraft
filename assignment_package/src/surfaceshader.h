@@ -23,6 +23,8 @@ int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse tran
 int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
 int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
 
+int unifCamPos; // a handle to a "uniform" vec3 representing the camera's position in world space.
+
 
 public:
 SurfaceShader(OpenGLContext* context);
@@ -41,4 +43,6 @@ virtual void draw(Drawable &d, int textureSlot) override;
 void drawInterleaved(Drawable &d, int textureSlot);
 // Draw the given object to our screen multiple times using instanced rendering
 void drawInstanced(InstancedDrawable &d);
+// Pass the camera position to this shader on the GPU
+void setCamPos(const glm::vec4 &eye);
 };

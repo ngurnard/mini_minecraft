@@ -43,6 +43,9 @@ out float fs_Anim;
 out float fs_dimVal;
 out float fs_T2O;
 
+uniform vec4 u_CamPos;
+out vec4 fs_CamPos;
+
 const vec4 lightDir = normalize(vec4(0.0, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
 
@@ -76,7 +79,7 @@ vec3 random2( vec3 p ) {
 
 void main()
 {
-    fs_Pos = vs_Pos;
+//    fs_Pos = vs_Pos;
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
     fs_UVs = vs_UV;
     fs_Anim = vs_Anim;
@@ -91,39 +94,40 @@ void main()
 
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
 
-//    if (vs_Anim != 0) { // if we want to animate this surface
-//        // check region in texture to decide which animatable type is drawn
-//        bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
-//        bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y < 4.f/16.f;
-//        // define an oscillating time so that model can transition back and forth
-//        float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
-
-//        vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
-//        temp = (temp - 0.5)/25; // [0, 1/scalar]
-//        modelposition.x = mix(modelposition.x, modelposition.x + temp.x, t);
-//        modelposition.y = mix(modelposition.y, modelposition.y + 3*temp.y, t);
-//        modelposition.z = mix(modelposition.z, modelposition.z + temp.z, t);
-
-//    }
-
     if (vs_Anim != 0) { // if we want to animate this surface
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
-        bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y < 4.f/16.f;
-        // define an oscillating time so that model can transition back and forth
-        float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+        bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y <= 4.f/16.f;
 
-        vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
-        temp = (temp - 0.5)/25; // [0, 1/scalar]
-        modelposition.x = mix(modelposition.x, modelposition.x + temp.x, t);
-        modelposition.y = mix(modelposition.y, modelposition.y + 3*temp.y, t);
-        modelposition.z = mix(modelposition.z, modelposition.z + temp.z, t);
+        if (water) {
+            // define an oscillating time so that model can transition back and forth
+            float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+            vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
+            temp = (temp - 0.5)/25; // [0, 1/scalar]
+            modelposition.x = mix(modelposition.x - temp.x, modelposition.x + temp.x, t);
+            modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
+            modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
+
+            fs_Pos = normalize( cross(dFdx(vs_Pos), dFdy(vs_Pos)) );
+        } else if (lava) {
+            // define an oscillating time so that model can transition back and forth
+            float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+            vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
+            temp = (temp - 0.5)/25; // [0, 1/scalar]
+            modelposition.x = mix(modelposition.x - temp.x, modelposition.x + temp.x, t);
+            modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
+            modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
+        }
     }
 
     fs_dimVal = random1(modelposition.xyz/100.f);
 
 //    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
     fs_LightVec = rotateLightVec(0.001 * u_Time, lightDir);  // Compute the direction in which the light source lies
+//    fs_LightVec = fs_CamPos - modelposition;
+
+    fs_CamPos = u_CamPos; // uniform handle for the camera position instead of the inverse
+    fs_Pos = modelposition;
 
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices

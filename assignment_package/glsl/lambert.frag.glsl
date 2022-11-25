@@ -33,6 +33,8 @@ in float fs_dimVal;
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 
+in vec4 fs_CamPos;
+
 float random1(vec3 p) {
     return fract(sin(dot(p,vec3(127.1, 311.7, 191.999)))
                  *43758.5453);
@@ -85,23 +87,11 @@ float fbm(vec3 p) {
 
 void main()
 {
-    // Material base color (before shading)
-
-    // OLD single-color drawing below
-    //      vec4 diffuseColor = fs_Col;
-    //      diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
-
-    // CRAZY texture shifting to test u_Time haha
-//     vec2 movingUVs = vec2(fs_UVs.x + 0.5*sin(0.01*u_Time), fs_UVs.y);
-//     vec2 movingUVs = vec2((fract(fs_UVs.x*16.f) + floor(16.f*(random1(vec3(floor(fs_UVs.x*16) + floor(0.05*u_Time))))))/16.f,
-//                          (fract(fs_UVs.y*16.f) + floor(16.f*(random1b(vec3(floor(fs_UVs.y*16) + floor(0.05*u_Time))))))/16.f);
-//    vec4 diffuseColor = texture(textureSampler, movingUVs);
-
-    // NEW actual textures
-
     vec4 diffuseColor = texture(textureSampler, fs_UVs);
 
     bool apply_lambert = true;
+
+    float specularIntensity = 0;
 
     if (fs_Anim != 0) {
         // check region in texture to decide which animatable type is drawn
@@ -134,6 +124,15 @@ void main()
             vec4 newColor = texture(textureSampler, offsetUVs);
             diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time)) + fs_dimVal * vec4(0.025);
             diffuseColor.a = 0.7;
+
+            // ----------------------------------------------------
+            // Blinn-Phong Shading
+            // ----------------------------------------------------
+            vec4 lightDir = normalize(fs_LightVec - fs_Pos); // vector from the fragment's world-space position to the light source (assuming a point light source)
+            vec4 viewDir = normalize(fs_CamPos - fs_Pos); // vector from the fragment's world-space position to the camera
+            vec4 halfVec = normalize(lightDir + viewDir); // vector halfway between light source and view direction
+            float shininess = 400.f;
+            float specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
         }
     }
 
@@ -153,7 +152,8 @@ void main()
 
     // Compute final shaded color
     if (apply_lambert) {
-        col *= lightIntensity;
+//        col *= lightIntensity;
+        col = col * lightIntensity + col * specularIntensity;
     }
 
     // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
@@ -168,5 +168,7 @@ void main()
     float FC = gl_FragCoord.z / gl_FragCoord.w / 124.f;
     float falloff = clamp(1.05 - exp(-1.05f * (FC - 0.9f)), 0.f, 1.f);
     out_Col = mix(out_Col, fogColor, falloff);
+
+//    out_Col.y = fs_CamPos.y;
 
 }

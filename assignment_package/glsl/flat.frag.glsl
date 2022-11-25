@@ -7,6 +7,8 @@ in vec4 fs_Col;
 
 out vec4 out_Col;
 
+in vec4 fs_CamPos;
+
 void main()
 {
     // Copy the color; there is no shading.

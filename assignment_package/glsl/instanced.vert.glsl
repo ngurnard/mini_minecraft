@@ -38,6 +38,9 @@ out float fs_T2O;
 const vec4 lightDir = normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
 
+uniform vec4 u_CamPos;
+out vec4 fs_CamPos;
+
 float random1(vec3 p) {
     return fract(sin(dot(p, vec3(127.1, 311.7, 191.999)))
                  *43758.5453);
@@ -61,6 +64,8 @@ void main()
     fs_Nor = vs_Nor;
 
     fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
+
+    fs_CamPos = u_CamPos; // uniform handle for the camera position instead of the inverse
 
     gl_Position = u_ViewProj * offsetPos;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices

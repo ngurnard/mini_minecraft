@@ -87,10 +87,10 @@ void MyGL::initializeGL()
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
 
-    // Create and set up the frame buffer ///
+    // Create and set up the frame buffer
     m_frameBuffer.create();
 
-    // Create and set up the post process shaders ///
+    // Create and set up the post process shaders
     m_geomQuad.create(); // create the quadrangle over the whole screen
     m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
     m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl");
@@ -123,7 +123,7 @@ void MyGL::resizeGL(int w, int h) {
     m_frameBuffer.create();
 
     // Resize the postprocess shaders
-    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio())); ///
+    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_HUD.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
@@ -178,6 +178,12 @@ void MyGL::paintGL() {
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+
+    m_progFlat.setCamPos(glm::vec4(m_player.getCamPos(), 1));
+    m_progLambert.setCamPos(glm::vec4(m_player.getCamPos(), 1));
+    m_progInstanced.setCamPos(glm::vec4(m_player.getCamPos(), 1));
+
+//    std::cout << "{"<< m_player.getCamPos().x << ", " << m_player.getCamPos().y << ", " << m_player.getCamPos().z << "}" << std::endl;
 
     m_frameBuffer.bindFrameBuffer();
     glViewport(0,0,this->width(), this->height());

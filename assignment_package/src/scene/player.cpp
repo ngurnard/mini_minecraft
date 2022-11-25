@@ -191,6 +191,7 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         playSoundsGround(footBlock);
 
     }
+
 }
 
 bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, float *interfaceAxisPtr) {
@@ -689,6 +690,10 @@ void Player::playSoundsFlight() {
         flying.stop();
     }
 
+}
+
+glm::vec3 Player:: getCamPos() {
+    return glm::vec3(this->m_position.x, this->m_position.y, this->m_position.z);
 }
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {

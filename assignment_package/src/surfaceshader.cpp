@@ -35,6 +35,8 @@ void SurfaceShader::setupMemberVars() {
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
     unifSampler2D    = context->glGetUniformLocation(prog, "textureSampler");
     unifTime       = context->glGetUniformLocation(prog, "u_Time");
+
+    unifCamPos = context->glGetUniformLocation(prog, "u_CamPos"); // define what we call the cam pos
 }
 
 void SurfaceShader::setModelMatrix(const glm::mat4 &model)
@@ -92,6 +94,23 @@ void SurfaceShader::setGeometryColor(glm::vec4 color)
     if(unifColor != -1)
     {
         context->glUniform4fv(unifColor, 1, &color[0]);
+    }
+}
+
+void SurfaceShader::setCamPos(const glm::vec4 &eye)
+{
+    useMe();
+
+    if (unifCamPos != -1) {
+//        std::cout << "I AM HERE " << std::endl;
+        // Pass a vector into a uniform variable in our shader handle to the vec variable on the GPU
+        context->glUniform4fv(unifCamPos,
+                            // How many vectors to pass
+                               1,
+                            // Pointer to the first element of the vector
+                               &eye[0]);
+
+//        std::cout << "{"<< eye.x << ", " << eye.y << ", " << eye.z << "}" << std::endl;
     }
 }
 

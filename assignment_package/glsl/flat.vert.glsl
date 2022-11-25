@@ -11,6 +11,9 @@ in vec4 vs_Col;
 
 out vec4 fs_Col;
 
+uniform vec4 u_CamPos;
+out vec4 fs_CamPos;
+
 void main()
 {
     fs_Col = vs_Col;
@@ -18,5 +21,7 @@ void main()
 
     //built-in things to pass down the pipeline
     gl_Position = u_ViewProj * modelposition;
+
+    fs_CamPos = u_CamPos; // uniform handle for the camera position instead of the inverse
 
 }
