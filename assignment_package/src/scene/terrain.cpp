@@ -154,13 +154,46 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
                     chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
                 }
             }
+            // Clouds
+//            if(noise.m_biomeMaskMap.computeFBM(i +156, j + 197) > 0.8)
+//            {
+//                chunk->setBlockAt(coord_x, 225, coord_z, SNOW);
+//            }
         }
     }
+}
+
+void Terrain::recreateClouds(Chunk* chunk, int x, int z, float time) {
+    int cloudH = 225;
+    BlockType cloudType = ICE;
+    for(int i = x; i < x + 16; ++i) {
+        for(int j = z; j < z + 16; ++j) {
+            glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
+            int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
+            if (noise.m_biomeMaskMap.computeFBM(i +156 + time, j + 197 + time) > 0.8)
+            {
+                if (chunk->getBlockAt(coord_x, cloudH, coord_z) == EMPTY)
+                {
+                    chunk->setBlockAt(coord_x, cloudH, coord_z, cloudType);
+                }
+
+            }
+            else
+            {
+                if (chunk->getBlockAt(coord_x, cloudH, coord_z) == cloudType)
+                {
+                    chunk->setBlockAt(coord_x, cloudH, coord_z, EMPTY);
+                }
+            }
+        }
+    }
+    chunk->recreateVBOdata();
 }
 
 void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT)
 {
     m_tryExpansionTimer += dT;
+    m_time += dT;
     if(m_tryExpansionTimer < 0.5f) {return;}
 
     tryExpansion(playerPos, playerPosPrev);

@@ -7,6 +7,7 @@
 #include "scene/terrain.h"
 #include "scene/player.h"
 #include "scene/quad.h"
+#include "scene/hud.h"
 
 #include "texture.h"
 #include "postprocessshader.h"
@@ -22,6 +23,7 @@ class MyGL : public OpenGLContext
     Q_OBJECT
 private:
     WorldAxes m_worldAxes; // A wireframe representation of the world axes. It is hard-coded to sit centered at (32, 128, 32).
+    HUD m_hud; // contains crosshair
     SurfaceShader m_progLambert;// A shader program that uses lambertian reflection
     SurfaceShader m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     SurfaceShader m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
@@ -29,6 +31,7 @@ private:
     PostProcessShader m_noOp;
     PostProcessShader m_postLava;
     PostProcessShader m_postWater;
+    PostProcessShader m_HUD;
 
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.

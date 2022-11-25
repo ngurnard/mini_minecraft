@@ -14,6 +14,7 @@ PostProcessShader::~PostProcessShader()
 void PostProcessShader::setupMemberVars()
 {
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
+    attrCol = context->glGetAttribLocation(prog, "vs_Col");
     attrUV  = context->glGetAttribLocation(prog, "vs_UV");
 
     unifTime = context->glGetUniformLocation(prog, "u_Time");
@@ -37,6 +38,10 @@ void PostProcessShader::draw(Drawable& d, int textureSlot)
         context->glEnableVertexAttribArray(attrPos);
         context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 0, NULL);
     }
+    if (attrCol != -1 && d.bindCol()) {
+        context->glEnableVertexAttribArray(attrCol);
+        context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 0, NULL);
+    }
     if (attrUV != -1 && d.bindUV()) {
         context->glEnableVertexAttribArray(attrUV);
         context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 0, NULL);
@@ -48,6 +53,7 @@ void PostProcessShader::draw(Drawable& d, int textureSlot)
     context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
 
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
     if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
 
     context->printGLErrorLog();

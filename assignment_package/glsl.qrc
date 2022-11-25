@@ -9,5 +9,7 @@
         <file>glsl/postLava.frag.glsl</file>
         <file>glsl/passthrough.vert.glsl</file>
         <file>glsl/noOp.frag.glsl</file>
+        <file>glsl/hud.frag.glsl</file>
+        <file>glsl/hudPassthrough.vert.glsl</file>
     </qresource>
 </RCC>

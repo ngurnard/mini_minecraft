@@ -94,6 +94,10 @@ void main()
 {
 
     vec4 base_color = texture(u_RenderedTexture, fs_UV);
+    base_color.r -= 0.15f;
+    base_color.g -= 0.1;
+    base_color.b += 0.2;
+
     vec2 uv = fs_UV;
 
     // Gridify and animate with rightward motion

@@ -21,6 +21,7 @@ uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformati
                             // but in HW3 you'll have to generate one yourself
 
 uniform vec4 u_Color;       // When drawing the cube instance, we'll set our uniform color to represent different block types.
+uniform int u_Time;
 
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
@@ -42,9 +43,26 @@ out float fs_Anim;
 out float fs_dimVal;
 out float fs_T2O;
 
-const vec4 lightDir = normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
+const vec4 lightDir = normalize(vec4(0.0, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
 
+mat4 rotationMatrix(vec3 axis, float angle) {
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
+}
+
+vec4 rotateLightVec(float deg, vec4 LV) {
+
+    mat4 R = rotationMatrix(vec3(0,0,1), deg);
+    return R * LV;
+}
 
 float random1(vec3 p) {
     return fract(sin(dot(p, vec3(127.1, 311.7, 191.999)))
@@ -72,7 +90,8 @@ void main()
 
     fs_dimVal = random1(modelposition.xyz/100.f);
 
-    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
+//    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
+    fs_LightVec = rotateLightVec(0.001 * u_Time, lightDir);  // Compute the direction in which the light source lies
 
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices

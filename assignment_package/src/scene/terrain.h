@@ -62,6 +62,8 @@ private:
 
     OpenGLContext* mp_context;
 
+    float m_time;
+
 public:
     Terrain(OpenGLContext *context);
     ~Terrain();
@@ -77,6 +79,7 @@ public:
     Chunk* instantiateChunkAt(int x, int z);
 
     void setChunkBlocks(Chunk* chunk, int x, int z);
+    void recreateClouds(Chunk* chunk, int x, int z, float time);
     // Do these world-space coordinates lie within
     // a Chunk that exists?
     bool hasChunkAt(int x, int z) const;

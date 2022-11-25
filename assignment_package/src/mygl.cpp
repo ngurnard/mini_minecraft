@@ -6,14 +6,14 @@
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QDir>
-#include "scene/quad.h"
+
 
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      m_worldAxes(this),
+      m_worldAxes(this), m_hud(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this), m_frameBuffer(this, width(), height(), 1.0f),
-      m_noOp(this), m_postLava(this), m_postWater(this),
+      m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
       m_time(0.f),
       prevTime(QDateTime::currentMSecsSinceEpoch()), m_geomQuad(this),
@@ -69,6 +69,7 @@ void MyGL::initializeGL()
 
     //Create the instance of the world axes
     m_worldAxes.createVBOdata();
+    m_hud.createVBOdata();
 
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
@@ -94,6 +95,7 @@ void MyGL::initializeGL()
     m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
     m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
     m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
+    m_HUD.create(":/glsl/hudPassthrough.vert.glsl", ":/glsl/hud.frag.glsl"); // continue here
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -102,7 +104,7 @@ void MyGL::initializeGL()
     //    m_terrain.CreateTestTerrainScene();
 
     m_terrain.allowTransparent(true);   // whether to draw transparent blocks
-    m_terrain.allowCaves(false);        // whether to draw caves
+    m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -124,6 +126,7 @@ void MyGL::resizeGL(int w, int h) {
     m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio())); ///
     m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    m_HUD.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
 
     printGLErrorLog();
 }
@@ -186,6 +189,7 @@ void MyGL::paintGL() {
     // Post process render pass ///
     m_postLava.setTime(m_time);
     m_postWater.setTime(m_time);
+    m_HUD.setTime(m_time);
     performPostprocessRenderPass();
 
     glDisable(GL_DEPTH_TEST);
@@ -249,6 +253,7 @@ void MyGL::performPostprocessRenderPass()
     } else {
         m_noOp.draw(m_geomQuad, 2); // no post process
     }
+    m_HUD.draw(m_hud, 2);
 }
 
 

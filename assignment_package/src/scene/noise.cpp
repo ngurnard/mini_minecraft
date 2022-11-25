@@ -86,6 +86,7 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
     int biomeBaseH = 129;   // Height below which there is only stone
     int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
+
     if(height == 0)
         return BEDROCK;
     bool caveMaskCondition = caveMask < 0.4 && height < max_height - 15 + 15 * snow_noise && caveNoiseVal < 0.4 && height > 0;

@@ -9,6 +9,7 @@ SOURCES += \
     $$PWD/mainwindow.cpp \
     $$PWD/mygl.cpp \
     $$PWD/postprocessshader.cpp \
+    $$PWD/scene/hud.cpp \
     $$PWD/scene/noise.cpp \
     $$PWD/scene/quad.cpp \
     $$PWD/shaderprogram.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     $$PWD/mygl.h \
     $$PWD/postprocessshader.h \
     $$PWD/scene/block.h \
+    $$PWD/scene/hud.h \
     $$PWD/scene/noise.h \
     $$PWD/scene/quad.h \
     $$PWD/shaderprogram.h \
