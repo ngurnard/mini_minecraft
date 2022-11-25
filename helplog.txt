@@ -45,13 +45,13 @@ Rendering and Chunking to implement the code.
 Nick:
 ------------------------
 
-I followed some youtube tutrials on understanding some shader functions like smoothstep (I forget which one but there are tons online) (November 19, 17: 03)
+How do I create a directory in QT?
+Answer (Nov 24, 15:07)
+https://stackoverflow.com/questions/1176666/how-to-create-a-subdirectory-for-a-project-qtcreator
 
-Question 6
-Why is my postprocess shader only showing blue sky?
-Answer (Nov 21, 21:20)
-Talked to Adam, had to bind the frame buffer before rendering terrain.
-Also had to extensively debug with team (thank you team this one was tough)
+What happened to the QSound class?
+Answer (Nov 24, 19:57)
+https://stuff.mit.edu/afs/athena/software/texmaker_v5.0.2/qt57/doc/qtmultimedia/qsoundeffect.html
+https://www.youtube.com/watch?v=DS7CDpIrwN4&ab_channel=Abdullah
 
-Other than that I mostly used Documentation online for c++
 

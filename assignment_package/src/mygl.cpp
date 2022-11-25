@@ -93,9 +93,9 @@ void MyGL::initializeGL()
     // Create and set up the post process shaders ///
     m_geomQuad.create(); // create the quadrangle over the whole screen
     m_noOp.create(":/glsl/passthrough.vert.glsl", ":/glsl/noOp.frag.glsl");
-    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl"); // continue here
-    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl"); // continue here
-    m_HUD.create(":/glsl/hudPassthrough.vert.glsl", ":/glsl/hud.frag.glsl"); // continue here
+    m_postLava.create(":/glsl/passthrough.vert.glsl", ":/glsl/postLava.frag.glsl");
+    m_postWater.create(":/glsl/passthrough.vert.glsl", ":/glsl/postWater.frag.glsl");
+    m_HUD.create(":/glsl/hudPassthrough.vert.glsl", ":/glsl/hud.frag.glsl");
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.

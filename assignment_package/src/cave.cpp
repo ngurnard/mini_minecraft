@@ -2,12 +2,12 @@
 
 glm::vec2 caveRand2( glm::vec2 p ) {
     return glm::fract( glm::sin( glm::vec2(glm::dot(p, glm::vec2(120.1, 304.7)),
-                            glm::dot(p, glm::vec2(248.5,183.3))) ) * 42389.5453f);
+                            glm::dot(p, glm::vec2(248.5, 183.3))) ) * 42389.5453f);
 }
 
 glm::vec3 caveRand3( glm::vec3 p ) {
     return glm::fract( glm::sin( glm::vec3(glm::dot(p, glm::vec3(127.1, 311.7, 58.24)),
-                                           glm::dot(p, glm::vec3(269.5,183.3, 657.3)),
+                                           glm::dot(p, glm::vec3(269.5, 183.3, 657.3)),
                                            glm::dot(p, glm::vec3(420.69, 69.420, 469.20))) ) * 43758.5453f);
 }
 
