@@ -133,7 +133,6 @@ void MyGL::resizeGL(int w, int h) {
     m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_HUD.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_progSky.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
-    m_progSky.setEye(m_player.mcr_camera.mcr_position);
 
     printGLErrorLog();
 }
@@ -190,8 +189,11 @@ void MyGL::paintGL() {
     m_progInstanced.setViewProjMatrix(viewproj);
     m_progSky.setViewProjMatrix(glm::inverse(viewproj));
 
-    // Sky specific
+    // Send camera position to shaders for the sky and blinn-phong
     m_progSky.setEye(m_player.mcr_camera.mcr_position);
+    m_progFlat.setEye(m_player.mcr_camera.mcr_position);
+    m_progLambert.setEye(m_player.mcr_camera.mcr_position);
+    m_progInstanced.setEye(m_player.mcr_camera.mcr_position);
 
     // Set Timers in Shaders
     m_progLambert.setTime(m_time);
@@ -199,12 +201,6 @@ void MyGL::paintGL() {
     m_postWater.setTime(m_time);
     m_HUD.setTime(m_time);
     m_progSky.setTime(m_time);
-
-    m_progFlat.setEye(m_player.mcr_camera.mcr_position);
-    m_progLambert.setEye(m_player.mcr_camera.mcr_position);
-    m_progInstanced.setEye(m_player.mcr_camera.mcr_position);
-
-//    std::cout << "{"<< m_player.getCamPos().x << ", " << m_player.getCamPos().y << ", " << m_player.getCamPos().z << "}" << std::endl;
 
     m_frameBuffer.bindFrameBuffer();
     glViewport(0,0,this->width(), this->height());
