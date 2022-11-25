@@ -27,6 +27,7 @@ private:
     HUD m_hud; // contains crosshair
     BlockWireframe m_viewedBlock; // white frame around current block in view range
 
+    SurfaceShader m_progSky; // will use draw(), not drawInterleaved()
     SurfaceShader m_progLambert;// A shader program that uses lambertian reflection
     SurfaceShader m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     SurfaceShader m_progInstanced;// A shader program that is designed to be compatible with instanced rendering

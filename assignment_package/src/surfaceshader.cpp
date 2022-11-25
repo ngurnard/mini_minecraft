@@ -33,8 +33,11 @@ void SurfaceShader::setupMemberVars() {
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
-    unifSampler2D    = context->glGetUniformLocation(prog, "textureSampler");
+    unifSampler2D  = context->glGetUniformLocation(prog, "textureSampler");
     unifTime       = context->glGetUniformLocation(prog, "u_Time");
+    unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifEye        = context->glGetUniformLocation(prog, "u_Eye");
+
 }
 
 void SurfaceShader::setModelMatrix(const glm::mat4 &model)
@@ -95,6 +98,25 @@ void SurfaceShader::setGeometryColor(glm::vec4 color)
     }
 }
 
+void SurfaceShader::setDimensions(glm::ivec2 dims)
+{
+    useMe();
+
+    if(unifDimensions != -1)
+    {
+        context->glUniform2i(unifDimensions, dims.x, dims.y);
+    }
+}
+
+void SurfaceShader::setEye(glm::vec3 eye)
+{
+    useMe();
+    if(unifEye != -1)
+    {
+        context->glUniform3f(unifEye, eye.x, eye.y, eye.z);
+    }
+}
+
 //This function, as its name implies, uses the passed in GL widget
 void SurfaceShader::draw(Drawable &d, int textureSlot)
 {
@@ -102,6 +124,10 @@ void SurfaceShader::draw(Drawable &d, int textureSlot)
 
     if(d.elemCount() < 0) {
         throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
+    }
+
+    if (unifSampler2D != -1) {
+        context->glUniform1i(unifSampler2D, textureSlot);
     }
 
     // Each of the following blocks checks that:

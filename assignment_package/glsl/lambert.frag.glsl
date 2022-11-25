@@ -164,9 +164,10 @@ void main()
     }
 
     // distance fog!
-    vec4 fogColor = vec4(0.6, 0.75, 0.9, 1.0);
+//    vec4 fogColor = vec4(0.6, 0.75, 0.9, 1.0); //
+    vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
     float FC = gl_FragCoord.z / gl_FragCoord.w / 124.f;
-    float falloff = clamp(1.05 - exp(-1.05f * (FC - 0.9f)), 0.f, 1.f);
+    float falloff = clamp(1.05 - exp(-1.5f * (FC - 0.9f)), 0.f, 1.f);
     out_Col = mix(out_Col, fogColor, falloff);
 
 }

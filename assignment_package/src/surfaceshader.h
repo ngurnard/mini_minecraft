@@ -22,6 +22,8 @@ int unifModel; // A handle for the "uniform" mat4 representing model matrix in t
 int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader
 int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
 int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
+int unifDimensions;
+int unifEye;
 
 
 public:
@@ -35,6 +37,11 @@ void setModelMatrix(const glm::mat4 &model);
 void setViewProjMatrix(const glm::mat4 &vp);
 // Pass the given color to this shader on the GPU
 void setGeometryColor(glm::vec4 color);
+
+// For Sky specifically
+void setDimensions(glm::ivec2 dims);
+void setEye(glm::vec3 eye);
+
 
 // Draw the given object to our screen using this ShaderProgram's shaders
 virtual void draw(Drawable &d, int textureSlot) override;

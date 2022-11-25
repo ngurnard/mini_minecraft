@@ -5,7 +5,7 @@ HUD::~HUD()
 
 void HUD::createVBOdata()
 {
-    float crossHalfWidth = 30.f; // width of crosshair
+    float crossHalfWidth = 25.f; // width of crosshair
 
     GLuint idx[4] = {0, 1, 2, 3};
     glm::vec4 pos[4] = {glm::vec4(-crossHalfWidth, 0.f, 0.9f, 1), glm::vec4(crossHalfWidth, 0.f, 0.9f, 1),

@@ -60,7 +60,7 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 
 vec4 rotateLightVec(float deg, vec4 LV) {
 
-    mat4 R = rotationMatrix(vec3(0,0,1), deg);
+    mat4 R = rotationMatrix(vec3(1,0,0.5), deg);
     return R * LV;
 }
 
@@ -91,7 +91,7 @@ void main()
     fs_dimVal = random1(modelposition.xyz/100.f);
 
 //    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
-    fs_LightVec = rotateLightVec(0.001 * u_Time, lightDir);  // Compute the direction in which the light source lies
+    fs_LightVec = rotateLightVec(0.005 * u_Time, lightDir);  // Compute the direction in which the light source lies
 
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices
