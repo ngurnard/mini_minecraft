@@ -520,9 +520,26 @@ bool Player::checkIsLiquid(float x, float y, float z) {
     }
 }
 
+glm::ivec3 Player::getViewedBlockCoord(Terrain &terrain) {
+
+    glm::vec3 cameraOrigin = this->m_camera.mcr_position;
+    glm::vec3 rayCamera = 4.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
+    float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
+    glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
+
+    if (terrain.hasChunkAt(cameraOrigin.x + rayCamera.x, cameraOrigin.z + rayCamera.z)) {
+        // TODO: consider passing chunk VBO regeneration to a VBO worker thread
+        if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit)) {
+            return out_blockHit;
+        }
+    }
+    return glm::ivec3(NULL);
+}
+
+
 BlockType Player::removeBlock(Terrain &terrain) {
     glm::vec3 cameraOrigin = this->m_camera.mcr_position; // the camera in position
-    glm::vec3 rayCamera = 3.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
+    glm::vec3 rayCamera = 4.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
     glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
 
@@ -546,7 +563,7 @@ BlockType Player::removeBlock(Terrain &terrain) {
 
 void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
     glm::vec3 cameraOrigin = this->m_camera.mcr_position; // the camera in position
-    glm::vec3 rayCamera = 3.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
+    glm::vec3 rayCamera = 4.f * glm::normalize(this->m_forward); // cast the camera ray in the forward direction 3 blocks
     float out_dist = 0; // delcare input to grid march (how far away the collision is to the block, if at all)
     glm::ivec3 out_blockHit = glm::ivec3(); // declare the input to grid march (cell that we are colliding with, if any)
     float interfaceAxis; // to keep track of the face that we hit
