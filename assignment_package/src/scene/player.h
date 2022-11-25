@@ -24,7 +24,6 @@ public:
 
     // For sounds
     QSoundEffect walk_grass;
-//    QSoundEffect walk_snow;
     QSoundEffect walk_snow_sand;
     QSoundEffect walk_stone;
     QSoundEffect swim_water;
@@ -49,8 +48,6 @@ public:
     void placeBlock(Terrain &terrain, BlockType &blockToPlace); // remove block on right mouse click
     void playSoundsGround(BlockType footBlock);
     void playSoundsFlight();
-
-    glm::vec3 getCamPos();
 
     void setCameraWidthHeight(unsigned int w, unsigned int h);
 

@@ -43,7 +43,8 @@ out float fs_Anim;
 out float fs_dimVal;
 out float fs_T2O;
 
-uniform vec4 u_CamPos;
+//uniform vec4 u_CamPos;
+uniform vec3 u_Eye; // Camera pos
 out vec4 fs_CamPos;
 
 const vec4 lightDir = normalize(vec4(0.0, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
@@ -63,7 +64,7 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 
 vec4 rotateLightVec(float deg, vec4 LV) {
 
-    mat4 R = rotationMatrix(vec3(0,0,1), deg);
+    mat4 R = rotationMatrix(vec3(1,0,0.5), deg);
     return R * LV;
 }
 
@@ -108,7 +109,7 @@ void main()
             modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
             modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
 
-            fs_Pos = normalize( cross(dFdx(vs_Pos), dFdy(vs_Pos)) );
+//            fs_Pos = normalize( cross(dFdx(vs_Pos), dFdy(vs_Pos)) );
         } else if (lava) {
             // define an oscillating time so that model can transition back and forth
             float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
@@ -123,10 +124,10 @@ void main()
     fs_dimVal = random1(modelposition.xyz/100.f);
 
 //    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
-    fs_LightVec = rotateLightVec(0.001 * u_Time, lightDir);  // Compute the direction in which the light source lies
+    fs_LightVec = rotateLightVec(0.005 * u_Time, lightDir);  // Compute the direction in which the light source lies
 //    fs_LightVec = fs_CamPos - modelposition;
 
-    fs_CamPos = u_CamPos; // uniform handle for the camera position instead of the inverse
+    fs_CamPos = vec4(u_Eye, 1); // uniform handle for the camera position instead of the inverse
     fs_Pos = modelposition;
 
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is

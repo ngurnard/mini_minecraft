@@ -12,7 +12,8 @@
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this), m_hud(this), m_viewedBlock(this),
-      m_progLambert(this), m_progFlat(this), m_progInstanced(this), m_frameBuffer(this, width(), height(), 1.0f),
+      m_progSky(this), m_progLambert(this), m_progFlat(this), m_progInstanced(this),
+      m_frameBuffer(this, width(), height(), 1.0f),
       m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
       m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
       m_time(0.f),
@@ -58,9 +59,11 @@ void MyGL::initializeGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
     // Set the color with which the screen is filled at the start of each render call.
-    glClearColor(0.37f, 0.74f, 1.0f, 1);
+//    glClearColor(0.37f, 0.74f, 1.0f, 1);
+    glClearColor(0.47f, 0.64f, 1.0f, 1);
 
     printGLErrorLog();
 
@@ -86,6 +89,7 @@ void MyGL::initializeGL()
     // Create and set up the flat lighting shader
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
+    m_progSky.create(":/glsl/sky.vert.glsl", ":/glsl/sky.frag.glsl");
 
     // Create and set up the frame buffer
     m_frameBuffer.create();
@@ -116,6 +120,7 @@ void MyGL::resizeGL(int w, int h) {
     // Upload the view-projection matrix to our shaders (i.e. onto the graphics card)
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
+    m_progSky.setViewProjMatrix(glm::inverse(viewproj));
 
     // Resize the frame buffer
     m_frameBuffer.resize(w, h, 1.f);
@@ -127,6 +132,8 @@ void MyGL::resizeGL(int w, int h) {
     m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
     m_HUD.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    m_progSky.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    m_progSky.setEye(m_player.mcr_camera.mcr_position);
 
     printGLErrorLog();
 }
@@ -172,16 +179,30 @@ void MyGL::sendPlayerDataToGUI() const {
 // MyGL's constructor links update() to a timer that fires 60 times per second,
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
+
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    // Send ViewProj to Shaders
+    glm::mat4 viewproj = m_player.mcr_camera.getViewProj();
+    m_progFlat.setViewProjMatrix(viewproj);
+    m_progLambert.setViewProjMatrix(viewproj);
+    m_progInstanced.setViewProjMatrix(viewproj);
+    m_progSky.setViewProjMatrix(glm::inverse(viewproj));
 
-    m_progFlat.setCamPos(glm::vec4(m_player.getCamPos(), 1));
-    m_progLambert.setCamPos(glm::vec4(m_player.getCamPos(), 1));
-    m_progInstanced.setCamPos(glm::vec4(m_player.getCamPos(), 1));
+    // Sky specific
+    m_progSky.setEye(m_player.mcr_camera.mcr_position);
+
+    // Set Timers in Shaders
+    m_progLambert.setTime(m_time);
+    m_postLava.setTime(m_time);
+    m_postWater.setTime(m_time);
+    m_HUD.setTime(m_time);
+    m_progSky.setTime(m_time);
+
+    m_progFlat.setEye(m_player.mcr_camera.mcr_position);
+    m_progLambert.setEye(m_player.mcr_camera.mcr_position);
+    m_progInstanced.setEye(m_player.mcr_camera.mcr_position);
 
 //    std::cout << "{"<< m_player.getCamPos().x << ", " << m_player.getCamPos().y << ", " << m_player.getCamPos().z << "}" << std::endl;
 
@@ -189,27 +210,23 @@ void MyGL::paintGL() {
     glViewport(0,0,this->width(), this->height());
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     mp_textureAtlas->bind(0); //must bind with every call to draw
+
+    // Draw Sky, then Terrain
+    m_progSky.draw(m_geomQuad, 0);
     renderTerrain();
 
     // Post process render pass ///
-    m_postLava.setTime(m_time);
-    m_postWater.setTime(m_time);
-    m_HUD.setTime(m_time);
     performPostprocessRenderPass();
 
+    // Draw the world Axes without depth checking
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
-    m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    m_progFlat.setViewProjMatrix(viewproj);
     m_progFlat.draw(m_worldAxes, 0);
-
-    // if in selection range of a block, draw wireframe around it
-    drawBlockWireframe();
-
     glEnable(GL_DEPTH_TEST);
 
-    //TODO: add this for any other shaders which may need time update
-    m_progLambert.setTime(m_time);
     m_time++;
 }
 
@@ -263,16 +280,19 @@ void MyGL::performPostprocessRenderPass()
     } else {
         m_noOp.draw(m_geomQuad, 2); // no post process
     }
+    // if in selection range of a block, draw wireframe around it
+    drawBlockWireframe();
     m_HUD.draw(m_hud, 2);
 }
 
 void MyGL::drawBlockWireframe()
 {
     glm::ivec3 blockpos = m_player.getViewedBlockCoord(m_terrain);
-    if (blockpos.x != NULL)
+    BlockType head = m_player.headSpaceSight();
+    if (blockpos.x != NULL && head != WATER && head != LAVA)
     {
         m_viewedBlock.update(blockpos);
-        m_progFlat.draw(m_viewedBlock, 0);
+        m_progFlat.draw(m_viewedBlock, 2);
     }
 }
 

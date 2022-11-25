@@ -11,5 +11,7 @@
         <file>glsl/noOp.frag.glsl</file>
         <file>glsl/hud.frag.glsl</file>
         <file>glsl/hudPassthrough.vert.glsl</file>
+        <file>glsl/sky.vert.glsl</file>
+        <file>glsl/sky.frag.glsl</file>
     </qresource>
 </RCC>

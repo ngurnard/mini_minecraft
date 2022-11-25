@@ -594,21 +594,6 @@ void Player::playSoundsGround(BlockType footBlock) {
     // Cut flying sounds
 //    flying.stop();
 
-//    // Grass sounds
-//    if (glm::length(this->m_velocity) > 0.01 && (footBlock == GRASS || footBlock == DIRT)) { // if moving at a threshold of epsilon = 0.1
-//        walk_grass.setMuted(false);
-//        // dynamically set the volume based on player speed
-//        float volume = glm::length(this->m_velocity)/50;
-//        walk_grass.setVolume(volume);
-//        if (!walk_grass.isPlaying()) { // do not reloop if already playing
-//            walk_grass.play();
-//        }
-//    } else if (walk_grass.isPlaying() && footBlock != GRASS && footBlock != DIRT) {
-//        walk_grass.setMuted(true); // instead of replaying the walking just mute it or "pause"
-//    } else {
-//        walk_grass.stop();
-//    }
-
     // Grass sounds
     if (glm::length(this->m_velocity) > 0.01 && (footBlock == GRASS || footBlock == DIRT)) { // if moving at a threshold of epsilon = 0.1
         walk_grass.setMuted(false);
@@ -690,10 +675,6 @@ void Player::playSoundsFlight() {
         flying.stop();
     }
 
-}
-
-glm::vec3 Player:: getCamPos() {
-    return glm::vec3(this->m_position.x, this->m_position.y, this->m_position.z);
 }
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {

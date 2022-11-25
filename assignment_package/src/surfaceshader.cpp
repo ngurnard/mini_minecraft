@@ -33,10 +33,13 @@ void SurfaceShader::setupMemberVars() {
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
-    unifSampler2D    = context->glGetUniformLocation(prog, "textureSampler");
+    unifSampler2D  = context->glGetUniformLocation(prog, "textureSampler");
     unifTime       = context->glGetUniformLocation(prog, "u_Time");
 
-    unifCamPos = context->glGetUniformLocation(prog, "u_CamPos"); // define what we call the cam pos
+//    unifCamPos = context->glGetUniformLocation(prog, "u_CamPos"); // define what we call the cam pos
+    unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifEye        = context->glGetUniformLocation(prog, "u_Eye");
+
 }
 
 void SurfaceShader::setModelMatrix(const glm::mat4 &model)
@@ -97,20 +100,22 @@ void SurfaceShader::setGeometryColor(glm::vec4 color)
     }
 }
 
-void SurfaceShader::setCamPos(const glm::vec4 &eye)
+void SurfaceShader::setDimensions(glm::ivec2 dims)
 {
     useMe();
 
-    if (unifCamPos != -1) {
-//        std::cout << "I AM HERE " << std::endl;
-        // Pass a vector into a uniform variable in our shader handle to the vec variable on the GPU
-        context->glUniform4fv(unifCamPos,
-                            // How many vectors to pass
-                               1,
-                            // Pointer to the first element of the vector
-                               &eye[0]);
+    if(unifDimensions != -1)
+    {
+        context->glUniform2i(unifDimensions, dims.x, dims.y);
+    }
+}
 
-//        std::cout << "{"<< eye.x << ", " << eye.y << ", " << eye.z << "}" << std::endl;
+void SurfaceShader::setEye(glm::vec3 eye)
+{
+    useMe();
+    if(unifEye != -1)
+    {
+        context->glUniform3f(unifEye, eye.x, eye.y, eye.z);
     }
 }
 
@@ -121,6 +126,10 @@ void SurfaceShader::draw(Drawable &d, int textureSlot)
 
     if(d.elemCount() < 0) {
         throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
+    }
+
+    if (unifSampler2D != -1) {
+        context->glUniform1i(unifSampler2D, textureSlot);
     }
 
     // Each of the following blocks checks that:
