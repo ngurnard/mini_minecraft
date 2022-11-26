@@ -54,6 +54,7 @@ private:
                               // your mouse stays within the screen bounds and is always read.
 
     void sendPlayerDataToGUI() const;
+    void sendInventoryDataToGUI() const;
 
     qint64 prevTime; // the time in the last tick
 
@@ -123,7 +124,16 @@ signals:
     void sig_sendLiquidBool(QString) const;
     void sig_sendGroundBool(QString) const;
     void sig_sendCamBlock(QString) const;
+//    void sig_sendPlayer(Player &player) const;
 
     // inventory
     void sig_showInventory(bool showInventory);
+    void sig_sendGrassCount(int count) const;
+    void sig_sendDirtCount(int count) const;
+    void sig_sendStoneCount(int count) const;
+    void sig_sendWaterCount(int count) const;
+    void sig_sendLavaCount(int count) const;
+    void sig_sendIceCount(int count) const;
+    void sig_sendSnowCount(int count) const;
+    void sig_sendSandCount(int count) const;
 };

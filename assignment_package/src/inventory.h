@@ -4,7 +4,9 @@
 #include <QWidget> // make the gui a widget similar to player info
                    // otherwise would have to make frame buffer object to be like minecraft and that is hard
                    // would have to map clicks on spaces of the screen and stuff... this qt way is easier
-#include <ui_mainwindow.h>
+#include <QKeyEvent> // need this in order to close the inventory
+#include <QPixmap>
+#include "scene/player.h"
 
 namespace Ui {
     class Inventory;
@@ -17,17 +19,22 @@ public:
     explicit Inventory(QWidget *parent = nullptr);
     ~Inventory();
 
-    Ui::MainWindow *ui_mainwindow; // so we can hide the main window when we open the inventory
+    // Need to get the keypress to close since we switch from mainwindow
+    void keyPressEvent(QKeyEvent *e);
+    void setInventoryPlayer(Player &player);
 
 public slots:
-    void slot_setGrass(QString);
-    void slot_setDirt(QString);
-    void slot_setStone(QString);
-    void slot_setWater(QString);
-    void slot_setLava(QString);
-    void slot_setIce(QString);
-    void slot_setSnow(QString s);
-    void slot_setSand(QString s);
+    void slot_setGrass(int);
+    void slot_setDirt(int);
+    void slot_setStone(int);
+    void slot_setWater(int);
+    void slot_setLava(int);
+    void slot_setIce(int);
+    void slot_setSnow(int);
+    void slot_setSand(int);
+
+//    void slot_setHoldingBlock(Player &player);
+
 
 private:
     Ui::Inventory *ui;

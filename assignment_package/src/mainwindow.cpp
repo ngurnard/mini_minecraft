@@ -24,6 +24,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Inventory specific
     connect(ui->mygl, SIGNAL(sig_showInventory(bool)), this, SLOT(slot_showInventory(bool)));
+    connect(ui->mygl, SIGNAL(sig_sendGrassCount(int)), &inventoryWindow, SLOT(slot_setGrass(int)));
+    connect(ui->mygl, SIGNAL(sig_sendDirtCount(int)), &inventoryWindow, SLOT(slot_setDirt(int)));
+    connect(ui->mygl, SIGNAL(sig_sendStoneCount(int)), &inventoryWindow, SLOT(slot_setStone(int)));
+    connect(ui->mygl, SIGNAL(sig_sendWaterCount(int)), &inventoryWindow, SLOT(slot_setWater(int)));
+    connect(ui->mygl, SIGNAL(sig_sendLavaCount(int)), &inventoryWindow, SLOT(slot_setLava(int)));
+    connect(ui->mygl, SIGNAL(sig_sendIceCount(int)), &inventoryWindow, SLOT(slot_setIce(int)));
+    connect(ui->mygl, SIGNAL(sig_sendSnowCount(int)), &inventoryWindow, SLOT(slot_setSnow(int)));
+    connect(ui->mygl, SIGNAL(sig_sendSandCount(int)), &inventoryWindow, SLOT(slot_setSand(int)));
+
+//    connect(ui->mygl, SIGNAL(sig_sendPlayer(Player)), &inventoryWindow, SLOT(slot_setHoldingBlock(Player)));
 }
 
 MainWindow::~MainWindow()
@@ -41,6 +51,10 @@ void MainWindow::on_actionCamera_Controls_triggered()
     cHelp.show();
 }
 
-void MainWindow::slot_showInventory(bool) {
-    std::cout << "I am in this slot" << std::endl;
+void MainWindow::slot_showInventory(bool show) {
+    if (show) {
+        inventoryWindow.show();
+    } else {
+        inventoryWindow.close();
+    }
 }

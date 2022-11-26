@@ -156,7 +156,7 @@ void MyGL::tick() {
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
 
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
-//    sendInventoryDataToGUI();
+    sendInventoryDataToGUI();
     prevTime = currTime; // update the previous time
 }
 
@@ -173,6 +173,18 @@ void MyGL::sendPlayerDataToGUI() const {
     emit sig_sendLiquidBool(QString::number(m_player.playerInLiquid));
     emit sig_sendGroundBool(QString::number(m_player.playerOnGround));
     emit sig_sendCamBlock(QString(m_player.camBlock));
+//    emit sig_sendPlayer(m_player);
+}
+
+void MyGL::sendInventoryDataToGUI() const {
+    emit sig_sendGrassCount(m_player.grassCount);
+    emit sig_sendDirtCount(m_player.dirtCount);
+    emit sig_sendStoneCount(m_player.stoneCount);
+    emit sig_sendWaterCount(m_player.waterCount);
+    emit sig_sendLavaCount(m_player.lavaCount);
+    emit sig_sendIceCount(m_player.iceCount);
+    emit sig_sendSnowCount(m_player.snowCount);
+    emit sig_sendSandCount(m_player.sandCount);
 }
 
 // This function is called whenever update() is called.
@@ -375,6 +387,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
         m_inputs.ePressed = false;
     } else if (e->key() == Qt::Key_Space) {
         m_inputs.spacePressed = false;
+    } else if (e->key() == Qt::Key_I) {
+        showInventory = !showInventory; // switch it from whatever it was before
     } // dont do anything for F this time
 }
 

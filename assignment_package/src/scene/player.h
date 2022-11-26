@@ -31,6 +31,9 @@ public:
     QSoundEffect flying;
     QSoundEffect toggle_flying;
 
+    // Inventory
+    BlockType holdingBlock;
+
     Player(glm::vec3 pos, const Terrain &terrain);
     virtual ~Player() override;
 
@@ -85,7 +88,16 @@ public:
     bool playerInLiquid;
     bool playerOnGround;
     QString camBlock;
-//    QString camSight();
+
+    // For displaying inventory info
+    int grassCount;
+    int dirtCount;
+    int stoneCount;
+    int waterCount;
+    int lavaCount;
+    int iceCount;
+    int snowCount;
+    int sandCount;
 
     // For postprocess shader
     BlockType headSpaceSight();
