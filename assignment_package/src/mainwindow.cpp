@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->mygl, SIGNAL(sig_sendLiquidBool(QString)), &playerInfoWindow, SLOT(slot_setLiquidText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendGroundBool(QString)), &playerInfoWindow, SLOT(slot_setGroundText(QString)));
     connect(ui->mygl, SIGNAL(sig_sendCamBlock(QString)), &playerInfoWindow, SLOT(slot_setcamBlockText(QString)));
+    connect(ui->mygl, SIGNAL(sig_sendCurrentHoldingBlock(QString)), &playerInfoWindow, SLOT(slot_setCurrentHoldingBlock(QString)));
 
     // Inventory specific
     connect(ui->mygl, SIGNAL(sig_showInventory(bool)), this, SLOT(slot_showInventory(bool)));
@@ -33,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->mygl, SIGNAL(sig_sendSnowCount(int)), &inventoryWindow, SLOT(slot_setSnow(int)));
     connect(ui->mygl, SIGNAL(sig_sendSandCount(int)), &inventoryWindow, SLOT(slot_setSand(int)));
 
-//    connect(ui->mygl, SIGNAL(sig_sendPlayer(Player)), &inventoryWindow, SLOT(slot_setHoldingBlock(Player)));
+    connect(ui->mygl, SIGNAL(sig_sendPlayer(Player*)), &inventoryWindow, SLOT(slot_setHoldingBlock(Player*)));
 }
 
 MainWindow::~MainWindow()

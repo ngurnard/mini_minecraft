@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QDir>
+#include <utility>
 #include "inventory.h"
 
 
@@ -15,7 +16,7 @@ MyGL::MyGL(QWidget *parent)
       m_progSky(this), m_progLambert(this), m_progFlat(this), m_progInstanced(this),
       m_frameBuffer(this, width(), height(), 1.0f),
       m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
-      m_terrain(this), m_player(glm::vec3(0.f, 150.f, 0.f), m_terrain),
+      m_terrain(this),
       m_time(0.f),
       prevTime(QDateTime::currentMSecsSinceEpoch()), m_geomQuad(this),
       showInventory(false), mp_textureAtlas(nullptr)
@@ -84,6 +85,10 @@ void MyGL::initializeGL()
     // stored as uPtr mp_textureAtlas
     createTexAtlas();
 
+    // Generate the unique player Ptr to select blocks
+//    mup_player = mkU<Player>(mp_player.get());
+     mp_player = mkU<Player>(glm::vec3(0.f, 150.f, 0.f), m_terrain);
+
     // Create and set up the diffuse shader
     m_progLambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
@@ -114,8 +119,8 @@ void MyGL::initializeGL()
 void MyGL::resizeGL(int w, int h) {
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
-    m_player.setCameraWidthHeight(static_cast<unsigned int>(w), static_cast<unsigned int>(h));
-    glm::mat4 viewproj = m_player.mcr_camera.getViewProj();
+    mp_player->setCameraWidthHeight(static_cast<unsigned int>(w), static_cast<unsigned int>(h));
+    glm::mat4 viewproj = mp_player->mcr_camera.getViewProj();
 
     // Upload the view-projection matrix to our shaders (i.e. onto the graphics card)
     m_progLambert.setViewProjMatrix(viewproj);
@@ -143,16 +148,16 @@ void MyGL::resizeGL(int w, int h) {
 // all per-frame actions here, such as performing physics updates on all
 // entities in the scene.
 void MyGL::tick() {
-    glm::vec3 playerPosPrev = m_player.mcr_position;
+    glm::vec3 playerPosPrev = mp_player->mcr_position;
     qint64 currTime = QDateTime::currentMSecsSinceEpoch(); // time at this ticl
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
-    m_player.tick(dT, m_inputs); // tick the player
+    mp_player->tick(dT, m_inputs); // tick the player
     // Uncomment this line to test terrain expansion
 //    m_terrain.updateTerrain(m_player.mcr_position);
 
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
-    m_terrain.multithreadedWork(m_player.mcr_position, playerPosPrev, dT);
+    m_terrain.multithreadedWork(mp_player->mcr_position, playerPosPrev, dT);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
 
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
@@ -161,30 +166,33 @@ void MyGL::tick() {
 }
 
 void MyGL::sendPlayerDataToGUI() const {
-    emit sig_sendPlayerPos(m_player.posAsQString());
-    emit sig_sendPlayerVel(m_player.velAsQString());
-    emit sig_sendPlayerAcc(m_player.accAsQString());
-    emit sig_sendPlayerLook(m_player.lookAsQString());
-    glm::vec2 pPos(m_player.mcr_position.x, m_player.mcr_position.z);
+    emit sig_sendPlayerPos(mp_player->posAsQString());
+    emit sig_sendPlayerVel(mp_player->velAsQString());
+    emit sig_sendPlayerAcc(mp_player->accAsQString());
+    emit sig_sendPlayerLook(mp_player->lookAsQString());
+    glm::vec2 pPos(mp_player->mcr_position.x, mp_player->mcr_position.z);
     glm::ivec2 chunk(16 * glm::ivec2(glm::floor(pPos / 16.f)));
     glm::ivec2 zone(64 * glm::ivec2(glm::floor(pPos / 64.f)));
     emit sig_sendPlayerChunk(QString::fromStdString("( " + std::to_string(chunk.x) + ", " + std::to_string(chunk.y) + " )"));
     emit sig_sendPlayerTerrainZone(QString::fromStdString("( " + std::to_string(zone.x) + ", " + std::to_string(zone.y) + " )"));
-    emit sig_sendLiquidBool(QString::number(m_player.playerInLiquid));
-    emit sig_sendGroundBool(QString::number(m_player.playerOnGround));
-    emit sig_sendCamBlock(QString(m_player.camBlock));
-//    emit sig_sendPlayer(m_player);
+    emit sig_sendLiquidBool(QString::number(mp_player->playerInLiquid));
+    emit sig_sendGroundBool(QString::number(mp_player->playerOnGround));
+    emit sig_sendCamBlock(QString(mp_player->camBlock));
+    emit sig_sendCurrentHoldingBlock(QString(type_enum_to_string.at(mp_player->holdingBlock)));
 }
 
-void MyGL::sendInventoryDataToGUI() const {
-    emit sig_sendGrassCount(m_player.grassCount);
-    emit sig_sendDirtCount(m_player.dirtCount);
-    emit sig_sendStoneCount(m_player.stoneCount);
-    emit sig_sendWaterCount(m_player.waterCount);
-    emit sig_sendLavaCount(m_player.lavaCount);
-    emit sig_sendIceCount(m_player.iceCount);
-    emit sig_sendSnowCount(m_player.snowCount);
-    emit sig_sendSandCount(m_player.sandCount);
+void MyGL::sendInventoryDataToGUI() {
+    emit sig_sendGrassCount(mp_player->grassCount);
+    emit sig_sendDirtCount(mp_player->dirtCount);
+    emit sig_sendStoneCount(mp_player->stoneCount);
+    emit sig_sendWaterCount(mp_player->waterCount);
+    emit sig_sendLavaCount(mp_player->lavaCount);
+    emit sig_sendIceCount(mp_player->iceCount);
+    emit sig_sendSnowCount(mp_player->snowCount);
+    emit sig_sendSandCount(mp_player->sandCount);
+
+    // For selecting the holding block
+    emit sig_sendPlayer(mp_player.get());
 }
 
 // This function is called whenever update() is called.
@@ -196,17 +204,17 @@ void MyGL::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Send ViewProj to Shaders
-    glm::mat4 viewproj = m_player.mcr_camera.getViewProj();
+    glm::mat4 viewproj = mp_player->mcr_camera.getViewProj();
     m_progFlat.setViewProjMatrix(viewproj);
     m_progLambert.setViewProjMatrix(viewproj);
     m_progInstanced.setViewProjMatrix(viewproj);
     m_progSky.setViewProjMatrix(glm::inverse(viewproj));
 
     // Send camera position to shaders for the sky and blinn-phong
-    m_progSky.setEye(m_player.mcr_camera.mcr_position);
-    m_progFlat.setEye(m_player.mcr_camera.mcr_position);
-    m_progLambert.setEye(m_player.mcr_camera.mcr_position);
-    m_progInstanced.setEye(m_player.mcr_camera.mcr_position);
+    m_progSky.setEye(mp_player->mcr_camera.mcr_position);
+    m_progFlat.setEye(mp_player->mcr_camera.mcr_position);
+    m_progLambert.setEye(mp_player->mcr_camera.mcr_position);
+    m_progInstanced.setEye(mp_player->mcr_camera.mcr_position);
 
     // Set Timers in Shaders
     m_progLambert.setTime(m_time);
@@ -242,8 +250,8 @@ void MyGL::paintGL() {
 
 void MyGL::renderTerrain() {
 //    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
-    int x = 16 * static_cast<int>(glm::floor(m_player.mcr_position.x / 16.f));
-    int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
+    int x = 16 * static_cast<int>(glm::floor(mp_player->mcr_position.x / 16.f));
+    int z = 16 * static_cast<int>(glm::floor(mp_player->mcr_position.z / 16.f));
 
     int rend_dist = 256;
 
@@ -279,7 +287,7 @@ void MyGL::performPostprocessRenderPass()
     m_frameBuffer.bindToTextureSlot(2);
 //    m_postLava.draw(m_geomQuad, 2);
 
-    BlockType viewedBlock = this->m_player.headSpaceSight();
+    BlockType viewedBlock = this->mp_player->headSpaceSight();
 //    BlockType viewedBlock = LAVA;
     if (viewedBlock == LAVA) {
 //        std::cout << " In lava postprocessrenderpass" << std::endl;
@@ -296,8 +304,8 @@ void MyGL::performPostprocessRenderPass()
 
 void MyGL::drawBlockWireframe()
 {
-    glm::ivec3 blockpos = m_player.getViewedBlockCoord(m_terrain);
-    BlockType head = m_player.headSpaceSight();
+    glm::ivec3 blockpos = mp_player->getViewedBlockCoord(m_terrain);
+    BlockType head = mp_player->headSpaceSight();
     if (blockpos.x != NULL && head != WATER && head != LAVA)
     {
         m_viewedBlock.update(blockpos);
@@ -349,7 +357,7 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
         m_inputs.fPressed = true;
         m_inputs.flightMode = !m_inputs.flightMode;
         if (m_inputs.flightMode) {
-            m_player.toggle_flying.play();
+            mp_player->toggle_flying.play();
         }
     } else if (e->key() == Qt::Key_I) {
         showInventory = !showInventory; // switch it from whatever it was before
@@ -400,17 +408,17 @@ void MyGL::mouseMoveEvent(QMouseEvent *e) {
     // relative to the widget or item that received the event.
     float dx = -(e->position().x() - this->width() / 2); // mouse position relative to center - center of screen. Negative because testing was backwards
     float dy = -(e->position().y() - this->height() / 2); // mouse position relative to center - center of screen. Negative because testing was backwards
-    this->m_player.rotateOnUpGlobal(dx * dpi);
-    this->m_player.rotateOnRightLocal(dy * dpi);
+    this->mp_player->rotateOnUpGlobal(dx * dpi);
+    this->mp_player->rotateOnRightLocal(dy * dpi);
     moveMouseToCenter(); // recenter the mouse to properly compute the next dx and dy
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
     // somehow call grid marching with the camera as the origin? and remove the block if they click
     if (e->button() == Qt::LeftButton) { // if the player clicks the left mouse button, remove a block
-        BlockType removedBlock = this->m_player.removeBlock(this->m_terrain);
+        BlockType removedBlock = this->mp_player->removeBlock(this->m_terrain);
     } else if (e->button() == Qt::RightButton) { // if the player clicks the right mouse, place a block
-        BlockType blockToPlace = LAVA;//GRASS;
-        this->m_player.placeBlock(this->m_terrain, blockToPlace);
+        BlockType blockToPlace = mp_player->holdingBlock;//LAVA;//GRASS;
+        this->mp_player->placeBlock(this->m_terrain, blockToPlace);
     }
 }

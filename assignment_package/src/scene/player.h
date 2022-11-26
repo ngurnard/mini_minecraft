@@ -98,6 +98,7 @@ public:
     int iceCount;
     int snowCount;
     int sandCount;
+//    bool getOnGround() const { return playerOnGround; }
 
     // For postprocess shader
     BlockType headSpaceSight();

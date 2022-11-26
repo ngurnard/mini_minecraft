@@ -48,3 +48,7 @@ void PlayerInfo::slot_setcamBlockText(QString s) {
     ui->camBlockLabel->setText(s);
 }
 
+void PlayerInfo::slot_setCurrentHoldingBlock(QString s) {
+    ui->holdingLabel->setText(s);
+}
+

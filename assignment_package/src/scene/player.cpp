@@ -481,20 +481,6 @@ BlockType Player::checkInLiquid(InputBundle &inputs) {
 //    return type_enum_to_string[block];
 //}
 
-std::unordered_map<int, QString> type_enum_to_string = {
-    { 0, "EMPTY" },
-    { 1, "GRASS" },
-    { 2, "DIRT" },
-    { 3, "STONE" },
-    { 4, "WATER" },
-    { 5, "LAVA" },
-    { 6, "ICE" },
-    { 7, "SNOW" },
-    { 8, "SAND" },
-    { 9, "UNCERTAIN" },
-    { 10, "BEDROCK" },
-};
-
 BlockType Player::headSpaceSight()
 {
     // Get the block type where the player's camera is and check if it is lava or water
@@ -503,7 +489,7 @@ BlockType Player::headSpaceSight()
     try {
         block = this->mcr_terrain.getBlockAt(glm::floor(this->mcr_camera.mcr_position));
 
-        this->camBlock = type_enum_to_string[block];
+        this->camBlock = type_enum_to_string.at(block);
     } catch(const std::out_of_range &exception) {
         this->camBlock = "NOCHUNK";
         block = UNCERTAIN;
@@ -564,20 +550,28 @@ BlockType Player::removeBlock(Terrain &terrain) {
         // logic for increasing the number of held blocks
         if (block == GRASS) {
             grassCount += 1;
+            grassCount = glm::clamp(grassCount, 0, 64);
         } else if (block == DIRT) {
             dirtCount += 1;
+            dirtCount = glm::clamp(dirtCount, 0, 64);
         } else if (block == STONE) {
             stoneCount += 1;
+            stoneCount = glm::clamp(stoneCount, 0, 64);
         } else if (block == WATER) {
             waterCount += 1;
+            waterCount = glm::clamp(waterCount, 0, 64);
         } else if (block == LAVA) {
             lavaCount += 1;
+            lavaCount = glm::clamp(lavaCount, 0, 64);
         } else if (block == ICE) {
             iceCount += 1;
+            iceCount = glm::clamp(iceCount, 0, 64);
         } else if (block == SNOW) {
             snowCount += 1;
+            snowCount = glm::clamp(snowCount, 0, 64);
         } else if (block == SAND) {
             sandCount += 1;
+            sandCount = glm::clamp(sandCount, 0, 64);
         }
 
         return block; // return the block type that was hit

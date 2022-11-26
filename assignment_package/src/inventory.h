@@ -23,6 +23,8 @@ public:
     void keyPressEvent(QKeyEvent *e);
     void setInventoryPlayer(Player &player);
 
+    BlockType holding = EMPTY;
+
 public slots:
     void slot_setGrass(int);
     void slot_setDirt(int);
@@ -33,8 +35,18 @@ public slots:
     void slot_setSnow(int);
     void slot_setSand(int);
 
-//    void slot_setHoldingBlock(Player &player);
+    void slot_getHoldingBlockGrass();
+    void slot_getHoldingBlockDirt();
+    void slot_getHoldingBlockStone();
+    void slot_getHoldingBlockWater();
+    void slot_getHoldingBlockLava();
+    void slot_getHoldingBlockIce();
+    void slot_getHoldingBlockSnow();
+    void slot_getHoldingBlockSand();
+    void slot_setHoldingBlock(Player*);
 
+signals:
+    void sig_setHoldingGrass();
 
 private:
     Ui::Inventory *ui;

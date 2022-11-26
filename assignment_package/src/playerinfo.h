@@ -23,6 +23,7 @@ public slots:
     void slot_setLiquidText(QString s);
     void slot_setGroundText(QString s);
     void slot_setcamBlockText(QString s);
+    void slot_setCurrentHoldingBlock(QString s);
 
 private:
     Ui::PlayerInfo *ui;

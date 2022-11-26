@@ -7,43 +7,14 @@ Inventory::Inventory(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
-
-    // display the dirt block
-    QPixmap dirtPix(":/textures/dirt_block.png");
-    ui->dirtPic->setPixmap(dirtPix);
-    ui->dirtPic->setScaledContents(true);
-
-    // display the stone block
-    QPixmap stonePix(":/textures/stone_block.png");
-    ui->stonePic->setPixmap(stonePix);
-    ui->stonePic->setScaledContents(true);
-
-    // display the water block
-    QPixmap waterPix(":/textures/water_block.png");
-    ui->waterPic->setPixmap(waterPix);
-    ui->waterPic->setScaledContents(true);
-
-    // display the lava block
-    QPixmap lavaPix(":/textures/lava_block.png");
-    ui->lavaPic->setPixmap(lavaPix);
-    ui->lavaPic->setScaledContents(true);
-
-    // display the ice block
-    QPixmap icePix(":/textures/ice_block.png");
-    ui->icePic->setPixmap(icePix);
-    ui->icePic->setScaledContents(true);
-
-    // display the snow block
-    QPixmap snowPix(":/textures/snow_block.png");
-    ui->snowPic->setPixmap(snowPix);
-    ui->snowPic->setScaledContents(true);
-
-    // display the sand block
-    QPixmap sandPix(":/textures/sand_block.png");
-    ui->sandPic->setPixmap(sandPix);
-    ui->sandPic->setScaledContents(true);
-
+    connect(ui->grassButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockGrass()));
+    connect(ui->dirtButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockDirt()));
+    connect(ui->stoneButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockStone()));
+    connect(ui->waterButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockWater()));
+    connect(ui->lavaButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockLava()));
+    connect(ui->iceButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockIce()));
+    connect(ui->snowButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockSnow()));
+    connect(ui->sandButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockSand()));
 }
 
 Inventory::~Inventory()
@@ -200,8 +171,65 @@ void Inventory::slot_setSand(int count) {
     }
 }
 
-//void Inventory::slot_setHoldingBlock(Player &player) {
-//    player.holdingBlock = EMPTY;
-//}
+void Inventory::slot_getHoldingBlockGrass() {
+    this->holding = GRASS;
+}
+
+void Inventory::slot_getHoldingBlockDirt() {
+    this->holding = DIRT;
+}
+
+void Inventory::slot_getHoldingBlockStone() {
+    this->holding = STONE;
+}
+
+void Inventory::slot_getHoldingBlockWater() {
+    this->holding = WATER;
+}
+
+void Inventory::slot_getHoldingBlockLava() {
+    this->holding = LAVA;
+}
+
+void Inventory::slot_getHoldingBlockIce() {
+    this->holding = ICE;
+}
+
+void Inventory::slot_getHoldingBlockSnow() {
+    this->holding = SNOW;
+}
+
+void Inventory::slot_getHoldingBlockSand() {
+    this->holding = SAND;
+}
+
+void Inventory::slot_setHoldingBlock(Player *player) {
+//    QString printMe = type_enum_to_string.at(player->holdingBlock);
+//    if (this->holding != EMPTY) {
+//        player->holdingBlock = this->holding;
+////        std::cout << "holding changed in inventory to: " << printMe.toStdString() << std::endl;
+//    }
+
+    // Don't change block type if you don't have any left
+    if (this->holding == GRASS && player->grassCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == DIRT && player->dirtCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == STONE && player->stoneCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == WATER && player->waterCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == LAVA && player->lavaCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == ICE && player->iceCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == SNOW && player->snowCount != 0) {
+        player->holdingBlock = this->holding;
+    } else if (this->holding == SAND && player->sandCount != 0) {
+        player->holdingBlock = this->holding;
+    } else {
+        player->holdingBlock = EMPTY;
+    }
+}
 
 
