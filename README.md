@@ -2,8 +2,8 @@
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 3:
 
-####**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound**
-##### Inventory:
+**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound**
+#### Inventory:
 - Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, lava, ice, snow, sand
 - The player is not able to place a block if their block count falls below 1 (ie they have zero)
 - The player can collect up to 64 of each block type
@@ -15,14 +15,14 @@
 - The inventory widget was implemented with a QWidget and adding an *inventory.ui* inside of the *Forms* diretory 
 - Challenges: The hardest part of setting up the inventory was opening a new QWidget window and making sure it can connect to the main program. This took some time for me because I had to refresh my understanding of signals and slots and then implement them thuroughly. Additionally, Getting an image to show in the inventory wasn't trivial to figure out despite the fact it took relatively few lines. Finally, I had to change the player memeber variable to a uniquie pointer in order for player data to be passed through a signal from MyGL -> MainWindow -> Inventory or MyGL -> Inventory -> MainWindow
 
-##### Water Waves:
+#### Water Waves:
 - If a vertex is animatable and is liquid (water or lava), then the surface of the block will have displaces vertices
 - The surface of either water or lava appears to be moving according to a noise function
 - The vertex positions were changed inside of the *lambert.vert.glsl* vertex shader file in the *Resources* directory
 - Implemented Blinn-Phong lighting in the *lambert.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert, however was not able to figure out to to correctly displace the normals in the vertex shader so it doesn't appear different that that of the lambert shading
 - Challenges: I was not able to figure out how to displace the normals correctly inside of the vertex shader. The tranformation I did was non-linear, so an inverse-transpose of the vertex normals was not enough. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal, however was unable to figure out the surface contour since I had no information on surrounding vertices. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
 
-##### Sound
+#### Sound
 - Made a additional functions inside of *player.cpp* and *mygl.cpp* that induces sounds based on certain events
 - If the player is walking on dirt or grass, footsteps for grass/dirt will play if the player is walking
 - If the player is walking on sand or snow, footsteps for snow/sand will play if the player is walking
@@ -33,7 +33,7 @@
 - If the player switches from non-flight mode to flight-mode, a takeoff sound will play
 - Implemented dynamic sound volume, so if the player is going slowly then the volume will be quiter than if they are going faster. This is hard to notice unless turned off, then all of the sounds for walking and flying will sound extremely abrupt
 
-##### Post-Process Camera Overlay
+#### Post-Process Camera Overlay
 - This was mostly implemented in the last milestone for the sake of this milestone. Please refer to comment there for more information
 - Post-process effects are for when the player is under water or lava and are an upgrade from the regular red or blue tinge
 
