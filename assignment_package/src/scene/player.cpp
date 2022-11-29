@@ -4,7 +4,9 @@
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
-      mcr_camera(m_camera)
+      mcr_camera(m_camera),
+      holdingBlock(EMPTY),
+      grassCount(1), dirtCount(1), stoneCount(1), waterCount(1), lavaCount(1), iceCount(1), snowCount(1), sandCount(1)
 {
     // set up sounds
     walk_grass.setSource(QUrl::fromLocalFile(":/sounds/footsteps_woods_grass.wav"));
@@ -479,20 +481,6 @@ BlockType Player::checkInLiquid(InputBundle &inputs) {
 //    return type_enum_to_string[block];
 //}
 
-std::unordered_map<int, QString> type_enum_to_string = {
-    { 0, "EMPTY" },
-    { 1, "GRASS" },
-    { 2, "DIRT" },
-    { 3, "STONE" },
-    { 4, "WATER" },
-    { 5, "LAVA" },
-    { 6, "ICE" },
-    { 7, "SNOW" },
-    { 8, "SAND" },
-    { 9, "UNCERTAIN" },
-    { 10, "BEDROCK" },
-};
-
 BlockType Player::headSpaceSight()
 {
     // Get the block type where the player's camera is and check if it is lava or water
@@ -501,7 +489,7 @@ BlockType Player::headSpaceSight()
     try {
         block = this->mcr_terrain.getBlockAt(glm::floor(this->mcr_camera.mcr_position));
 
-        this->camBlock = type_enum_to_string[block];
+        this->camBlock = type_enum_to_string.at(block);
     } catch(const std::out_of_range &exception) {
         this->camBlock = "NOCHUNK";
         block = UNCERTAIN;
@@ -549,7 +537,8 @@ BlockType Player::removeBlock(Terrain &terrain) {
         BlockType block = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z); // get the block type that we clicked
         if (block != BEDROCK) {
             terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY); // set the clicked blocktype to empty
-            block = EMPTY; // reset the block to EMPTY so the player can't hold bedrock
+        } else {
+            block = EMPTY;
         }
         const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         chunk->recreateVBOdata();
@@ -557,6 +546,34 @@ BlockType Player::removeBlock(Terrain &terrain) {
         for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
             neighbor.second->recreateVBOdata();
         }
+
+        // logic for increasing the number of held blocks
+        if (block == GRASS) {
+            grassCount += 1;
+            grassCount = glm::clamp(grassCount, 0, 64);
+        } else if (block == DIRT) {
+            dirtCount += 1;
+            dirtCount = glm::clamp(dirtCount, 0, 64);
+        } else if (block == STONE) {
+            stoneCount += 1;
+            stoneCount = glm::clamp(stoneCount, 0, 64);
+        } else if (block == WATER) {
+            waterCount += 1;
+            waterCount = glm::clamp(waterCount, 0, 64);
+        } else if (block == LAVA) {
+            lavaCount += 1;
+            lavaCount = glm::clamp(lavaCount, 0, 64);
+        } else if (block == ICE) {
+            iceCount += 1;
+            iceCount = glm::clamp(iceCount, 0, 64);
+        } else if (block == SNOW) {
+            snowCount += 1;
+            snowCount = glm::clamp(snowCount, 0, 64);
+        } else if (block == SAND) {
+            sandCount += 1;
+            sandCount = glm::clamp(sandCount, 0, 64);
+        }
+
         return block; // return the block type that was hit
     }
     return EMPTY; // if no block hit, return empty block
@@ -570,7 +587,36 @@ void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
     float interfaceAxis; // to keep track of the face that we hit
 
     if (gridMarch(cameraOrigin, rayCamera, terrain, &out_dist, &out_blockHit, &interfaceAxis)) { // if there is a detected block
-//      if (out_blockHit != glm::ivec3(glm::floor(this->m_position).x, glm::floor(this->m_position).y, glm::floor(this->m_position).z)) { // if not on the block
+        // logic for decreasing the number of held blocks
+        bool placeMe = false;
+        if (blockToPlace == GRASS && grassCount != 0) {
+            placeMe = true;
+            grassCount -= 1;
+        } else if (blockToPlace == DIRT && dirtCount != 0) {
+            placeMe = true;
+            dirtCount -= 1;
+        } else if (blockToPlace == STONE && stoneCount != 0) {
+            placeMe = true;
+            stoneCount -= 1;
+        } else if (blockToPlace == WATER && waterCount != 0) {
+            placeMe = true;
+            waterCount -= 1;
+        } else if (blockToPlace == LAVA && lavaCount != 0) {
+            placeMe = true;
+            lavaCount -= 1;
+        } else if (blockToPlace == ICE && iceCount != 0) {
+            placeMe = true;
+            iceCount -= 1;
+        } else if (blockToPlace == SNOW && snowCount != 0) {
+            placeMe = true;
+            snowCount -= 1;
+        } else if (blockToPlace == SAND && sandCount != 0) {
+            placeMe = true;
+            sandCount -= 1;
+        }
+
+        // Should we place the block?
+        if (placeMe == true) {
             if (interfaceAxis == 2) { // z-axis
                 terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z - glm::sign(rayCamera.z), blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
             } else if (interfaceAxis == 1) { // y-axis
@@ -578,14 +624,16 @@ void Player::placeBlock(Terrain &terrain, BlockType &blockToPlace) {
             } else if (interfaceAxis == 0) { // x-axis
                 terrain.setBlockAt(out_blockHit.x - glm::sign(rayCamera.x), out_blockHit.y, out_blockHit.z, blockToPlace); // place block a small distance in front of the interface axis (otherwise replaces block)
             }
-            // TODO: consider passing chunk VBO regeneration to a VBO worker thread
-            const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
-            chunk->recreateVBOdata();
 
-            for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
-                neighbor.second->recreateVBOdata();
-            }
-//      }
+        }
+
+        // TODO: consider passing chunk VBO regeneration to a VBO worker thread
+        const uPtr<Chunk> &chunk = terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
+        chunk->recreateVBOdata();
+
+        for(auto &neighbor : terrain.getChunkAt(out_blockHit.x, out_blockHit.z)->m_neighbors) {
+            neighbor.second->recreateVBOdata();
+        }
     }
 }
 

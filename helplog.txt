@@ -62,3 +62,16 @@ https://www.google.com/search?client=firefox-b-1-d&q=replace+main+window+on+push
 https://stackoverflow.com/questions/17988292/how-to-open-a-new-window-from-the-main-window-in-qt
 https://stackoverflow.com/questions/20583860/ui-header-file-ui-name-h-not-found
 https://forum.qt.io/topic/122810/error-cannot-initialize-object-parameter-of-type-ui_mainwindow-with-an-expression-of-type-ui-mainwindow
+
+Apparently Qt has building bugs when it comes to the ui that have never been addressed according to:
+https://forum.qt.io/topic/122810/error-cannot-initialize-object-parameter-of-type-ui_mainwindow-with-an-expression-of-type-ui-mainwindow/5
+I fixed the issue by just copying the playerinfo.ui file in forms and manually editing the .pro and whatnot
+
+
+How can I include an image inside of my inventory widget so it isn't simply text?
+Answer (Nov 25, 18:39)
+https://www.youtube.com/watch?v=SyzxerD2Yps&ab_channel=ProgrammingKnowledge
+https://stackoverflow.com/questions/44768106/how-to-display-an-image-with-qt
+The above led me to look into the QGraphicsView class
+https://stackoverflow.com/questions/7138113/qt-graphics-view-show-image-widget
+The above conviced me that it is easier to use QLabel and the QPixap class instead

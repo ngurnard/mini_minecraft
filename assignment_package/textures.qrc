@@ -2,5 +2,14 @@
     <qresource prefix="/">
         <file>textures/minecraft_normals_all.png</file>
         <file>textures/minecraft_textures_all.png</file>
+        <file>textures/dirt_block.png</file>
+        <file>textures/grass_block.png</file>
+        <file>textures/ice_block.png</file>
+        <file>textures/lava_block.png</file>
+        <file>textures/snow_block.png</file>
+        <file>textures/stone_block.png</file>
+        <file>textures/water_block.png</file>
+        <file>textures/sand_block.png</file>
+        <file>textures/blank.png</file>
     </qresource>
 </RCC>
