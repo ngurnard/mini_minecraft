@@ -46,6 +46,7 @@ out float fs_T2O;
 //uniform vec4 u_CamPos;
 uniform vec3 u_Eye; // Camera pos
 out vec4 fs_CamPos;
+out vec3 fs_Z;
 
 const vec4 lightDir = normalize(vec4(0.0, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
@@ -95,6 +96,9 @@ void main()
 
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
 
+    fs_Z = modelposition.xyz - u_Eye;
+    fs_dimVal = random1(modelposition.xyz/100.f);
+
     if (vs_Anim != 0) { // if we want to animate this surface
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
@@ -121,10 +125,10 @@ void main()
         }
     }
 
-    fs_dimVal = random1(modelposition.xyz/100.f);
+
 
 //    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
-    fs_LightVec = rotateLightVec(0.005 * u_Time, lightDir);  // Compute the direction in which the light source lies
+    fs_LightVec = rotateLightVec(0.0005 * u_Time, lightDir);  // Compute the direction in which the light source lies
 //    fs_LightVec = fs_CamPos - modelposition;
 
     fs_CamPos = vec4(u_Eye, 1); // uniform handle for the camera position instead of the inverse

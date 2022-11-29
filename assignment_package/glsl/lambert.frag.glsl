@@ -28,6 +28,8 @@ in vec2 fs_UVs;
 in float fs_Anim;
 in float fs_T2O;
 
+in vec3 fs_Z;
+
 in float fs_dimVal;
 
 out vec4 out_Col; // This is the final output color that you will see on your
@@ -115,15 +117,15 @@ void main()
             diffuseColor = texture(textureSampler, fs_UVs);
             vec4 altColor = texture(textureSampler, offsetUVs);
 
-            altColor.x += fs_dimVal * pow(altColor.x+.15, 5);
-            altColor.y += fs_dimVal * pow(altColor.y+.15, 5);
-            altColor.z += 0.5 * fs_dimVal * pow(altColor.z+.15, 5);
+//            altColor.x += fs_dimVal * pow(altColor.x+.15, 5);
+//            altColor.y += fs_dimVal * pow(altColor.y+.15, 5);
+//            altColor.z += 0.5 * fs_dimVal * pow(altColor.z+.15, 5);
 
             diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.35*sin(0.05*u_Time));
             offsetUVs -= 0.25f/16.f;
             vec4 newColor = texture(textureSampler, offsetUVs);
-            diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time)) + fs_dimVal * vec4(0.025);
-            diffuseColor.a = 0.7;
+            diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time));// + fs_dimVal * vec4(0.025);
+            diffuseColor.a = 0.75;
 
             // ----------------------------------------------------
             // Blinn-Phong Shading
@@ -163,13 +165,9 @@ void main()
         out_Col = vec4(col, diffuseColor.a);
     }
 
-    // distance fog!
-//    vec4 fogColor = vec4(0.6, 0.75, 0.9, 1.0); //
+    // New distance fog w/ improved Z coord from vert shader and new alpha fadeout
     vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
-    float FC = gl_FragCoord.z / gl_FragCoord.w / 124.f;
-    float falloff = clamp(1.05 - exp(-1.5f * (FC - 0.9f)), 0.f, 1.f);
-    out_Col = mix(out_Col, fogColor, falloff);
-
-//    out_Col.y = fs_CamPos.y;
-
+    float Z = length(fs_Z) / 135.f;
+    float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
+    out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
 }
