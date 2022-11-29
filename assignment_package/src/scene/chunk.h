@@ -213,16 +213,17 @@ private:
 public:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
     bool isVBOready;
+    bool isBlocksSet;
     Chunk(OpenGLContext* context, int m_xCorner, int m_zCorner, Noise* N);
     glm::ivec2 getCorners();
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z);
-    BlockType getBlockAt(int x, int y, int z, bool isModified);
+    BlockType getBlockAt(int x, int y, int z);
     BlockType getWorldBlock(int x, int y, int z);
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
     void recreateVBOdata();
     void virtual createVBOdata() override;
-    void generateVBOdata(bool isModified = false);
+    void generateVBOdata();
     void loadVBOdata();
     GLenum drawMode() override;
     ~Chunk();

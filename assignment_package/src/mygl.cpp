@@ -234,7 +234,6 @@ void MyGL::renderTerrain() {
     int z = 16 * static_cast<int>(glm::floor(m_player.mcr_position.z / 16.f));
 
     int rend_dist = 256;
-
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
@@ -379,8 +378,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-//    float dpi = 0.0005; // BENEDICT: sensitivity of moving the mouse around the screen
+//    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
+    float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.

@@ -11,6 +11,7 @@ SOURCES += \
     $$PWD/mygl.cpp \
     $$PWD/postprocessshader.cpp \
     $$PWD/scene/blockwireframe.cpp \
+    $$PWD/scene/deltariver.cpp \
     $$PWD/scene/hud.cpp \
     $$PWD/scene/noise.cpp \
     $$PWD/scene/quad.cpp \
@@ -39,6 +40,7 @@ HEADERS += \
     $$PWD/postprocessshader.h \
     $$PWD/scene/block.h \
     $$PWD/scene/blockwireframe.h \
+    $$PWD/scene/deltariver.h \
     $$PWD/scene/hud.h \
     $$PWD/scene/noise.h \
     $$PWD/scene/quad.h \

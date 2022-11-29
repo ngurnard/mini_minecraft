@@ -5,7 +5,7 @@
 Chunk::Chunk(OpenGLContext *context, int x, int z, Noise* N)
     : Drawable(context), m_xCorner(x), m_zCorner(z), noise(N),
       m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}},
-      isVBOready(false)
+      isVBOready(false), isBlocksSet(false)
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
@@ -27,22 +27,27 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
     auto HB = noise->computeHeight(x, z);
     int H = HB.first;
     int biome = HB.second;
+    bool isDeltaRiver = false;
+    if(find(noise->deltaRiverCoords.begin(), noise->deltaRiverCoords.end(), pair<int, int>(x, z)) != noise->deltaRiverCoords.end())
+    {
+       isDeltaRiver = true;
+    }
     float snow_noise = noise->m_mountainHeightMap.noise2D({x, z});
     if (noise->m_permit_caves)
     {
         float caveNoiseVal = cavePerlinNoise3D(glm::vec3(x/25.f, y/16.f, z/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
         float caveMask = cavePerlinNoise3D(glm::vec3(z/100.f, x/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-        return noise->getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask);
+        return noise->getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask, isDeltaRiver);
     } else
     {
-        return noise->getBlockType(y, H, biome, snow_noise);
+        return noise->getBlockType(y, H, biome, snow_noise, isDeltaRiver);
     }
 
 
 }
 
 // Exists to get rid of compiler warnings about int -> unsigned int implicit conversion
-BlockType Chunk::getBlockAt(int x, int y, int z, bool isModified = false) {
+BlockType Chunk::getBlockAt(int x, int y, int z) {
     // Boundary constraints on y direction
     if(y > 255)
     {
@@ -52,30 +57,25 @@ BlockType Chunk::getBlockAt(int x, int y, int z, bool isModified = false) {
     {
         return UNCERTAIN;
     }
+    if(x < 0 && m_neighbors[XNEG] != nullptr)
+    {
+        return m_neighbors[XNEG]->getBlockAt(15, y, z);
+    }
+    if(x > 15 && m_neighbors[XPOS] != nullptr)
+    {
+        return m_neighbors[XPOS]->getBlockAt(0, y, z);
+    }
+    if(z < 0 && m_neighbors[ZNEG] != nullptr)
+    {
+        return m_neighbors[ZNEG]->getBlockAt(x, y, 15);
+    }
+    if(z > 15 && m_neighbors[ZPOS] != nullptr)
+    {
+        return m_neighbors[ZPOS]->getBlockAt(x, y, 0);
+    }
     if(x > 15 || x < 0 || z > 15 || z < 0)
     {
-        if(!isModified)
-            return getWorldBlock(x, y, z);
-        else
-        {
-            if(x < 0 && m_neighbors[XNEG] != nullptr)
-            {
-                return m_neighbors[XNEG]->getBlockAt(15, y, z);
-            }
-            if(x > 15 && m_neighbors[XPOS] != nullptr)
-            {
-                return m_neighbors[XPOS]->getBlockAt(0, y, z);
-            }
-            if(z < 0 && m_neighbors[ZNEG] != nullptr)
-            {
-                return m_neighbors[ZNEG]->getBlockAt(x, y, 15);
-            }
-            if(z > 15 && m_neighbors[ZPOS] != nullptr)
-            {
-                return m_neighbors[ZPOS]->getBlockAt(x, y, 0);
-            }
-            return getWorldBlock(x, y, z);
-        }
+        return getWorldBlock(x, y, z);
     }
     return getBlockAt(static_cast<unsigned int>(x), static_cast<unsigned int>(y), static_cast<unsigned int>(z));
 }
@@ -152,7 +152,7 @@ GLenum Chunk::drawMode() {
     return GL_TRIANGLES;
 }
 
-void Chunk::generateVBOdata(bool isModified)
+void Chunk::generateVBOdata()
 {
     isVBOready = false;
     // OPAQUE PASS
@@ -173,7 +173,7 @@ void Chunk::generateVBOdata(bool isModified)
                         for(auto &block : adjacentFaces)
                         {
                             glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
-                            if(!isOpaque(getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z, isModified)))
+                            if(!isOpaque(getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z)))
                             {
                                 for(VertexData vertex : block.vertices)
                                 {
@@ -220,7 +220,7 @@ void Chunk::generateVBOdata(bool isModified)
                         for(auto &block : adjacentFaces)
                         {
                             glm::ivec3 curr_neighbor = glm::ivec3(x, y, z) + glm::ivec3(block.directionVec);
-                            BlockType curr_neighbor_type = getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z, isModified);
+                            BlockType curr_neighbor_type = getBlockAt(curr_neighbor.x, curr_neighbor.y, curr_neighbor.z);
 
                             if(!isOpaque(curr_neighbor_type) && curr_neighbor_type != curr)
                             //if(curr_neighbor_type == EMPTY)
@@ -340,8 +340,9 @@ void Chunk::loadVBOdata()
 }
 void Chunk::recreateVBOdata()
 {
+    isVBOready = false;
     destroyVBOdata();
-    generateVBOdata(true);
+    generateVBOdata();
     loadVBOdata();
 }
 

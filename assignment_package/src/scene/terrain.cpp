@@ -7,7 +7,8 @@
 Terrain::Terrain(OpenGLContext *context)
     : m_chunks(), m_permit_transparent_terrain(true), m_permit_caves(true),
       m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
-{}
+{
+}
 
 Terrain::~Terrain() {
 }
@@ -134,7 +135,11 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
             auto HB = noise.computeHeight(i, j);
             int H = HB.first;
             int biome = HB.second;
-
+            bool isDeltaRiver = false;
+            if(find(noise.deltaRiverCoords.begin(), noise.deltaRiverCoords.end(), pair<int, int>(i, j)) != noise.deltaRiverCoords.end())
+            {
+               isDeltaRiver = true;
+            }
             glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
             int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
             float snow_noise = noise.m_mountainHeightMap.noise2D({i, j});
@@ -148,17 +153,12 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
                     // Carve out the caves
                     float caveNoiseVal = cavePerlinNoise3D(glm::vec3(i/25.f, y/16.f, j/25.f))/2 + 0.5; // output range [-1, 1] mapped to [0, 1]
                     float caveMask = cavePerlinNoise3D(glm::vec3(j/100.f, i/100.f, y/100.f))/2 + 0.5; // similar to previous but rotate
-                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask));
+                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, caveNoiseVal, caveMask, isDeltaRiver));
                 } else
                 {
-                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise));
+                    chunk->setBlockAt(coord_x, y, coord_z, noise.getBlockType(y, H, biome, snow_noise, isDeltaRiver));
                 }
             }
-            // Clouds
-//            if(noise.m_biomeMaskMap.computeFBM(i +156, j + 197) > 0.8)
-//            {
-//                chunk->setBlockAt(coord_x, 225, coord_z, SNOW);
-//            }
         }
     }
 }
@@ -226,10 +226,9 @@ bool Terrain::terrainZoneExists(int x, int z)
     return m_generatedTerrain.find(toKey(x, z)) != m_generatedTerrain.end();
 }
 
-Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>(mp_context, x, z, &noise);
-    Chunk *cPtr = chunk.get();
-    m_chunks[toKey(x, z)] = move(chunk);
+void Terrain::updateNeighbors(int x, int z)
+{
+    Chunk* cPtr = getChunkAt(x, z).get();
     if(hasChunkAt(x, z + 16)) {
         auto &chunkNorth = m_chunks[toKey(x, z + 16)];
         cPtr->linkNeighbor(chunkNorth, ZPOS);
@@ -246,25 +245,55 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
+
+}
+Chunk* Terrain::instantiateChunkAt(int x, int z) {
+    uPtr<Chunk> chunk = mkU<Chunk>(mp_context, x, z, &noise);
+    Chunk *cPtr = chunk.get();
+    m_chunks[toKey(x, z)] = move(chunk);
+    updateNeighbors(x, z);
     return cPtr;
 }
 
 void Terrain::VBOWorker(Chunk* chunk)
 {
     // Generate Opaque VBO data
+    bool isReadyToGenerate;
+    int count = 0;
+    do
+    {
+        count++;
+        isReadyToGenerate = true;
+        for(auto &neighbor : chunk->m_neighbors)
+        {
+            if(neighbor.second != nullptr && neighbor.second->isBlocksSet == false)
+            {
+                isReadyToGenerate = false;
+                break;
+            }
+        }
+    }while(isReadyToGenerate == false);
     chunk->generateVBOdata();
     m_chunksThatHaveVBODataLock.lock();
     m_chunksThatHaveVBOData.insert(chunk);
     m_chunksThatHaveVBODataLock.unlock();
 }
 
-void Terrain::blockTypeWorker(Chunk* chunk)
+void Terrain::blockTypeWorker(vector<Chunk*> new_chunks)
 {
-    int coord_x = chunk->getCorners().x, coord_z = chunk->getCorners().y;
-    setChunkBlocks(chunk, coord_x, coord_z);
-    m_chunksThatHaveBlockDataLock.lock();
-    m_chunksThatHaveBlockData.insert(chunk);
-    m_chunksThatHaveBlockDataLock.unlock();
+    for(auto &chunk : new_chunks)
+    {
+        int coord_x = chunk->getCorners().x, coord_z = chunk->getCorners().y;
+        updateNeighbors(coord_x, coord_z);
+        setChunkBlocks(chunk, coord_x, coord_z);
+        chunk->isBlocksSet = true;
+    }
+    for(auto &chunk : new_chunks)
+    {
+        m_chunksThatHaveBlockDataLock.lock();
+        m_chunksThatHaveBlockData.insert(chunk);
+        m_chunksThatHaveBlockDataLock.unlock();
+    }
 }
 
 void Terrain::destroyOutOfRangeTerrainZoneVBOs(std::unordered_set<int64_t>& terrainZonesBorderingCurrPos, std::unordered_set<int64_t>& terrainZonesBorderingPrevPos)
@@ -329,16 +358,24 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
             // If it doesn't exist yet, send it to a BlockTypeWorker. This also adds it to the set of generated terrain
             // zones so that we don't try to repeatedly generate it
             m_generatedTerrain.insert(id);
+            vector<Chunk*> new_chunks;
             for(int x = coord.x; x < coord.x + 64; x += 16)
             {
                 for(int z = coord.y; z < coord.y + 64; z += 16)
                 {
                     instantiateChunkAt(x, z);
                     auto &chunk = getChunkAt(x, z);
-                    std::thread t(&Terrain::blockTypeWorker, this, chunk.get());
-                    t.detach();
+                    new_chunks.push_back(chunk.get());
+                    if((x != 0 || z != 0) && (x % 256 == 0 && z % 256 == 0))
+                    {
+                        noise.clearOutofRangeRiverCoords();
+                        noise.delta = DeltaRiver(glm::vec2(x, z), glm::vec2(-0.5f, 1.0f));
+                        noise.populateDeltaRivers();
+                    }
                 }
             }
+            std::thread t(&Terrain::blockTypeWorker, this, new_chunks);
+            t.detach();
         }
     }
 }
