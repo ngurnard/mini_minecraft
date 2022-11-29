@@ -3,6 +3,46 @@
 Noise::Noise()
 {
     createHeightMaps();
+    populateDeltaRivers();
+}
+void Noise::populateDeltaRivers()
+{
+    delta.lsystemParse(num_delta_iterations);
+    carveDeltaRivers();
+}
+void Noise::clearOutofRangeRiverCoords()
+{
+        deltaRiverCoords.clear();
+}
+void Noise::carveDeltaRivers()
+{
+    for(int i = 0; i < delta.axiom.size(); i++)
+    {
+        char literal = delta.axiom[i];
+        glm::vec2 start_position = delta.current_state.position;
+        (delta.*(delta.char_to_rulefunction[literal]))();
+        glm::vec2 end_position = delta.current_state.position;
+        if(literal == 'F')
+        {
+            int minZ = std::min(start_position[1], end_position[1]), maxZ = std::max(start_position[1], end_position[1]);
+            if(start_position[1] == end_position[1])
+                continue;
+            int radius = start_radius - delta.current_state.iteration;
+            for(int z = minZ; z <= maxZ; z++)
+            {
+                int intercept;
+                if(start_position[0] == end_position[0])
+                    intercept = floor(start_position[0]);
+                else
+                    intercept = floor(start_position[0] +
+                                ((z - start_position[1]) * (start_position[0] - end_position[0]))/(start_position[1] - end_position[1]));
+                for(int x = intercept - radius; x <= intercept + radius; x++)
+                {
+                    deltaRiverCoords.push_back(std::make_pair(x, z));
+                }
+            }
+        }
+    }
 }
 
 void Noise::createHeightMaps()
@@ -80,12 +120,18 @@ void Noise::printHeight(int x, int z)
     std::cout << "Height Map @ [" << x << ", " << z << "] = " << H << " --BIOME " << biome << std::endl;
 }
 
-BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise, float caveNoiseVal, float caveMask)
+BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise, float caveNoiseVal, float caveMask, bool isDeltaRiver)
 {
     // Includes caves
     int biomeBaseH = 129;   // Height below which there is only stone
-    int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
+    if(isDeltaRiver && biome == 0 && max_height < 160)
+    {
+        if(height >= 130 && height <= 135)
+            return WATER;
+        else if(height > 135)
+            return EMPTY;
+    }
 
     if(height == 0)
         return BEDROCK;
@@ -103,22 +149,10 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
             return STONE;
         if(biome == 0)
         {
-            if(max_height <= waterH)
-            {
-                if(height < max_height)
-                    return DIRT;
-                else if(height == max_height)
-                    return SAND;
-                else if(height <= waterH)
-                    return WATER;
-            }
-            else
-            {
-                if(height < max_height)
-                    return DIRT;
-                else if(height == max_height)
-                    return GRASS;
-            }
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return GRASS;
         }
         else if(biome == 1)
         {
@@ -149,34 +183,27 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
     return EMPTY;
 }
 
-BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise)
+BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_noise, bool isDeltaRiver)
 {
     // Excludes caves
     int biomeBaseH = 129;   // Height below which there is only stone
-    int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
-
+    if(isDeltaRiver && biome == 0 && max_height < 160)
+    {
+        if(height >= 130 && height <= 135)
+            return WATER;
+        else if(height > 135)
+            return EMPTY;
+    }
     if(height == 0) {return BEDROCK;}
     if(height  < biomeBaseH - 1) {return STONE;}
 
     if(biome == 0)
     {
-        if(max_height <= waterH)
-        {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return SAND;
-            else if(height <= waterH)
-                return WATER;
-        }
-        else
-        {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return GRASS;
-        }
+        if(height < max_height)
+            return DIRT;
+        else if(height == max_height)
+            return GRASS;
     }
     else if(biome == 1)
     {

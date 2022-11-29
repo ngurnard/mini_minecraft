@@ -1,4 +1,5 @@
 #pragma once
+#include "scene/deltariver.h"
 #include "scene/noise.h"
 #include "smartpointerhelp.h"
 #include "glm_includes.h"
@@ -63,7 +64,8 @@ private:
     OpenGLContext* mp_context;
 
     float m_time;
-
+    int num_delta_iterations = 6;
+    DeltaRiver delta = DeltaRiver(glm::vec2(-60.f, 0.f), glm::vec2(0.5f, 1.0f));
 public:
     Terrain(OpenGLContext *context);
     ~Terrain();
@@ -125,5 +127,6 @@ public:
     bool terrainZoneExists(int64_t key);
     bool terrainZoneExists(int x, int z);
     void VBOWorker(Chunk* chunk);
-    void blockTypeWorker(Chunk* chunk);
+    void blockTypeWorker(vector<Chunk*> new_chunks);
+    void updateNeighbors(int x, int z);
 };
