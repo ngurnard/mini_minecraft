@@ -48,7 +48,7 @@ uniform vec3 u_Eye; // Camera pos
 out vec4 fs_CamPos;
 out vec3 fs_Z;
 
-const vec4 lightDir = normalize(vec4(0.0, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
+const vec4 lightDir = normalize(vec4(1.f, 1.f, 1.f, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
 
 mat4 rotationMatrix(vec3 axis, float angle) {
@@ -79,6 +79,19 @@ vec3 random2( vec3 p ) {
                                            dot(p, vec3(420.69, 69.420, 469.20))) ) * 43758.5453);
 }
 
+vec3 surfacePerturb( vec3 p ) {
+    // define an oscillating time so that model can transition back and forth
+    float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+    vec3 temp = random2(vec3(p.x, p.y, p.z)); // range [0, 1]
+    temp = (temp - 0.5)/25; // [0, 1/scalar]
+
+    p.x = mix(p.x - temp.x, p.x + temp.x, t);
+    p.y = mix(p.y - temp.y, p.y + 3*temp.y, t); // move in y more
+    p.z = mix(p.z - temp.z, p.z + temp.z, t);
+
+    return p;
+}
+
 void main()
 {
 //    fs_Pos = vs_Pos;
@@ -99,37 +112,46 @@ void main()
     fs_Z = modelposition.xyz - u_Eye;
     fs_dimVal = random1(modelposition.xyz/100.f);
 
+    fs_LightVec = rotateLightVec(0.0005 * u_Time, lightDir);  // Compute the direction in which the light source lies
+
     if (vs_Anim != 0) { // if we want to animate this surface
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
         bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y <= 4.f/16.f;
 
         if (water) {
-            // define an oscillating time so that model can transition back and forth
-            float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
-            vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
-            temp = (temp - 0.5)/25; // [0, 1/scalar]
-            modelposition.x = mix(modelposition.x - temp.x, modelposition.x + temp.x, t);
-            modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
-            modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
 
-//            fs_Pos = normalize( cross(dFdx(vs_Pos), dFdy(vs_Pos)) );
+            // Recompute the normals
+            // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 1.f)))); // take cross product with oblique so cube normals are never zero
+            float eps = 0.008;
+            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_Nor.x + eps, fs_Nor.y + eps, fs_Nor.z + eps)))); // make it so normals are never zero
+            // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_LightVec.x, fs_LightVec.y, fs_LightVec.z)))); // take cross product with oblique so cube normals are never zero
+            vec3 bitangent = normalize(cross(vec3(fs_Nor), tangent));
+
+            vec3 p1 = surfacePerturb(modelposition.xyz + (eps * tangent));
+            vec3 p2 = surfacePerturb(modelposition.xyz - (eps * tangent));
+            vec3 p3 = surfacePerturb(modelposition.xyz + (eps * bitangent));
+            vec3 p4 = surfacePerturb(modelposition.xyz - (eps * bitangent));
+
+            // only make the top surface shiny
+            if (vs_Nor.y == 1) {
+                fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
+            }
+
+            // Perturb the surface
+            modelposition.xyz = surfacePerturb(modelposition.xyz);
+
         } else if (lava) {
-            // define an oscillating time so that model can transition back and forth
-            float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
-            vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
-            temp = (temp - 0.5)/25; // [0, 1/scalar]
-            modelposition.x = mix(modelposition.x - temp.x, modelposition.x + temp.x, t);
-            modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
-            modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
+
+            // Perturb the surface
+            modelposition.xyz = surfacePerturb(modelposition.xyz);
+            // Do not recompute the normals
         }
     }
 
 
 
-//    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
-    fs_LightVec = rotateLightVec(0.0005 * u_Time, lightDir);  // Compute the direction in which the light source lies
-//    fs_LightVec = fs_CamPos - modelposition;
+
 
     fs_CamPos = vec4(u_Eye, 1); // uniform handle for the camera position instead of the inverse
     fs_Pos = modelposition;
