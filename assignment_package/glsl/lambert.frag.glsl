@@ -134,9 +134,18 @@ void main()
             vec4 viewDir = normalize(fs_CamPos - fs_Pos); // vector from the fragment's world-space position to the camera
             vec4 halfVec = normalize(lightDir + viewDir); // vector halfway between light source and view direction
             float shininess = 400.f;
-            float specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
+            specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
         }
     }
+
+//    // ----------------------------------------------------
+//    // Blinn-Phong Shading
+//    // ----------------------------------------------------
+//    vec4 lightDir = normalize(fs_LightVec - fs_Pos); // vector from the fragment's world-space position to the light source (assuming a point light source)
+//    vec4 viewDir = normalize(fs_CamPos - fs_Pos); // vector from the fragment's world-space position to the camera
+//    vec4 halfVec = normalize(lightDir + viewDir); // vector halfway between light source and view direction
+//    float shininess = 400.f;
+//    specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
 
     // Calculate the diffuse term for Lambert shading
     float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
@@ -166,8 +175,8 @@ void main()
     }
 
     // New distance fog w/ improved Z coord from vert shader and new alpha fadeout
-    vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
-    float Z = length(fs_Z) / 135.f;
-    float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
-    out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
+//    vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
+//    float Z = length(fs_Z) / 135.f;
+//    float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
+//    out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
 }

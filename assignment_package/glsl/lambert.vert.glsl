@@ -48,7 +48,7 @@ uniform vec3 u_Eye; // Camera pos
 out vec4 fs_CamPos;
 out vec3 fs_Z;
 
-const vec4 lightDir = normalize(vec4(0.0, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
+const vec4 lightDir = normalize(vec4(0.5, 1.f, 0.0, 0));//normalize(vec4(0.5, 1, 0.75, 0));  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
 
 mat4 rotationMatrix(vec3 axis, float angle) {
@@ -79,6 +79,18 @@ vec3 random2( vec3 p ) {
                                            dot(p, vec3(420.69, 69.420, 469.20))) ) * 43758.5453);
 }
 
+vec3 surfacePerturb( vec3 p ) {
+    float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+    vec3 temp = random2(vec3(p.x, p.y, p.z)); // range [0, 1]
+    temp = (temp - 0.5)/25; // [0, 1/scalar]
+
+    p.x = mix(p.x - temp.x, p.x + temp.x, t);
+    p.y = mix(p.y - temp.y, p.y + 3*temp.y, t);
+    p.z = mix(p.z - temp.z, p.z + temp.z, t);
+
+    return p;
+}
+
 void main()
 {
 //    fs_Pos = vs_Pos;
@@ -106,14 +118,28 @@ void main()
 
         if (water) {
             // define an oscillating time so that model can transition back and forth
-            float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
-            vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
-            temp = (temp - 0.5)/25; // [0, 1/scalar]
-            modelposition.x = mix(modelposition.x - temp.x, modelposition.x + temp.x, t);
-            modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
-            modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
+//            float t = (cos(u_Time * 0.05) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+//            vec3 temp = random2(vec3(modelposition.x, modelposition.y, modelposition.z)); // range [0, 1]
+//            temp = (temp - 0.5)/25; // [0, 1/scalar]
 
-//            fs_Pos = normalize( cross(dFdx(vs_Pos), dFdy(vs_Pos)) );
+//            modelposition.x = mix(modelposition.x - temp.x, modelposition.x + temp.x, t);
+//            modelposition.y = mix(modelposition.y - temp.y, modelposition.y + 3*temp.y, t);
+//            modelposition.z = mix(modelposition.z - temp.z, modelposition.z + temp.z, t);
+
+            // Recompute the normals
+            modelposition.xyz = surfacePerturb(modelposition.xyz);
+
+            vec3 tangent = normalize(cross(vec3(fs_Nor), vec3(0.f, 1.f, 0.f)));
+            vec3 bitangent = normalize(cross(vec3(fs_Nor), tangent));
+
+            float eps = 0.001;
+            vec3 p1 = surfacePerturb(vs_Pos.xyz + (eps * tangent));
+            vec3 p2 = surfacePerturb(vs_Pos.xyz - (eps * tangent));
+            vec3 p3 = surfacePerturb(vs_Pos.xyz + (eps * bitangent));
+            vec3 p4 = surfacePerturb(vs_Pos.xyz - (eps * bitangent));
+
+            fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
+
         } else if (lava) {
             // define an oscillating time so that model can transition back and forth
             float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
