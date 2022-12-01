@@ -26,7 +26,7 @@ int unifViewProjInv; // A handle for the "uniform" mat4 representing inverse Vie
 int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
 int unifDimensions;
 int unifEye;
-int unifFBSampler; // A handle for a supplmental texture from intermediate FrameBuffer
+int unifQuadDraw; // A handle for a "uniform" bool to see if we're drawing a screen-spanning quad (aka the sky in our case)
 
 //int unifCamPos; // a handle to a "uniform" vec3 representing the camera's position in world space.
 
@@ -36,6 +36,7 @@ SurfaceShader(OpenGLContext* context);
 virtual ~SurfaceShader();
 virtual void setupMemberVars() override;
 
+void setQuadDraw(bool quad);
 // Pass the given model matrix to this shader on the GPU
 void setModelMatrix(const glm::mat4 &model);
 // Pass the given Projection * View matrix to this shader on the GPU

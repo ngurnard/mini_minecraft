@@ -11,7 +11,8 @@
 SurfaceShader::SurfaceShader(OpenGLContext *context)
     : ShaderProgram(context),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1), attrTra2Opq(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1)
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
+      unifDimensions(-1), unifEye(-1), unifQuadDraw(-1)
 {}
 
 SurfaceShader::~SurfaceShader()
@@ -34,11 +35,19 @@ void SurfaceShader::setupMemberVars() {
     unifColor       = context->glGetUniformLocation(prog, "u_Color");
     unifSampler2D   = context->glGetUniformLocation(prog, "textureSampler");
     unifTime        = context->glGetUniformLocation(prog, "u_Time");
+    unifDimensions  = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifEye         = context->glGetUniformLocation(prog, "u_Eye");
+    unifQuadDraw    = context->glGetUniformLocation(prog, "u_QuadDraw");
 
-//    unifCamPos = context->glGetUniformLocation(prog, "u_CamPos"); // define what we call the cam pos
-    unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
-    unifEye        = context->glGetUniformLocation(prog, "u_Eye");
+}
 
+void SurfaceShader::setQuadDraw(bool quad)
+{
+    useMe();
+    if (unifQuadDraw != -1) {
+        //std::cout << "unifQuadDraw set properly" << std::endl;
+        context->glUniform1i(unifQuadDraw, quad);
+    }
 }
 
 void SurfaceShader::setModelMatrix(const glm::mat4 &model)

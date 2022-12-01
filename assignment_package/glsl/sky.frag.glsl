@@ -98,6 +98,10 @@ vec3 cosinePalette(mat4x3 P, float t) {
     return P[0] + P[1] * cos(TWO_PI * (t * P[2] + P[3]));
 }
 
+float brightness(vec3 col) {
+    return  0.21 * col.r + 0.72 * col.g + 0.07 * col.b;
+}
+
 void main()
 {
     // Convert back to world

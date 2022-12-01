@@ -11,7 +11,7 @@ uniform int u_Time;
 uniform mat4 u_ViewProjInv;
 uniform mat4 u_Model;
 uniform vec3 u_Eye;
-//uniform bool u_drawSky; // bool that tells whether we're drawing sky or terrain
+uniform bool u_QuadDraw; // bool that tells whether we're drawing sky or terrain
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -35,7 +35,10 @@ out vec4 out_Col;
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
 
+const float sunSize = 5;
+const float coronaSize = 50;
 const vec3 sunColor = vec3(255, 255, 200) / 255.0;
+
 const mat4x3 vibrantsunsetPalette = mat4x3(
             vec3(0.850, 0.580, 0.190),
             vec3(0.540, 0.600, 0.290),
@@ -70,6 +73,10 @@ vec3 cosinePalette(mat4x3 P, float t) {
 
 vec3 avgofPalette(mat4x3 P) {
     return P[0] + P[1] * TWO_PI * P[2] * sin(TWO_PI * (P[2] + P[3]));
+}
+
+float brightness(vec3 col) {
+    return  0.21 * col.r + 0.72 * col.g + 0.07 * col.b;
 }
 
 vec2 sphereToUV(vec3 p) {
@@ -171,39 +178,41 @@ float fbm(vec3 p) {
 
 void main()
 {
-    if (false)//u_drawSky != 0)
+    // ---------------------------------
+    // COMMON SKY/TERRAIN STUFF
+    // ---------------------------------
+    vec4 skyCol = vec4(0);
+
+    // Convert back to world coords
+    vec2 ndc = (gl_FragCoord.xy / vec2(u_Dimensions)) * 2.0 - 1.0; // -1 to 1 NDC
+    vec4 p = vec4(ndc.xy, 1, 1); // Pixel at the far clip plane
+    p *= 1000.0; // Times far clip plane value
+    p = /*Inverse of*/ u_ViewProjInv * p; // Convert from unhomogenized screen to world
+    vec3 rayDir = normalize(p.xyz - u_Eye);
+    vec3 sunDir = normalize(fs_LightVec.xyz);
+
+    // New Sunset Color that follows lightDir
+    float t = 0.5 + 0.5 * dot(rayDir, sunDir);
+    float tstatic = 0.5 + 0.5 * dot(rayDir, vec3(0,1,0));
+    float sunDotUp = dot(vec3(0,1,0), sunDir);
+    vec3 sunsetSky = cosinePalette(sunsetPalette, t);
+    vec3 daySky    = cosinePalette(dayPalette, tstatic);
+    vec3 nightSky  = cosinePalette(nightPalette, tstatic);
+
+    // Nonlinearly interpolate between day, night, and sunset palettes
+    // lower bias = more day/night time, less sunset/sunrise, harsher transition
+    float sunsetBias = 0.5f;
+    if (sunDotUp > 0) // Sun above horizon
+        {skyCol = vec4(mix(sunsetSky, daySky, pow(sunDotUp, sunsetBias)), 1.f);}
+    else              // Sun below horizon
+        {skyCol = vec4(mix(sunsetSky, nightSky, pow(-sunDotUp, sunsetBias)), 1.f);}
+
+    if (u_QuadDraw) // drawing sky
     {
         // ---------------------------------
-        // SKY STUFF
+        // SKY ONLY STUFF
         // ---------------------------------
-        // Convert back to world coords
-        vec2 ndc = (gl_FragCoord.xy / vec2(u_Dimensions)) * 2.0 - 1.0; // -1 to 1 NDC
-        vec4 p = vec4(ndc.xy, 1, 1); // Pixel at the far clip plane
-        p *= 1000.0; // Times far clip plane value
-        p = /*Inverse of*/ u_ViewProjInv * p; // Convert from unhomogenized screen to world
-        vec3 rayDir = normalize(p.xyz - u_Eye);
-        // Ray as color:
-        //out_Col = vec4(0.5 * (rayDir + vec3(1,1,1)), 1.f);
-
-        // New Sunset Color that follows lightDir
-        vec3 sunDir = normalize(fs_LightVec.xyz);
-        float t = 0.5 + 0.5 * dot(rayDir, sunDir);
-        float tstatic = 0.5 + 0.5 * dot(rayDir, vec3(0,1,0));
-        float sunDotUp = dot(vec3(0,1,0), sunDir);
-
-        vec3 sunsetSky = cosinePalette(sunsetPalette, t);
-        vec3 daySky    = cosinePalette(dayPalette, tstatic);
-        vec3 nightSky  = cosinePalette(nightPalette, tstatic);
-
-        // range [0,1], with lower values favoring day/night over sunset time
-        float sunsetBias = 1.f / 2.f;
-        // interp between day/sunset/night
-        if (sunDotUp > 0) {
-            out_Col = vec4(mix(sunsetSky, daySky, pow(sunDotUp, sunsetBias)), 1.f);
-        } else {
-            out_Col = vec4(mix(sunsetSky, nightSky, pow(-sunDotUp, sunsetBias)), 1.f);
-        }
-
+        out_Col = skyCol;
         // Create stars from Worley noise
         vec4 nearStar = worley3D(rayDir * 55.f);
         if (nearStar.x <= 0.07f) {
@@ -212,8 +221,8 @@ void main()
         }
 
         // Add a glowing sun in the sky
-        float sunSize = 5;
-        float coronaSize = 50;
+//        float sunSize = 5;
+//        float coronaSize = 50;
         float angle = acos(dot(rayDir, sunDir)) * 360.0 / PI;
         // If the angle between our ray dir and vector to center of sun
         // is less than the threshold, then we're looking at the sun
@@ -222,120 +231,102 @@ void main()
             if(angle < sunSize) {
                 out_Col = vec4(sunColor, 1);
             }
-            // Corona of sun, mix with sky color
+            // Corona of sun, mix with sky color (physically-inspired exponential falloff)
             else {
                 float t = (angle - sunSize) / (coronaSize - sunSize);
                 if (t < 1) {
                     out_Col = vec4(mix(sunColor, out_Col.xyz, 1 + exp(-2*t)*(t - 1)), 1);
-                } else {
-                    out_Col = vec4(sunColor,1);
                 }
             }
         }
     }
     else
     {
-        vec4 diffuseColor = texture(textureSampler, fs_UVs);
+        // ---------------------------------
+        // TERRAIN ONLY STUFF
+        // ---------------------------------
 
-        // New Sunset Color that follows lightDir
-        vec4 skyinfluenceCol = vec4(0,0,0,1);
-        vec3 sunDir = normalize(fs_LightVec.xyz);
+        vec4 diffuseColor = texture(textureSampler, fs_UVs);
         vec3 norDir = normalize(fs_Nor.xyz);
 
-        float t = 0.5 + 0.5 * dot(norDir, sunDir);
-        float tstatic = 0.5 + 0.5 * dot(norDir, vec3(0,1,0));
-        float sunDotUp = dot(vec3(0,1,0), sunDir);
-
-        vec3 sunsetSky = cosinePalette(sunsetPalette, t);
-        vec3 daySky    = cosinePalette(dayPalette, tstatic);
-        vec3 nightSky  = cosinePalette(nightPalette, tstatic);
-
-        // range [0,1], with lower values favoring day/night over sunset time
-        float sunsetBias = 1.f / 2.f;
-        // interp between day/sunset/night
-        if (sunDotUp > 0) {
-            skyinfluenceCol = vec4(mix(sunsetSky, diffuseColor.rgb, pow(sunDotUp, sunsetBias)), 1.f);
-        } else {
-            skyinfluenceCol = vec4(mix(sunsetSky, nightSky, pow(-sunDotUp, sunsetBias)), 1.f);
+        if (dot(rayDir, norDir) > 0 && fs_Anim == 0)
+        {
+            // Naive backface culling
+            // seems to fix noisy white pixels at edges of blocks & should reduce shader load
+            discard;
         }
+        else
+        {
+            bool apply_lambert = true;
+            float specularIntensity = 0;
 
-        // ---------------------------------
-        // TERRAIN STUFF
-        // ---------------------------------
+            // water and lava animation logic
+            if (fs_Anim != 0) {
+                // check region in texture to decide which animatable type is drawn
+                bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
+                bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y < 4.f/16.f;
 
-        bool apply_lambert = true;
-        float specularIntensity = 0;
+                if (lava) {
+                    // slowly gyrate texture and lighten and darken with random dimVal from vert shader
+                    vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.065/16 * sin(0.01*u_Time),
+                                          fs_UVs.y - fs_Anim * 0.065/16 * sin(0.01*u_Time + 3.14159/2));
+                    diffuseColor = texture(textureSampler, movingUVs);
+                    vec4 warmerColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
+                    vec4 coolerColor = diffuseColor - vec4(0.1, 0.1, 0, 0);
+                    diffuseColor = mix(warmerColor, coolerColor, 0.5 + fs_dimVal * 0.65*sin(0.02*u_Time));
 
+                    apply_lambert = false;
 
+                } else if (water) {
+                    // blend between 3 different points in texture to create a wavy subtle change over time
+                    vec2 offsetUVs = vec2(fs_UVs.x - 0.5f/16.f, fs_UVs.y - 0.5f/16.f);
+                    diffuseColor = texture(textureSampler, fs_UVs);
+                    vec4 altColor = texture(textureSampler, offsetUVs);
 
-        // water and lava animation logic
-        if (fs_Anim != 0) {
-            // check region in texture to decide which animatable type is drawn
-            bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
-            bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y < 4.f/16.f;
+                    diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.35*sin(0.05*u_Time));
+                    offsetUVs -= 0.25f/16.f;
+                    vec4 newColor = texture(textureSampler, offsetUVs);
+                    diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time));
+                    diffuseColor.a = 0.75;
 
-            if (lava) {
-                // slowly gyrate texture and lighten and darken with random dimVal from vert shader
-                vec2 movingUVs = vec2(fs_UVs.x + fs_Anim * 0.065/16 * sin(0.01*u_Time),
-                                      fs_UVs.y - fs_Anim * 0.065/16 * sin(0.01*u_Time + 3.14159/2));
-                diffuseColor = texture(textureSampler, movingUVs);
-                vec4 warmerColor = diffuseColor + vec4(0.3, 0.3, 0, 0);
-                vec4 coolerColor = diffuseColor - vec4(0.1, 0.1, 0, 0);
-                diffuseColor = mix(warmerColor, coolerColor, 0.5 + fs_dimVal * 0.65*sin(0.02*u_Time));
-
-                apply_lambert = false;
-
-            } else if (water) {
-                // blend between 3 different points in texture to create a wavy subtle change over time
-                vec2 offsetUVs = vec2(fs_UVs.x - 0.5f/16.f, fs_UVs.y - 0.5f/16.f);
-                diffuseColor = texture(textureSampler, fs_UVs);
-                vec4 altColor = texture(textureSampler, offsetUVs);
-
-                diffuseColor = mix(diffuseColor, altColor, 0.5 + 0.35*sin(0.05*u_Time));
-                offsetUVs -= 0.25f/16.f;
-                vec4 newColor = texture(textureSampler, offsetUVs);
-                diffuseColor = mix(diffuseColor, newColor, 0.5 + 0.5*sin(0.025*u_Time));
-                diffuseColor.a = 0.75;
-
-                // ----------------------------------------------------
-                // Blinn-Phong Shading
-                // ----------------------------------------------------
-                vec4 lightDir = normalize(fs_LightVec - fs_Pos); // vector from the fragment's world-space position to the light source (assuming a point light source)
-                vec4 viewDir = normalize(vec4(u_Eye,1) - fs_Pos); // vector from the fragment's world-space position to the camera
-                vec4 halfVec = normalize(lightDir + viewDir); // vector halfway between light source and view direction
-                float shininess = 400.f;
-                float specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
+                    // ----------------------------------------------------
+                    // Blinn-Phong Shading
+                    // ----------------------------------------------------
+                    vec4 lightDir = normalize(fs_LightVec - fs_Pos); // vector from the fragment's world-space position to the light source (assuming a point light source)
+                    vec4 viewDir = normalize(vec4(u_Eye,1) - fs_Pos); // vector from the fragment's world-space position to the camera
+                    vec4 halfVec = normalize(lightDir + viewDir); // vector halfway between light source and view direction
+                    float shininess = 400.f;
+                    float specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
+                }
             }
+
+            // Calculate the diffuse term for Lambert shading
+            float diffuseTerm = dot(norDir, sunDir);
+            diffuseTerm = clamp(diffuseTerm, 0, 1); // Avoid negative lighting values (backface lighting)
+
+            //Add ambient light term to get non-black shadows
+            float ambientTerm = 0.2;
+            vec3 ambientCol = vec3(0.2, 0.2, 0.3);
+            vec3 diffuseCol = diffuseTerm * vec3(255, 255, 200) / 255.0;
+//            float lightIntensity = diffuseTerm + ambientTerm;
+            vec3 lightIntensity = diffuseCol + ambientCol;
+
+            vec3 diffuseRGB = diffuseColor.rgb;
+            if (apply_lambert) {
+                // apply shading given light intensity
+                diffuseRGB = diffuseRGB * lightIntensity + diffuseRGB * specularIntensity;
+            }
+
+            // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
+            if (fs_T2O != 0) {out_Col = vec4(diffuseRGB, 1.f);}
+            else {out_Col = vec4(diffuseRGB, diffuseColor.a);}
+
+            // New distance fog w/ improved Z coord from vert shader and new alpha fadeout
+            float bloomfactor = 0.8f + 0.1f * length(skyCol.rgb);
+            vec4 fogColor = vec4(bloomfactor * skyCol.rgb, 1);//vec4(0.57f, 0.71f, 1.0f, 1.0f);
+            float Z = length(fs_Z) / 135.f;
+            float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
+            out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), diffuseColor.a);
         }
-
-
-        // Calculate the diffuse term for Lambert shading
-        float diffuseTerm = dot(norDir, sunDir);
-        diffuseTerm = clamp(diffuseTerm, 0, 1); // Avoid negative lighting values (backface lighting)
-
-        //Add ambient light term to get non-black shadows
-        float ambientTerm = 0.2;
-        float lightIntensity = diffuseTerm + ambientTerm;
-
-        vec3 diffuseRGB = diffuseColor.rgb;
-        if (apply_lambert) {
-            // apply shading given light intensity
-            diffuseRGB = diffuseRGB * lightIntensity + diffuseRGB * specularIntensity;
-        }
-
-        diffuseRGB = mix(diffuseRGB, skyinfluenceCol.rgb, 0.3*(1 - diffuseTerm));
-
-        // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
-        if (fs_T2O != 0) {
-            out_Col = vec4(diffuseRGB, 1.f);
-        } else {
-            out_Col = vec4(diffuseRGB, diffuseColor.a);
-        }
-
-        // New distance fog w/ improved Z coord from vert shader and new alpha fadeout
-        vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
-        float Z = length(fs_Z) / 135.f;
-        float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
-        out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
     }
 }

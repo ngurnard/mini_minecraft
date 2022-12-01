@@ -240,12 +240,22 @@ void MyGL::paintGL() {
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Draw Sky
-    m_progSky.draw(m_geomQuad, 0);
-    // Bind texture atlas for terrain
-    mp_textureAtlas->bind(0);
+    // USING NEW SKY/TERRAIN UBER SHADER
+    // couples previous sky and lamber shaders into a more
+    // efficient single shader which draws sky if u_QuadDraw
+    // is set to TRUE. drawing terrian first will now prevent
+    // redundant Sky drawing beneath terrain. This uber shader
+    // also allows the terrain part to access sky color info and such,
+    // for more flexible and interesting options for environment looks
+
     // Draw Terrain
+    mp_textureAtlas->bind(0);
+    m_progSkyTerrain.setQuadDraw(false);
     renderTerrain();
+    // Draw Sky
+    m_progSkyTerrain.setQuadDraw(true);
+    m_progSkyTerrain.draw(m_geomQuad, 0);
+
 
     // Post process render pass ///
     performPostprocessRenderPass();
@@ -283,8 +293,8 @@ void MyGL::renderTerrain() {
     int rend_dist = 256;
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
-    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
-//    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progSkyTerrain);
+//    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
+    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progSkyTerrain);
 }
 
 void MyGL::createTexAtlas()
