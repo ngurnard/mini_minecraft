@@ -86,10 +86,12 @@ void DeltaRiver::rotateRight()
 void DeltaRiver::drawForward()
 {
     float rand_val = (rand() / (float) RAND_MAX);
+    rotate_angle = 12;
     if(rand_val < 0.5)
         rotateLeft();
     else
         rotateRight();
+    rotate_angle = 35;
     float distance = std::pow(0.9, current_state.iteration) * f_distance;
     current_state.position += 0.5f * distance * current_state.rotation;
 }
