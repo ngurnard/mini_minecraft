@@ -257,7 +257,6 @@ void MyGL::paintGL() {
     m_progSkyTerrain.setQuadDraw(true);
     m_progSkyTerrain.draw(m_geomQuad, 0);
 
-
     // Post process render pass ///
     performPostprocessRenderPass();
 

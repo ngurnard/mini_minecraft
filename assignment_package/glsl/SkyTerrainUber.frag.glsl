@@ -201,7 +201,7 @@ void main()
 
     // Nonlinearly interpolate between day, night, and sunset palettes
     // lower bias = more day/night time, less sunset/sunrise, harsher transition
-    float sunsetBias = 0.5f;
+    float sunsetBias = 0.70f;
     if (sunDotUp > 0) // Sun above horizon
         {skyCol = vec4(mix(sunsetSky, daySky, pow(sunDotUp, sunsetBias)), 1.f);}
     else              // Sun below horizon
