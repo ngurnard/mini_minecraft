@@ -28,6 +28,7 @@ private:
     BlockWireframe m_viewedBlock; // white frame around current block in view range
 
     SurfaceShader m_progSky; // will use draw(), not drawInterleaved()
+    SurfaceShader m_progSkyTerrain;
     SurfaceShader m_progLambert;// A shader program that uses lambertian reflection
     SurfaceShader m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     SurfaceShader m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
@@ -87,6 +88,10 @@ public:
     // Called whenever MyGL::update() is called.
     // In the base code, update() is called from tick().
     void paintGL() override;
+
+    // refactored to restore default FB to draw to screen
+    // and bind m_frameBuffer to texSlot
+    void resetFB(int texSlot);
 
     // Called from paintGL().
     // Calls Terrain::draw().

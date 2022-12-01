@@ -124,8 +124,9 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
 {
     // Includes caves
     int biomeBaseH = 129;   // Height below which there is only stone
+    int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
-    if(isDeltaRiver && biome == 0 && max_height < 160)
+    if(m_permit_lrivers && isDeltaRiver && biome == 0 && max_height < 160)
     {
         if(height >= 130 && height <= 135)
             return WATER;
@@ -149,10 +150,22 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
             return STONE;
         if(biome == 0)
         {
-            if(height < max_height)
-                return DIRT;
-            else if(height == max_height)
-                return GRASS;
+            if(!m_permit_lrivers && max_height <= waterH)
+            {
+                if(height < max_height)
+                    return DIRT;
+                else if(height == max_height)
+                    return SAND;
+                else if(height <= waterH)
+                    return WATER;
+            }
+            else
+            {
+                if(height < max_height)
+                    return DIRT;
+                else if(height == max_height)
+                    return GRASS;
+            }
         }
         else if(biome == 1)
         {
@@ -187,8 +200,9 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
 {
     // Excludes caves
     int biomeBaseH = 129;   // Height below which there is only stone
+    int waterH = 138;       // Height of water level
     int snowH = 200;        // Height where snow is possible
-    if(isDeltaRiver && biome == 0 && max_height < 160)
+    if(isDeltaRiver && biome == 0 && max_height < 155)
     {
         if(height >= 130 && height <= 135)
             return WATER;
@@ -200,10 +214,22 @@ BlockType Noise::getBlockType(int height, int max_height, int biome, float snow_
 
     if(biome == 0)
     {
-        if(height < max_height)
-            return DIRT;
-        else if(height == max_height)
-            return GRASS;
+        if(!m_permit_lrivers && max_height <= waterH)
+        {
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return SAND;
+            else if(height <= waterH)
+                return WATER;
+        }
+        else
+        {
+            if(height < max_height)
+                return DIRT;
+            else if(height == max_height)
+                return GRASS;
+        }
     }
     else if(biome == 1)
     {

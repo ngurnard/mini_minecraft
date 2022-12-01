@@ -11,16 +11,15 @@
 SurfaceShader::SurfaceShader(OpenGLContext *context)
     : ShaderProgram(context),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrAnim(-1), attrTra2Opq(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1)
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
+      unifDimensions(-1), unifEye(-1), unifQuadDraw(-1)
 {}
 
 SurfaceShader::~SurfaceShader()
 {}
 
 void SurfaceShader::setupMemberVars() {
-//    std::cout << "BEFORE: " << attrPos << std::endl;
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
-//    std::cout << "AFTER: " << attrPos << std::endl;
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
     attrUV = context->glGetAttribLocation(prog, "vs_UV");
@@ -29,17 +28,26 @@ void SurfaceShader::setupMemberVars() {
     if(attrCol == -1) attrCol = context->glGetAttribLocation(prog, "vs_ColInstanced");
     attrPosOffset = context->glGetAttribLocation(prog, "vs_OffsetInstanced");
 
-    unifModel      = context->glGetUniformLocation(prog, "u_Model");
-    unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
-    unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
-    unifColor      = context->glGetUniformLocation(prog, "u_Color");
-    unifSampler2D  = context->glGetUniformLocation(prog, "textureSampler");
-    unifTime       = context->glGetUniformLocation(prog, "u_Time");
+    unifModel       = context->glGetUniformLocation(prog, "u_Model");
+    unifModelInvTr  = context->glGetUniformLocation(prog, "u_ModelInvTr");
+    unifViewProj    = context->glGetUniformLocation(prog, "u_ViewProj");
+    unifViewProjInv = context->glGetUniformLocation(prog, "u_ViewProjInv");
+    unifColor       = context->glGetUniformLocation(prog, "u_Color");
+    unifSampler2D   = context->glGetUniformLocation(prog, "textureSampler");
+    unifTime        = context->glGetUniformLocation(prog, "u_Time");
+    unifDimensions  = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifEye         = context->glGetUniformLocation(prog, "u_Eye");
+    unifQuadDraw    = context->glGetUniformLocation(prog, "u_QuadDraw");
 
-//    unifCamPos = context->glGetUniformLocation(prog, "u_CamPos"); // define what we call the cam pos
-    unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
-    unifEye        = context->glGetUniformLocation(prog, "u_Eye");
+}
 
+void SurfaceShader::setQuadDraw(bool quad)
+{
+    useMe();
+    if (unifQuadDraw != -1) {
+        //std::cout << "unifQuadDraw set properly" << std::endl;
+        context->glUniform1i(unifQuadDraw, quad);
+    }
 }
 
 void SurfaceShader::setModelMatrix(const glm::mat4 &model)
@@ -81,6 +89,24 @@ void SurfaceShader::setViewProjMatrix(const glm::mat4 &vp)
     // Pass a 4x4 matrix into a uniform variable in our shader
                     // Handle to the matrix variable on the GPU
     context->glUniformMatrix4fv(unifViewProj,
+                    // How many matrices to pass
+                       1,
+                    // Transpose the matrix? OpenGL uses column-major, so no.
+                       GL_FALSE,
+                    // Pointer to the first element of the matrix
+                       &vp[0][0]);
+    }
+}
+
+void SurfaceShader::setViewProjInvMatrix(const glm::mat4 &vp)
+{
+    // Tell OpenGL to use this shader program for subsequent function calls
+    useMe();
+
+    if(unifViewProjInv != -1) {
+    // Pass a 4x4 matrix into a uniform variable in our shader
+                    // Handle to the matrix variable on the GPU
+    context->glUniformMatrix4fv(unifViewProjInv,
                     // How many matrices to pass
                        1,
                     // Transpose the matrix? OpenGL uses column-major, so no.

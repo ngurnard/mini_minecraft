@@ -27,6 +27,6 @@ vec4 rotateLightVec(float deg, vec4 LV) {
 
 void main()
 {
-    fs_LightVec = rotateLightVec(0.0005 * u_Time, lightDir);
+    fs_LightVec = rotateLightVec(0.0025 * u_Time, lightDir);
     gl_Position = vs_Pos;
 }

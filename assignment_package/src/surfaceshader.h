@@ -21,11 +21,14 @@ int attrTra2Opq; // handle to tell fragment to draw faces between transparent bl
 int unifModel; // A handle for the "uniform" mat4 representing model matrix in the vertex shader
 int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader
 int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
+int unifViewProjInv; // A handle for the "uniform" mat4 representing inverse ViewProj
+
 int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
 int unifDimensions;
 int unifEye;
+int unifQuadDraw; // A handle for a "uniform" bool to see if we're drawing a screen-spanning quad (aka the sky in our case)
 
-int unifCamPos; // a handle to a "uniform" vec3 representing the camera's position in world space.
+//int unifCamPos; // a handle to a "uniform" vec3 representing the camera's position in world space.
 
 
 public:
@@ -33,10 +36,12 @@ SurfaceShader(OpenGLContext* context);
 virtual ~SurfaceShader();
 virtual void setupMemberVars() override;
 
+void setQuadDraw(bool quad);
 // Pass the given model matrix to this shader on the GPU
 void setModelMatrix(const glm::mat4 &model);
 // Pass the given Projection * View matrix to this shader on the GPU
 void setViewProjMatrix(const glm::mat4 &vp);
+void setViewProjInvMatrix(const glm::mat4 &vp);
 // Pass the given color to this shader on the GPU
 void setGeometryColor(glm::vec4 color);
 
