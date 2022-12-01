@@ -289,36 +289,32 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
             glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
 
             if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
-                if (out_dist < glm::abs(rayDirection.x)) { // colliding with an object
-                    if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
-                        rayDirection.x = glm::sign(rayDirection.x) * (out_dist - offset);
+                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
+                    rayDirection.x = glm::sign(rayDirection.x) * glm::max((out_dist - offset), 0.f);
+                    if (out_dist <= offset) {
                         collidedWithAxis[0] = true;
-    //                    std::cout << "colliding x" << std::endl;
                     }
                 }
             }
 
             if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
-                if (out_dist < glm::abs(rayDirection.y)) { // colliding with an object
-                    if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
-                        rayDirection.y = glm::sign(rayDirection.y) * (out_dist - offset);
+                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
+                    rayDirection.y = glm::sign(rayDirection.y) * glm::max((out_dist - offset), 0.f);
+                    if (out_dist <= offset) {
                         collidedWithAxis[1] = true;
-    //                    std::cout << "colliding y" << std::endl;
                     }
                 }
             }
 
             if (gridMarch(castedRayOrigin, rayZ, terrain, &out_dist, &out_blockHit)) { // if there is a collision in z
-                if (out_dist < glm::abs(rayDirection.z)) { // colliding with an object
-                    if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
-                        rayDirection.z = glm::sign(rayDirection.z) * (out_dist - offset);
+                if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
+                    rayDirection.z = glm::sign(rayDirection.z) * glm::max((out_dist - offset), 0.f);
+                    if (out_dist <= offset) {
                         collidedWithAxis[2] = true;
-    //                    std::cout << "colliding z" << std::endl;
                     }
                 }
             }
         }
-
         return collidedWithAxis;
 }
 
