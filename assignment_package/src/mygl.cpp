@@ -13,7 +13,8 @@
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this), m_hud(this), m_viewedBlock(this),
-      m_progSky(this), m_progLambert(this), m_progFlat(this), m_progInstanced(this),
+      m_progSky(this), m_progSkyTerrain(this),
+      m_progLambert(this), m_progFlat(this), m_progInstanced(this),
       m_frameBuffer(this, width(), height(), 1.0f),
       m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
       m_terrain(this),
@@ -95,6 +96,7 @@ void MyGL::initializeGL()
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
     m_progSky.create(":/glsl/sky.vert.glsl", ":/glsl/sky.frag.glsl");
+    m_progSkyTerrain.create(":/glsl/SkyTerrainUber.vert.glsl", ":/glsl/SkyTerrainUber.frag.glsl");
 
     // Create and set up the frame buffer
     m_frameBuffer.create();
@@ -125,7 +127,9 @@ void MyGL::resizeGL(int w, int h) {
     // Upload the view-projection matrix to our shaders (i.e. onto the graphics card)
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
-    m_progSky.setViewProjMatrix(glm::inverse(viewproj));
+    m_progSky.setViewProjInvMatrix(glm::inverse(viewproj));
+    m_progSkyTerrain.setViewProjMatrix(viewproj);
+    m_progSkyTerrain.setViewProjInvMatrix(glm::inverse(viewproj));
 
     // Resize the frame buffer
     m_frameBuffer.resize(w, h, 1.f);
@@ -133,11 +137,14 @@ void MyGL::resizeGL(int w, int h) {
     m_frameBuffer.create();
 
     // Resize the postprocess shaders
-    m_noOp.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
-    m_postLava.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
-    m_postWater.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
-    m_HUD.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
-    m_progSky.setDimensions(glm::ivec2(w * devicePixelRatio(), h * devicePixelRatio()));
+    glm::ivec2 dims(w * devicePixelRatio(), h * devicePixelRatio());
+    m_noOp.setDimensions(dims);
+    m_postLava.setDimensions(dims);
+    m_postWater.setDimensions(dims);
+    m_HUD.setDimensions(dims);
+    m_progSky.setDimensions(dims);
+    m_progSkyTerrain.setDimensions(dims);
+    m_progLambert.setDimensions(dims);
 
     printGLErrorLog();
 }
@@ -208,10 +215,13 @@ void MyGL::paintGL() {
     m_progFlat.setViewProjMatrix(viewproj);
     m_progLambert.setViewProjMatrix(viewproj);
     m_progInstanced.setViewProjMatrix(viewproj);
-    m_progSky.setViewProjMatrix(glm::inverse(viewproj));
+    m_progSky.setViewProjInvMatrix(glm::inverse(viewproj));
+    m_progSkyTerrain.setViewProjMatrix(viewproj);
+    m_progSkyTerrain.setViewProjInvMatrix(glm::inverse(viewproj));
 
     // Send camera position to shaders for the sky and blinn-phong
     m_progSky.setEye(mp_player->mcr_camera.mcr_position);
+    m_progSkyTerrain.setEye(mp_player->mcr_camera.mcr_position);
     m_progFlat.setEye(mp_player->mcr_camera.mcr_position);
     m_progLambert.setEye(mp_player->mcr_camera.mcr_position);
     m_progInstanced.setEye(mp_player->mcr_camera.mcr_position);
@@ -222,16 +232,19 @@ void MyGL::paintGL() {
     m_postWater.setTime(m_time);
     m_HUD.setTime(m_time);
     m_progSky.setTime(m_time);
+    m_progSkyTerrain.setTime(m_time);
 
+    // bind frame buffer so that it is drawn to, not the screen
     m_frameBuffer.bindFrameBuffer();
     glViewport(0,0,this->width(), this->height());
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    mp_textureAtlas->bind(0); //must bind with every call to draw
-
-    // Draw Sky, then Terrain
+    // Draw Sky
     m_progSky.draw(m_geomQuad, 0);
+    // Bind texture atlas for terrain
+    mp_textureAtlas->bind(0);
+    // Draw Terrain
     renderTerrain();
 
     // Post process render pass ///
@@ -247,6 +260,20 @@ void MyGL::paintGL() {
     m_time++;
 }
 
+void MyGL::resetFB(int texSlot) {
+    // refactored to restore default FB to draw to screen
+    // and bind m_frameBuffer to texSlot
+
+    // Tell OpenGL to render to the viewport's frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+    // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // actually bind to appropriate slot
+    m_frameBuffer.bindToTextureSlot(texSlot);
+}
+
 
 void MyGL::renderTerrain() {
 //    m_terrain.draw(0, 64, 0, 64, &m_progLambert);
@@ -257,6 +284,7 @@ void MyGL::renderTerrain() {
     // Check if the terrain should expand. This both checks to see if player is near the border of
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
+//    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progSkyTerrain);
 }
 
 void MyGL::createTexAtlas()
@@ -272,33 +300,21 @@ void MyGL::createTexAtlas()
 
 void MyGL::performPostprocessRenderPass()
 {
+    int fbSlot = 2;
     // Render the frame buffer as a texture on a screen-size quad
-
-    // Tell OpenGL to render to the viewport's frame buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
-    // Render on the whole framebuffer, complete from the lower left corner to the upper right
-    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
-    // Clear the screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // Texture already bound (thanks Evan I hope you find this :) - Nick)
-
-    // Need logic of which postprocessor to draw since we no longer select a postprocess shader like hw04 ///
-    m_frameBuffer.bindToTextureSlot(2);
-//    m_postLava.draw(m_geomQuad, 2);
+    resetFB(fbSlot);
 
     BlockType viewedBlock = this->mp_player->headSpaceSight();
-//    BlockType viewedBlock = LAVA;
     if (viewedBlock == LAVA) {
-//        std::cout << " In lava postprocessrenderpass" << std::endl;
-        m_postLava.draw(m_geomQuad, 2);
+        m_postLava.draw(m_geomQuad, fbSlot);
     } else if (viewedBlock == WATER) {
-        m_postWater.draw(m_geomQuad, 2);
+        m_postWater.draw(m_geomQuad, fbSlot);
     } else {
-        m_noOp.draw(m_geomQuad, 2); // no post process
+        m_noOp.draw(m_geomQuad, fbSlot); // no post process
     }
     // if in selection range of a block, draw wireframe around it
     drawBlockWireframe();
-    m_HUD.draw(m_hud, 2);
+    m_HUD.draw(m_hud, fbSlot);
 }
 
 void MyGL::drawBlockWireframe()
@@ -400,8 +416,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-//    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-    float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
+    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
+//    float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.

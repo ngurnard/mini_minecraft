@@ -18,9 +18,7 @@ SurfaceShader::~SurfaceShader()
 {}
 
 void SurfaceShader::setupMemberVars() {
-//    std::cout << "BEFORE: " << attrPos << std::endl;
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
-//    std::cout << "AFTER: " << attrPos << std::endl;
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
     attrUV = context->glGetAttribLocation(prog, "vs_UV");
@@ -29,12 +27,13 @@ void SurfaceShader::setupMemberVars() {
     if(attrCol == -1) attrCol = context->glGetAttribLocation(prog, "vs_ColInstanced");
     attrPosOffset = context->glGetAttribLocation(prog, "vs_OffsetInstanced");
 
-    unifModel      = context->glGetUniformLocation(prog, "u_Model");
-    unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
-    unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
-    unifColor      = context->glGetUniformLocation(prog, "u_Color");
-    unifSampler2D  = context->glGetUniformLocation(prog, "textureSampler");
-    unifTime       = context->glGetUniformLocation(prog, "u_Time");
+    unifModel       = context->glGetUniformLocation(prog, "u_Model");
+    unifModelInvTr  = context->glGetUniformLocation(prog, "u_ModelInvTr");
+    unifViewProj    = context->glGetUniformLocation(prog, "u_ViewProj");
+    unifViewProjInv = context->glGetUniformLocation(prog, "u_ViewProjInv");
+    unifColor       = context->glGetUniformLocation(prog, "u_Color");
+    unifSampler2D   = context->glGetUniformLocation(prog, "textureSampler");
+    unifTime        = context->glGetUniformLocation(prog, "u_Time");
 
 //    unifCamPos = context->glGetUniformLocation(prog, "u_CamPos"); // define what we call the cam pos
     unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
@@ -81,6 +80,24 @@ void SurfaceShader::setViewProjMatrix(const glm::mat4 &vp)
     // Pass a 4x4 matrix into a uniform variable in our shader
                     // Handle to the matrix variable on the GPU
     context->glUniformMatrix4fv(unifViewProj,
+                    // How many matrices to pass
+                       1,
+                    // Transpose the matrix? OpenGL uses column-major, so no.
+                       GL_FALSE,
+                    // Pointer to the first element of the matrix
+                       &vp[0][0]);
+    }
+}
+
+void SurfaceShader::setViewProjInvMatrix(const glm::mat4 &vp)
+{
+    // Tell OpenGL to use this shader program for subsequent function calls
+    useMe();
+
+    if(unifViewProjInv != -1) {
+    // Pass a 4x4 matrix into a uniform variable in our shader
+                    // Handle to the matrix variable on the GPU
+    context->glUniformMatrix4fv(unifViewProjInv,
                     // How many matrices to pass
                        1,
                     // Transpose the matrix? OpenGL uses column-major, so no.

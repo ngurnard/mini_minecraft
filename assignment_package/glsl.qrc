@@ -13,5 +13,7 @@
         <file>glsl/hudPassthrough.vert.glsl</file>
         <file>glsl/sky.vert.glsl</file>
         <file>glsl/sky.frag.glsl</file>
+        <file>glsl/SkyTerrainUber.vert.glsl</file>
+        <file>glsl/SkyTerrainUber.frag.glsl</file>
     </qresource>
 </RCC>

@@ -170,4 +170,5 @@ void main()
     float Z = length(fs_Z) / 135.f;
     float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
     out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
+//    out_Col = vec4(vec3(length(fs_Z) / 135.f),1); // depthmap view
 }

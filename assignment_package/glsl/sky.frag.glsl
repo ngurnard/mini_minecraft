@@ -1,7 +1,7 @@
 //#version 330
 #version 150
 
-uniform mat4 u_ViewProj;    // We're actually passing the inverse of the viewproj
+uniform mat4 u_ViewProjInv;    // We're actually passing the inverse of the viewproj
                             // from our CPU, but it's named u_ViewProj so we don't
                             // have to bother rewriting our ShaderProgram class
 
@@ -104,7 +104,7 @@ void main()
     vec2 ndc = (gl_FragCoord.xy / vec2(u_Dimensions)) * 2.0 - 1.0; // -1 to 1 NDC
     vec4 p = vec4(ndc.xy, 1, 1); // Pixel at the far clip plane
     p *= 1000.0; // Times far clip plane value
-    p = /*Inverse of*/ u_ViewProj * p; // Convert from unhomogenized screen to world
+    p = u_ViewProjInv * p; // Convert from unhomogenized screen to world
     vec3 rayDir = normalize(p.xyz - u_Eye);
     // Ray as color:
     //out_Col = vec4(0.5 * (rayDir + vec3(1,1,1)), 1.f);
@@ -113,11 +113,12 @@ void main()
     // New Sunset Color that follows lightDir
     vec3 sunDir = normalize(fs_LightVec.xyz);
     float t = 0.5 + 0.5 * dot(rayDir, sunDir);
+    float tstatic = 0.5 + 0.5 * dot(rayDir, vec3(0,1,0));
     float sunDotUp = dot(vec3(0,1,0), sunDir);
 
     vec3 sunsetSky = cosinePalette(sunsetPalette, t);
-    vec3 daySky    = cosinePalette(dayPalette, t);
-    vec3 nightSky  = cosinePalette(nightPalette, t);
+    vec3 daySky    = cosinePalette(dayPalette, tstatic);
+    vec3 nightSky  = cosinePalette(nightPalette, tstatic);
 
     // range [0,1], with lower values favoring day/night over sunset colors
     float sunsetBias = 1.f / 2.f;
@@ -130,7 +131,7 @@ void main()
 
     // Create stars from Worley noise
     vec4 nearStar = worley3D(rayDir * 55.f);
-    if (nearStar.x <= 0.07f) {
+    if (nearStar.x <= 0.07f && dot(rayDir, nearStar.yzw) >= 0.999) {
         // stars fade in proportionally as sky darkens
         out_Col = vec4(mix(vec3(1,1,1), out_Col.xyz, clamp(length(out_Col.xyz), 0.f, 1.f)),1.f);
     }
