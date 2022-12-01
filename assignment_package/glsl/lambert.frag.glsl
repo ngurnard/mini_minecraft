@@ -95,6 +95,8 @@ void main()
 
     float specularIntensity = 0;
 
+    vec4 fs_Nor_new = fs_Nor;
+
     if (fs_Anim != 0) {
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
@@ -133,13 +135,14 @@ void main()
             vec4 lightDir = normalize(fs_LightVec - fs_Pos); // vector from the fragment's world-space position to the light source (assuming a point light source)
             vec4 viewDir = normalize(fs_CamPos - fs_Pos); // vector from the fragment's world-space position to the camera
             vec4 halfVec = normalize(lightDir + viewDir); // vector halfway between light source and view direction
+            // float shininess = 10.f;
             float shininess = 400.f;
-            float specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
+            specularIntensity = max(pow(dot(halfVec, normalize(fs_Nor)), shininess), 0);
         }
     }
 
     // Calculate the diffuse term for Lambert shading
-    float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
+    float diffuseTerm = dot(normalize(fs_Nor_new), normalize(fs_LightVec));
 
     // Avoid negative lighting values
     diffuseTerm = clamp(diffuseTerm, 0, 1);
@@ -166,9 +169,8 @@ void main()
     }
 
     // New distance fog w/ improved Z coord from vert shader and new alpha fadeout
-    vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
-    float Z = length(fs_Z) / 135.f;
-    float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
-    out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
-//    out_Col = vec4(vec3(length(fs_Z) / 135.f),1); // depthmap view
+//    vec4 fogColor = vec4(0.57f, 0.71f, 1.0f, 1.0f);
+//    float Z = length(fs_Z) / 135.f;
+//    float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
+//    out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), clamp(diffuseColor.a - fogfalloff, 0.f, 1.f));
 }
