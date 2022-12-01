@@ -214,7 +214,7 @@ void main()
         // ---------------------------------
         out_Col = skyCol;
         // Create stars from Worley noise
-        vec4 nearStar = worley3D(rayDir * 55.f);
+        vec4 nearStar = worley3D(rayDir * 75.f);
         if (nearStar.x <= 0.07f) {
             // stars fade in proportionally as sky darkens
             out_Col = vec4(mix(vec3(1,1,1), out_Col.xyz, clamp(length(out_Col.xyz), 0.f, 1.f)),1.f);
