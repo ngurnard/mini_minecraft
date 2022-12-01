@@ -114,8 +114,8 @@ void MyGL::initializeGL()
     //    m_terrain.CreateTestScene();
     //    m_terrain.CreateTestTerrainScene();
 
-    m_terrain.allowTransparent( true);   // whether to draw transparent blocks
-    m_terrain.allowCaves(false);         // whether to draw caves (improves performance considerably)
+    m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
+    m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
     m_terrain.allowRivers(false);        // whether to draw rivers
 }
 
