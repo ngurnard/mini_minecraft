@@ -16,6 +16,7 @@ public:
     int num_delta_iterations = 5, start_radius = 6;
     std::vector<std::pair<int, int>> deltaRiverCoords;
     bool m_permit_caves;
+    bool m_permit_lrivers;
 
     void createHeightMaps();
     void clearOutofRangeRiverCoords();

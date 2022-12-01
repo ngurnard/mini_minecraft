@@ -184,6 +184,20 @@ static std::unordered_map<BlockType, std::unordered_map<Direction, glm::vec2, En
                                                               {YNEG, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
                                                               {ZPOS, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)},
                                                               {ZNEG, glm::vec2(1.f BLK_UVX, 14.f  BLK_UVY)}}},
+    {WOOD, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(6.f BLK_UVX, 10.f BLK_UVY)},
+                                                              {XNEG, glm::vec2(6.f BLK_UVX, 10.f BLK_UVY)},
+                                                              {YPOS, glm::vec2(6.f BLK_UVX, 10.f BLK_UVY)},
+                                                              {YNEG, glm::vec2(6.f BLK_UVX, 10.f BLK_UVY)},
+                                                              {ZPOS, glm::vec2(6.f BLK_UVX, 10.f BLK_UVY)},
+                                                              {ZNEG, glm::vec2(6.f BLK_UVX, 10.f BLK_UVY)}}},
+
+    {LEAF, std::unordered_map<Direction, glm::vec2, EnumHash>{{XPOS, glm::vec2(4.f BLK_UVX, 12.f BLK_UVY)},
+                                                              {XNEG, glm::vec2(4.f BLK_UVX, 12.f BLK_UVY)},
+                                                              {YPOS, glm::vec2(4.f BLK_UVX, 12.f BLK_UVY)},
+                                                              {YNEG, glm::vec2(4.f BLK_UVX, 12.f BLK_UVY)},
+                                                              {ZPOS, glm::vec2(4.f BLK_UVX, 12.f BLK_UVY)},
+                                                              {ZNEG, glm::vec2(4.f BLK_UVX, 12.f BLK_UVY)}}}
+
 };
 
 // One Chunk is a 16 x 256 x 16 section of the world,

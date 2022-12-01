@@ -28,7 +28,7 @@ BlockType Chunk::getWorldBlock(int x, int y, int z)
     int H = HB.first;
     int biome = HB.second;
     bool isDeltaRiver = false;
-    if(find(noise->deltaRiverCoords.begin(), noise->deltaRiverCoords.end(), pair<int, int>(x, z)) != noise->deltaRiverCoords.end())
+    if(noise->m_permit_lrivers && find(noise->deltaRiverCoords.begin(), noise->deltaRiverCoords.end(), pair<int, int>(x, z)) != noise->deltaRiverCoords.end())
     {
        isDeltaRiver = true;
     }

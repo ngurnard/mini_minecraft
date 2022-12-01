@@ -4,7 +4,7 @@
 
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND, UNCERTAIN, BEDROCK
+    EMPTY, GRASS, DIRT, STONE, WATER, LAVA, ICE, SNOW, SAND, UNCERTAIN, BEDROCK, WOOD, LEAF
 };
 
 const static std::unordered_map<int, QString> type_enum_to_string = {
@@ -19,4 +19,6 @@ const static std::unordered_map<int, QString> type_enum_to_string = {
     { 8, "SAND" },
     { 9, "UNCERTAIN" },
     { 10, "BEDROCK" },
+    { 11, "WOOD" },
+    { 12, "LEAF" }
 };

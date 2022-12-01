@@ -5,10 +5,9 @@
 #include "cave.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_permit_transparent_terrain(true), m_permit_caves(true),
+    : m_chunks(), m_permit_transparent_terrain(true), m_permit_caves(true), m_permit_lrivers(true),
       m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
-{
-}
+{}
 
 Terrain::~Terrain() {
 }
@@ -20,6 +19,10 @@ void Terrain::allowTransparent(bool t) {
 void Terrain::allowCaves(bool c) {
     this->m_permit_caves = c;
     this->noise.m_permit_caves = c;
+}
+void Terrain::allowRivers(bool c) {
+    this->m_permit_lrivers = c;
+    this->noise.m_permit_lrivers = c;
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -136,7 +139,7 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
             int H = HB.first;
             int biome = HB.second;
             bool isDeltaRiver = false;
-            if(find(noise.deltaRiverCoords.begin(), noise.deltaRiverCoords.end(), pair<int, int>(i, j)) != noise.deltaRiverCoords.end())
+            if(m_permit_lrivers && find(noise.deltaRiverCoords.begin(), noise.deltaRiverCoords.end(), pair<int, int>(i, j)) != noise.deltaRiverCoords.end())
             {
                isDeltaRiver = true;
             }
@@ -366,11 +369,14 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
                     instantiateChunkAt(x, z);
                     auto &chunk = getChunkAt(x, z);
                     new_chunks.push_back(chunk.get());
-                    if((x != 0 || z != 0) && (x % 256 == 0 && z % 256 == 0))
+                    if(m_permit_lrivers)
                     {
-                        noise.clearOutofRangeRiverCoords();
-                        noise.delta = DeltaRiver(glm::vec2(x, z), glm::vec2(-0.5f, 1.0f));
-                        noise.populateDeltaRivers();
+                        if((x != 0 || z != 0) && (x % 256 == 0 && z % 256 == 0))
+                        {
+                            noise.clearOutofRangeRiverCoords();
+                            noise.delta = DeltaRiver(glm::vec2(x, z), glm::vec2(-0.5f, 1.0f));
+                            noise.populateDeltaRivers();
+                        }
                     }
                 }
             }

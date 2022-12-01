@@ -35,6 +35,7 @@ private:
 
     bool m_permit_transparent_terrain;
     bool m_permit_caves;
+    bool m_permit_lrivers;
 
     float m_tryExpansionTimer;
     // We will designate every 64 x 64 area of the world's x-z plane
@@ -72,6 +73,7 @@ public:
 
     void allowTransparent(bool);
     void allowCaves(bool);
+    void allowRivers(bool);
 
     void printHeight(int x, int z);
 

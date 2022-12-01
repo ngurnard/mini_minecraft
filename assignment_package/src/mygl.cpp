@@ -116,6 +116,7 @@ void MyGL::initializeGL()
 
     m_terrain.allowTransparent(true);   // whether to draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
+    m_terrain.allowRivers(true);        // whether to draw rivers
 }
 
 void MyGL::resizeGL(int w, int h) {
