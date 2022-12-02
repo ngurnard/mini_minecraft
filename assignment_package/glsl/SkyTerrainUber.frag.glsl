@@ -249,7 +249,7 @@ void main()
         vec4 diffuseColor = texture(textureSampler, fs_UVs);
         vec3 norDir = normalize(fs_Nor.xyz);
 
-        if (dot(rayDir, norDir) > 0 && fs_Anim == 0)
+        if (false)
         {
             // Naive backface culling
             // seems to fix noisy white pixels at edges of blocks & should reduce shader load
@@ -327,6 +327,8 @@ void main()
             float Z = length(fs_Z) / 135.f;
             float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
             out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), diffuseColor.a);
+
+//            out_Col = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.);
         }
     }
 }

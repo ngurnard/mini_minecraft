@@ -59,6 +59,8 @@ void MyGL::initializeGL()
 
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -138,7 +140,7 @@ void MyGL::resizeGL(int w, int h) {
     m_frameBuffer.create();
 
     // Resize the postprocess shaders
-    glm::ivec2 dims(w * devicePixelRatio(), h * devicePixelRatio());
+    glm::ivec2 dims(w, h);
     m_noOp.setDimensions(dims);
     m_postLava.setDimensions(dims);
     m_postWater.setDimensions(dims);
@@ -249,13 +251,13 @@ void MyGL::paintGL() {
     // also allows the terrain part to access sky color info and such,
     // for more flexible and interesting options for environment looks
 
+    // Draw Sky
+    m_progSkyTerrain.setQuadDraw(true);
+    m_progSkyTerrain.draw(m_geomQuad, 0);
     // Draw Terrain
     mp_textureAtlas->bind(0);
     m_progSkyTerrain.setQuadDraw(false);
     renderTerrain();
-    // Draw Sky
-    m_progSkyTerrain.setQuadDraw(true);
-    m_progSkyTerrain.draw(m_geomQuad, 0);
 
 
     // Post process render pass ///
