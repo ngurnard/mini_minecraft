@@ -40,16 +40,16 @@ const float coronaSize = 50;
 const vec3 sunColor = vec3(255, 255, 200) / 255.0;
 
 const mat4x3 vibrantsunsetPalette = mat4x3(
-            vec3(0.850, 0.580, 0.190),
-            vec3(0.540, 0.600, 0.290),
-            vec3(0.420, 0.550, 0.420),
-            vec3(3.430, 3.253, 1.027));
-
-const mat4x3 sunsetPalette = mat4x3(
             vec3(0.580, 0.580, 0.090),
             vec3(0.650, 0.710, 0.140),
             vec3(0.530, 0.440, 0.420),
             vec3(3.420, 3.333, 0.897));
+
+const mat4x3 sunsetPalette = mat4x3(
+            vec3(0.580, 0.580, 0.040),
+            vec3(0.650, 0.940, 0.140),
+            vec3(0.480, 0.410, 0.640),
+            vec3(3.430, 3.363, 1.027));
 
 const mat4x3 dayPalette = mat4x3(
             vec3(0.540, 0.770, 1.000),
@@ -71,8 +71,11 @@ vec3 cosinePalette(mat4x3 P, float t) {
     return P[0] + P[1] * cos(TWO_PI * (t * P[2] + P[3]));
 }
 
-vec3 avgofPalette(mat4x3 P) {
-    return P[0] + P[1] * TWO_PI * P[2] * sin(TWO_PI * (P[2] + P[3]));
+vec3 avgofPalette(mat4x3 P, float t1, float t2) {
+    // Returns the average RBG color of the cosine palette
+    // in range [t1, t2] (avg val definite integral of cosinePalette formula)
+    return P[0] + P[1] / (TWO_PI * P[2] * (t2 - t1)) *
+           (sin(TWO_PI * (P[2]*t2 + P[3])) - sin(TWO_PI * (P[2]*t1 + P[3])));
 }
 
 float brightness(vec3 col) {
@@ -195,6 +198,7 @@ void main()
     float t = 0.5 + 0.5 * dot(rayDir, sunDir);
     float tstatic = 0.5 + 0.5 * dot(rayDir, vec3(0,1,0));
     float sunDotUp = dot(vec3(0,1,0), sunDir);
+
     vec3 sunsetSky = cosinePalette(sunsetPalette, t);
     vec3 daySky    = cosinePalette(dayPalette, tstatic);
     vec3 nightSky  = cosinePalette(nightPalette, tstatic);
@@ -221,8 +225,6 @@ void main()
         }
 
         // Add a glowing sun in the sky
-//        float sunSize = 5;
-//        float coronaSize = 50;
         float angle = acos(dot(rayDir, sunDir)) * 360.0 / PI;
         // If the angle between our ray dir and vector to center of sun
         // is less than the threshold, then we're looking at the sun
@@ -315,6 +317,11 @@ void main()
             if (apply_lambert) {
                 // apply shading given light intensity
                 diffuseRGB = diffuseRGB * lightIntensity + diffuseRGB * specularIntensity;
+            }
+
+            // grayscale nighttime???
+            if (sunDotUp < 0) {
+                diffuseRGB = mix(diffuseRGB, vec3(brightness(diffuseRGB)), -0.75*sunDotUp);
             }
 
             // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
