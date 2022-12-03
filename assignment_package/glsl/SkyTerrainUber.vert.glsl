@@ -59,15 +59,76 @@ vec3 random2( vec3 p ) {
                                            dot(p, vec3(420.69, 69.420, 469.20))) ) * 43758.5453);
 }
 
+//float surflet3D(vec3 P, vec3 gridPoint) {
+//    // Compute falloff function by converting linear distance to a polynomial
+//    float distX = abs(P.x - gridPoint.x);
+//    float distY = abs(P.y - gridPoint.y);
+//    float distZ = abs(P.z - gridPoint.z);
+//    float tX = 1 - 6 * pow(distX, 5.f) + 15 * pow(distX, 4.f) - 10 * pow(distX, 3.f);
+//    float tY = 1 - 6 * pow(distY, 5.f) + 15 * pow(distY, 4.f) - 10 * pow(distY, 3.f);
+//    float tZ = 1 - 6 * pow(distZ, 5.f) + 15 * pow(distZ, 4.f) - 10 * pow(distZ, 3.f);
+//    // Get the random vector for the grid point (normalized)
+//    vec3 gradient = normalize(2.f * random2(gridPoint) - vec3(1.f));
+//    // Get the vector from the grid point to P (non-normalized)
+//    vec3 diff = P - gridPoint;
+//    // Get the value of our height field by dotting grid->P with our gradient
+//    float height = dot(diff, gradient);
+//    // Scale our height field (i.e. reduce it) by our polynomial falloff function
+//    return height * tX * tY * tZ;
+//}
+
+float surflet3D(vec3 p, vec3 gridPoint) {
+    // Compute the distance between p and the grid point along each axis, and warp it with a
+    // quintic function so we can smooth our cells
+    float distX = abs(p.x - gridPoint.x);
+    float distY = abs(p.y - gridPoint.y);
+    float distZ = abs(p.z - gridPoint.z);
+    float tX = 1 - 6 * pow(distX, 5.f) + 15 * pow(distX, 4.f) - 10 * pow(distX, 3.f);
+    float tY = 1 - 6 * pow(distY, 5.f) + 15 * pow(distY, 4.f) - 10 * pow(distY, 3.f);
+    float tZ = 1 - 6 * pow(distZ, 5.f) + 15 * pow(distZ, 4.f) - 10 * pow(distZ, 3.f);
+    // Get the random vector for the grid point
+    vec3 gradient = normalize(random2(gridPoint) * 2.f - vec3(1.f, 1.f, 1.f));
+    // Get the vector from the grid point to P
+    vec3 diff = p - gridPoint;
+    // Get the value of our height field by dotting grid->P with our gradient
+    float height = dot(diff, gradient);
+    // Scale our height field (i.e. reduce it) by our polynomial falloff function
+    return height * tX * tY * tZ;
+}
+
+
+float perlinNoise3D(vec3 p) {
+    float surfletSum = 0.f;
+    // Iterate over the eight integer corners surrounding uv
+    for(int dx = 0; dx <= 1; ++dx) {
+        for(int dy = 0; dy <= 1; ++dy) {
+            for(int dz = 0; dz <= 1; ++dz) {
+                surfletSum += surflet3D(p, floor(p) + vec3(dx, dy, dz));
+            }
+        }
+    }
+    return surfletSum; // output range [-1, 1]
+}
+
 vec3 surfacePerturb( vec3 p ) {
     // define an oscillating time so that model can transition back and forth
-    float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
-    vec3 temp = random2(vec3(p.x, p.y, p.z)); // range [0, 1]
-    temp = (temp - 0.5)/25; // [0, 1/scalar]
+//    float t = (cos(u_Time * 0.01) + 1)/2; // u_Timsse increments by 1 every frame. Domain [0,1]
+//    vec3 temp = random2(vec3(p.x, p.y, p.z)); // range [0, 1]
+//    temp = (temp - 0.5)/25; // [0, 1/scalar]
 
-    p.x = mix(p.x - temp.x, p.x + temp.x, t);
-    p.y = mix(p.y - temp.y, p.y + 3*temp.y, t); // move in y more
-    p.z = mix(p.z - temp.z, p.z + temp.z, t);
+//    p.x = mix(p.x - temp.x, p.x + temp.x, t);
+//    p.y = mix(p.y - temp.y, p.y + 3*temp.y, t); // move in y more
+//    p.z = mix(p.z - temp.z, p.z + temp.z, t);
+
+    // Try with perlin noise (always zero for some reason)
+    float timeX = p.x + u_Time;
+    float timeZ = p.z + u_Time;
+    float displacement = (perlinNoise3D(p + u_Time * 0.001)/4 - 0.25); // [-0.5, 0]
+//    float displacement = perlinNoise3D(u_Time * 0.0001 * p)/5; // [0, 1]
+//    p.y += displacement;
+//    displacement /= 10;
+    p.y += (sin((timeX + timeZ)/2000)/2 + 0.5)  * displacement;
+//    p.y += (cos(u_Time * 0.01)) * sin(displacement * u_Time * 0.001);
 
     return p;
 }
@@ -98,10 +159,14 @@ void main()
 
         if (water) {
 
+            // Perturb the surface
+            modelposition.xyz = surfacePerturb(modelposition.xyz);
+
             // Recompute the normals
             // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 1.f)))); // take cross product with oblique so cube normals are never zero
             float eps = 0.008;
-            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_Nor.x + eps, fs_Nor.y + eps, fs_Nor.z + eps)))); // make it so normals are never zero
+//            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_Nor.x + eps, fs_Nor.y + eps, fs_Nor.z + eps)))); // make it so normals are never zero
+            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 0.f)))); // make it so normals are never zero
             // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_LightVec.x, fs_LightVec.y, fs_LightVec.z)))); // take cross product with oblique so cube normals are never zero
             vec3 bitangent = normalize(cross(vec3(fs_Nor), tangent));
 
@@ -110,13 +175,17 @@ void main()
             vec3 p3 = surfacePerturb(modelposition.xyz + (eps * bitangent));
             vec3 p4 = surfacePerturb(modelposition.xyz - (eps * bitangent));
 
-            // only make the top surface shiny
-            if (vs_Nor.y == 1) {
-                fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
-            }
+//            vec3 p1 = surfacePerturb(modelposition.xyz + (eps * vec3(1.f, 0.f, 0.f)));
+//            vec3 p2 = surfacePerturb(modelposition.xyz - (eps * vec3(1.f, 0.f, 0.f)));
+//            vec3 p3 = surfacePerturb(modelposition.xyz + (eps * vec3(0.f, 0.f, 1.f)));
+//            vec3 p4 = surfacePerturb(modelposition.xyz - (eps * vec3(0.f, 0.f, 1.f)));
 
-            // Perturb the surface
-            modelposition.xyz = surfacePerturb(modelposition.xyz);
+            // only make the top surface shiny
+//            if (vs_Nor.y == 1) {
+//                fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
+//            }
+            fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
+
 
         } else if (lava) {
 

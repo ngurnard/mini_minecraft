@@ -79,15 +79,50 @@ vec3 random2( vec3 p ) {
                                            dot(p, vec3(420.69, 69.420, 469.20))) ) * 43758.5453);
 }
 
+float surflet3D(vec3 P, vec3 gridPoint) {
+    // Compute falloff function by converting linear distance to a polynomial
+    float distX = abs(P.x - gridPoint.x);
+    float distY = abs(P.y - gridPoint.y);
+    float distZ = abs(P.z - gridPoint.z);
+    float tX = 1 - 6 * pow(distX, 5.f) + 15 * pow(distX, 4.f) - 10 * pow(distX, 3.f);
+    float tY = 1 - 6 * pow(distY, 5.f) + 15 * pow(distY, 4.f) - 10 * pow(distY, 3.f);
+    float tZ = 1 - 6 * pow(distZ, 5.f) + 15 * pow(distZ, 4.f) - 10 * pow(distZ, 3.f);
+    // Get the random vector for the grid point (normalized)
+    vec3 gradient = normalize(2.f * random2(gridPoint) - vec3(1.f));
+    // Get the vector from the grid point to P (non-normalized)
+    vec3 diff = P - gridPoint;
+    // Get the value of our height field by dotting grid->P with our gradient
+    float height = dot(diff, gradient);
+    // Scale our height field (i.e. reduce it) by our polynomial falloff function
+    return height * tX * tY * tZ;
+}
+
+float perlinNoise3D(vec3 uvw) {
+    float surfletSum = 0.f;
+    // Iterate over the eight integer corners surrounding uv
+    for(int dx = 0; dx <= 1; ++dx) {
+        for(int dy = 0; dy <= 1; ++dy) {
+            for(int dz = 0; dz <= 1; ++dz) {
+                surfletSum += surflet3D(uvw, floor(uvw) + vec3(dx, dy, dz));
+            }
+        }
+    }
+    return surfletSum; // output range [-1, 1]
+}
+
 vec3 surfacePerturb( vec3 p ) {
     // define an oscillating time so that model can transition back and forth
-    float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
-    vec3 temp = random2(vec3(p.x, p.y, p.z)); // range [0, 1]
-    temp = (temp - 0.5)/25; // [0, 1/scalar]
+//    float t = (cos(u_Time * 0.01) + 1)/2; // u_Time increments by 1 every frame. Domain [0,1]
+//    vec3 temp = random2(vec3(p.x, p.y, p.z)); // range [0, 1]
+//    temp = (temp - 0.5)/25; // [0, 1/scalar]
 
-    p.x = mix(p.x - temp.x, p.x + temp.x, t);
-    p.y = mix(p.y - temp.y, p.y + 3*temp.y, t); // move in y more
-    p.z = mix(p.z - temp.z, p.z + temp.z, t);
+//    p.x = mix(p.x - temp.x, p.x + temp.x, t);
+//    p.y = mix(p.y - temp.y, p.y + 3*temp.y, t); // move in y more
+//    p.z = mix(p.z - temp.z, p.z + temp.z, t);
+
+    // Try with perlin noise
+    float displacement = perlinNoise3D(p);
+//    p += displacement;
 
     return p;
 }
