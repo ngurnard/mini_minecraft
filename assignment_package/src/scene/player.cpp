@@ -6,7 +6,7 @@ Player::Player(glm::vec3 pos, const Terrain &terrain)
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
       mcr_camera(m_camera),
       holdingBlock(EMPTY),
-      grassCount(1), dirtCount(1), stoneCount(1), waterCount(1), lavaCount(1), iceCount(1), snowCount(1), sandCount(1)
+      grassCount(1), dirtCount(1), stoneCount(1), waterCount(1), lavaCount(32), iceCount(1), snowCount(1), sandCount(1)
 {
     // set up sounds
     walk_grass.setSource(QUrl::fromLocalFile(":/sounds/footsteps_woods_grass.wav"));

@@ -1,4 +1,5 @@
 #pragma once
+#include "scene/cloud.h"
 #include "scene/deltariver.h"
 #include "scene/noise.h"
 #include "smartpointerhelp.h"
@@ -52,7 +53,10 @@ private:
     // surrounding the Player should be rendered, the Chunks
     // in the Terrain will never be deleted until the program is terminated.
     std::unordered_set<int64_t> m_generatedTerrain;
+
     Noise noise;
+
+    Cloud m_cloud;
     // TODO: DELETE ALL REFERENCES TO m_geomCube AS YOU WILL NOT USE
     // IT IN YOUR FINAL PROGRAM!
     // The instance of a unit cube we can use to render any cube.
@@ -107,6 +111,8 @@ public:
     // ShaderProgram    
     void drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader, bool opaque);
     void draw(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader);
+    void createClouds();
+    void drawClouds(int minX, int maxX, int minZ, int maxZ, glm::ivec2 increment, SurfaceShader *shader);
 
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.

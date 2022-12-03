@@ -119,6 +119,7 @@ void MyGL::initializeGL()
     m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
     m_terrain.allowRivers(false);        // whether to draw rivers
+    m_terrain.createClouds();
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -297,6 +298,9 @@ void MyGL::renderTerrain() {
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
 //    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progSkyTerrain);
+
+    m_terrain.drawClouds(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist,
+                         glm::ivec2(0, 0), &m_progFlat);
 }
 
 void MyGL::createTexAtlas()

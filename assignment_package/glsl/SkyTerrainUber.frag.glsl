@@ -37,7 +37,9 @@ const float TWO_PI = 6.28318530718;
 
 const float sunSize = 5;
 const float coronaSize = 50;
+const float moonglowSize = 15;
 const vec3 sunColor = vec3(255, 255, 200) / 255.0;
+const vec3 moonColor = vec3(180, 185, 200) / 255.0;
 
 const mat4x3 vibrantsunsetPalette = mat4x3(
             vec3(0.580, 0.580, 0.090),
@@ -241,6 +243,26 @@ void main()
                 }
             }
         }
+
+        // Add a glowing moon in the sky
+        float moonangle = acos(dot(rayDir, -sunDir)) * 360.0 / PI;
+        // If the angle between our ray dir and vector to center of sun
+        // is less than the threshold, then we're looking at the sun
+        if(moonangle < moonglowSize) {
+            // Full center of sun
+            if(moonangle < sunSize) {
+                out_Col = vec4(moonColor, 1);
+            }
+            // Corona of sun, mix with sky color (physically-inspired exponential falloff)
+            else {
+                float t = (moonangle - sunSize) / (moonglowSize - sunSize);
+                if (t < 1) {
+                    //vec3 glowCol = mix(moonColor, out_Col.xyz, 0.5);
+                    out_Col = vec4(mix(moonColor, out_Col.xyz, 1 + exp(-2*t)*(t - 1)), 1);
+                }
+            }
+        }
+
     }
     else
     {
@@ -320,7 +342,7 @@ void main()
             }
 
             // grayscale nighttime???
-            if (sunDotUp < 0) {
+            if (sunDotUp < 0 && apply_lambert) {
                 diffuseRGB = mix(diffuseRGB, vec3(brightness(diffuseRGB)), -0.75*sunDotUp);
             }
 
