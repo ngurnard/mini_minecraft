@@ -61,7 +61,7 @@ void MyGL::initializeGL()
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glEnable(GL_CULL_FACE);
+//    glEnable(GL_CULL_FACE);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -265,10 +265,10 @@ void MyGL::paintGL() {
     m_progSkyTerrain.setQuadDraw(false);
     renderTerrain();
     mp_textureNick->bind(1);
-    m_progLambert.setQuadDraw(false);
+    m_progSkyTerrain.setQuadDraw(false);
     if(m_nick.root)
     {
-        m_progLambert.setModelMatrix(glm::mat4(1.f));
+        m_progSkyTerrain.setModelMatrix(glm::mat4(1.f));
         traverse(m_nick.root, glm::mat4(1.f), 1);
     }
 
@@ -449,7 +449,7 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-    // float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
+//     float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.
@@ -491,7 +491,7 @@ void MyGL::traverse(const uPtr<Node> &node, glm::mat4 transform_mat, int texture
         node->cube->NPCbodyPart = node->NPCbodyPart;
         node->cube->destroyVBOdata();
         node->cube->createVBOdata();
-        m_progLambert.setModelMatrix(transform_mat);
-        m_progLambert.drawNPC(*(node->cube), texture_slot);
+        m_progSkyTerrain.setModelMatrix(transform_mat);
+        m_progSkyTerrain.drawNPC(*(node->cube), texture_slot);
     }
 }
