@@ -1,5 +1,7 @@
 #include "inventory.h"
+#include "qfileinfo.h"
 #include "ui_inventory.h" // had to make the inventory.ui file under forms for this to be recognized
+#include <QFile>
 
 Inventory::Inventory(QWidget *parent) :
     QWidget(parent),
@@ -8,13 +10,28 @@ Inventory::Inventory(QWidget *parent) :
     ui->setupUi(this);
 
     connect(ui->grassButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockGrass()));
+    ui->grassButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->dirtButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockDirt()));
+    ui->dirtButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->stoneButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockStone()));
+    ui->stoneButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->waterButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockWater()));
+    ui->waterButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->lavaButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockLava()));
+    ui->lavaButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->iceButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockIce()));
+    ui->iceButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->snowButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockSnow()));
+    ui->snowButton->setStyleSheet("QPushButton {background:transparent;}");
+
     connect(ui->sandButton, SIGNAL(clicked()), this, SLOT(slot_getHoldingBlockSand()));
+    ui->sandButton->setStyleSheet("QPushButton {background:transparent;}");
 }
 
 Inventory::~Inventory()
@@ -88,6 +105,10 @@ void Inventory::slot_setWater(int count) {
         QPixmap waterPix(":/textures/water_block.png");
         ui->waterPic->setPixmap(waterPix);
         ui->waterPic->setScaledContents(true);
+
+        //std::cout << QFileInfo(":/textures/water_block.png")
+//        qDebug()<<"File exists -"<<QFileInfo(":/textures/water_block.png").exists()<<
+//                  " "<<QFileInfo(":/textures/water_block.png").absoluteFilePath();
 
         ui->waterCount->setText(QString::number(count));
     } else {

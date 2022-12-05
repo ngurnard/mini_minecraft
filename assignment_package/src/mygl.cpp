@@ -60,6 +60,8 @@ void MyGL::initializeGL()
 
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -121,6 +123,7 @@ void MyGL::initializeGL()
     m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
     m_terrain.allowRivers(true);        // whether to draw rivers
+    m_terrain.createClouds();
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -142,7 +145,7 @@ void MyGL::resizeGL(int w, int h) {
     m_frameBuffer.create();
 
     // Resize the postprocess shaders
-    glm::ivec2 dims(w * devicePixelRatio(), h * devicePixelRatio());
+    glm::ivec2 dims(w, h);
     m_noOp.setDimensions(dims);
     m_postLava.setDimensions(dims);
     m_postWater.setDimensions(dims);
@@ -254,6 +257,9 @@ void MyGL::paintGL() {
     // also allows the terrain part to access sky color info and such,
     // for more flexible and interesting options for environment looks
 
+    // Draw Sky
+    m_progSkyTerrain.setQuadDraw(true);
+    m_progSkyTerrain.draw(m_geomQuad, 0);
     // Draw Terrain
     mp_textureAtlas->bind(0);
     m_progSkyTerrain.setQuadDraw(false);
@@ -265,10 +271,6 @@ void MyGL::paintGL() {
         m_progLambert.setModelMatrix(glm::mat4(1.f));
         traverse(m_nick.root, glm::mat4(1.f), 1);
     }
-    // Draw Sky
-    m_progSkyTerrain.setQuadDraw(true);
-    m_progSkyTerrain.draw(m_geomQuad, 0);
-
 
     // Post process render pass ///
     performPostprocessRenderPass();
@@ -308,6 +310,9 @@ void MyGL::renderTerrain() {
     // existing terrain and checks the status of any BlockType workers that are generating Chunks.
 //    m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progLambert);
     m_terrain.draw(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist, &m_progSkyTerrain);
+
+    m_terrain.drawClouds(x - rend_dist, x + rend_dist, z - rend_dist, z + rend_dist,
+                         glm::ivec2(0, 0), &m_progFlat);
 }
 
 void MyGL::createTexAtlas()
@@ -443,8 +448,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-//    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-    float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
+   float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
+    // float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.

@@ -37,19 +37,21 @@ const float TWO_PI = 6.28318530718;
 
 const float sunSize = 5;
 const float coronaSize = 50;
+const float moonglowSize = 15;
 const vec3 sunColor = vec3(255, 255, 200) / 255.0;
+const vec3 moonColor = vec3(180, 185, 200) / 255.0;
 
 const mat4x3 vibrantsunsetPalette = mat4x3(
-            vec3(0.850, 0.580, 0.190),
-            vec3(0.540, 0.600, 0.290),
-            vec3(0.420, 0.550, 0.420),
-            vec3(3.430, 3.253, 1.027));
-
-const mat4x3 sunsetPalette = mat4x3(
             vec3(0.580, 0.580, 0.090),
             vec3(0.650, 0.710, 0.140),
             vec3(0.530, 0.440, 0.420),
             vec3(3.420, 3.333, 0.897));
+
+const mat4x3 sunsetPalette = mat4x3(
+            vec3(0.580, 0.580, 0.040),
+            vec3(0.650, 0.940, 0.140),
+            vec3(0.480, 0.410, 0.640),
+            vec3(3.430, 3.363, 1.027));
 
 const mat4x3 dayPalette = mat4x3(
             vec3(0.540, 0.770, 1.000),
@@ -71,8 +73,11 @@ vec3 cosinePalette(mat4x3 P, float t) {
     return P[0] + P[1] * cos(TWO_PI * (t * P[2] + P[3]));
 }
 
-vec3 avgofPalette(mat4x3 P) {
-    return P[0] + P[1] * TWO_PI * P[2] * sin(TWO_PI * (P[2] + P[3]));
+vec3 avgofPalette(mat4x3 P, float t1, float t2) {
+    // Returns the average RBG color of the cosine palette
+    // in range [t1, t2] (avg val definite integral of cosinePalette formula)
+    return P[0] + P[1] / (TWO_PI * P[2] * (t2 - t1)) *
+           (sin(TWO_PI * (P[2]*t2 + P[3])) - sin(TWO_PI * (P[2]*t1 + P[3])));
 }
 
 float brightness(vec3 col) {
@@ -195,13 +200,14 @@ void main()
     float t = 0.5 + 0.5 * dot(rayDir, sunDir);
     float tstatic = 0.5 + 0.5 * dot(rayDir, vec3(0,1,0));
     float sunDotUp = dot(vec3(0,1,0), sunDir);
+
     vec3 sunsetSky = cosinePalette(sunsetPalette, t);
     vec3 daySky    = cosinePalette(dayPalette, tstatic);
     vec3 nightSky  = cosinePalette(nightPalette, tstatic);
 
     // Nonlinearly interpolate between day, night, and sunset palettes
     // lower bias = more day/night time, less sunset/sunrise, harsher transition
-    float sunsetBias = 0.5f;
+    float sunsetBias = 0.70f;
     if (sunDotUp > 0) // Sun above horizon
         {skyCol = vec4(mix(sunsetSky, daySky, pow(sunDotUp, sunsetBias)), 1.f);}
     else              // Sun below horizon
@@ -221,8 +227,6 @@ void main()
         }
 
         // Add a glowing sun in the sky
-//        float sunSize = 5;
-//        float coronaSize = 50;
         float angle = acos(dot(rayDir, sunDir)) * 360.0 / PI;
         // If the angle between our ray dir and vector to center of sun
         // is less than the threshold, then we're looking at the sun
@@ -239,6 +243,26 @@ void main()
                 }
             }
         }
+
+        // Add a glowing moon in the sky
+        float moonangle = acos(dot(rayDir, -sunDir)) * 360.0 / PI;
+        // If the angle between our ray dir and vector to center of sun
+        // is less than the threshold, then we're looking at the sun
+        if(moonangle < moonglowSize) {
+            // Full center of sun
+            if(moonangle < sunSize) {
+                out_Col = vec4(moonColor, 1);
+            }
+            // Corona of sun, mix with sky color (physically-inspired exponential falloff)
+            else {
+                float t = (moonangle - sunSize) / (moonglowSize - sunSize);
+                if (t < 1) {
+                    //vec3 glowCol = mix(moonColor, out_Col.xyz, 0.5);
+                    out_Col = vec4(mix(moonColor, out_Col.xyz, 1 + exp(-2*t)*(t - 1)), 1);
+                }
+            }
+        }
+
     }
     else
     {
@@ -249,7 +273,7 @@ void main()
         vec4 diffuseColor = texture(textureSampler, fs_UVs);
         vec3 norDir = normalize(fs_Nor.xyz);
 
-        if (dot(rayDir, norDir) > 0 && fs_Anim == 0)
+        if (false)
         {
             // Naive backface culling
             // seems to fix noisy white pixels at edges of blocks & should reduce shader load
@@ -317,6 +341,11 @@ void main()
                 diffuseRGB = diffuseRGB * lightIntensity + diffuseRGB * specularIntensity;
             }
 
+            // grayscale nighttime???
+            if (sunDotUp < 0 && apply_lambert) {
+                diffuseRGB = mix(diffuseRGB, vec3(brightness(diffuseRGB)), -0.75*sunDotUp);
+            }
+
             // & Check the rare, special case where we draw face between two diff transparent blocks as opaque
             if (fs_T2O != 0) {out_Col = vec4(diffuseRGB, 1.f);}
             else {out_Col = vec4(diffuseRGB, diffuseColor.a);}
@@ -327,6 +356,8 @@ void main()
             float Z = length(fs_Z) / 135.f;
             float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
             out_Col = vec4(mix(out_Col.rgb, fogColor.rgb, fogfalloff), diffuseColor.a);
+
+//            out_Col = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.);
         }
     }
 }

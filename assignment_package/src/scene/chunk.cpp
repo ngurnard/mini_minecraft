@@ -182,6 +182,8 @@ void Chunk::generateVBOdata()
                                     // Color
                                     interleavedOpq.push_back(color);
                                     // Normal
+                                    // TODO: add piggyback float/bool to check if the above block is empty
+                                    //       so animatible blocks do not hover above each other when stacked
                                     interleavedOpq.push_back(glm::vec4(block.directionVec, 0));
                                     // UV coordinates, Animatable flag
                                     glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];

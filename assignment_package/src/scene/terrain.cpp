@@ -6,7 +6,7 @@
 
 Terrain::Terrain(OpenGLContext *context)
     : m_chunks(), m_permit_transparent_terrain(true), m_permit_caves(true), m_permit_lrivers(true),
-      m_tryExpansionTimer(0), m_generatedTerrain(), mp_context(context)
+      m_tryExpansionTimer(0), m_generatedTerrain(), m_cloud(context, &noise), mp_context(context)
 {}
 
 Terrain::~Terrain() {
@@ -128,7 +128,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     }
 }
 
-// uncomment for caves
+
 void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
     int waterH = 138;       // Height of water level
     for(int i = x; i < x + 16; ++i) {
@@ -166,32 +166,32 @@ void Terrain::setChunkBlocks(Chunk* chunk, int x, int z) {
     }
 }
 
-void Terrain::recreateClouds(Chunk* chunk, int x, int z, float time) {
-    int cloudH = 225;
-    BlockType cloudType = ICE;
-    for(int i = x; i < x + 16; ++i) {
-        for(int j = z; j < z + 16; ++j) {
-            glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
-            int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
-            if (noise.m_biomeMaskMap.computeFBM(i +156 + time, j + 197 + time) > 0.8)
-            {
-                if (chunk->getBlockAt(coord_x, cloudH, coord_z) == EMPTY)
-                {
-                    chunk->setBlockAt(coord_x, cloudH, coord_z, cloudType);
-                }
+//void Terrain::recreateClouds(Chunk* chunk, int x, int z, float time) {
+//    int cloudH = 225;
+//    BlockType cloudType = ICE;
+//    for(int i = x; i < x + 16; ++i) {
+//        for(int j = z; j < z + 16; ++j) {
+//            glm::vec2 chunkOrigin = glm::vec2(floor(i / 16.f) * 16, floor(j / 16.f) * 16);
+//            int coord_x = int(i - chunkOrigin.x), coord_z = int(j - chunkOrigin.y);
+//            if (noise.m_biomeMaskMap.computeFBM(i +156 + time, j + 197 + time) > 0.8)
+//            {
+//                if (chunk->getBlockAt(coord_x, cloudH, coord_z) == EMPTY)
+//                {
+//                    chunk->setBlockAt(coord_x, cloudH, coord_z, cloudType);
+//                }
 
-            }
-            else
-            {
-                if (chunk->getBlockAt(coord_x, cloudH, coord_z) == cloudType)
-                {
-                    chunk->setBlockAt(coord_x, cloudH, coord_z, EMPTY);
-                }
-            }
-        }
-    }
-    chunk->recreateVBOdata();
-}
+//            }
+//            else
+//            {
+//                if (chunk->getBlockAt(coord_x, cloudH, coord_z) == cloudType)
+//                {
+//                    chunk->setBlockAt(coord_x, cloudH, coord_z, EMPTY);
+//                }
+//            }
+//        }
+//    }
+//    chunk->recreateVBOdata();
+//}
 
 void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT)
 {
@@ -328,8 +328,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev)
     glm::ivec2 prevZone = glm::ivec2(64.f * glm::floor(playerPosPrev.x / 64.f), 64.f * glm::floor(playerPosPrev.z / 64.f));
     // Determine which terrain zones border our current and previous position
     // This will include out ungenerated terrain zones
-    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 3);
-    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 3);
+    std::unordered_set<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, 5);
+    std::unordered_set<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, 5);
 
     destroyOutOfRangeTerrainZoneVBOs(terrainZonesBorderingCurrPos, terrainZonesBorderingPrevPos);
 
@@ -440,6 +440,21 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader
         // Transparent pass
         drawTransparentOrOpaque(minX, maxX, minZ, maxZ, shader, false);
     }
+}
+
+void Terrain::createClouds() {
+    m_cloud.setHeight(250);
+    m_cloud.setThreshold(135);
+    int sqLen = 64*6;
+    m_cloud.setBounds(-sqLen, sqLen, -sqLen, sqLen);
+    m_cloud.incrementOffset({0, 0});
+
+    m_cloud.createVBOdata();
+}
+
+void Terrain::drawClouds(int minX, int maxX, int minZ, int maxZ, glm::ivec2 increment, SurfaceShader *shader) {
+
+    shader->draw(m_cloud, 0);
 }
 
 

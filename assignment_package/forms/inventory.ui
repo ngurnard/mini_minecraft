@@ -88,6 +88,9 @@
     <property name="text">
      <string/>
     </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
    </widget>
   </widget>
   <widget class="QFrame" name="border_2">

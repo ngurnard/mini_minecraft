@@ -15,10 +15,14 @@ out vec4 fs_Col;
 uniform vec3 u_Eye;
 out vec4 fs_CamPos;
 
+out vec3 fs_Z;
+
 void main()
 {
     fs_Col = vs_Col;
     vec4 modelposition = u_Model * vs_Pos;
+
+    fs_Z = modelposition.xyz - u_Eye;
 
     //built-in things to pass down the pipeline
     gl_Position = u_ViewProj * modelposition;
