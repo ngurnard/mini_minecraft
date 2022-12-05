@@ -19,8 +19,9 @@ MyGL::MyGL(QWidget *parent)
       m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
       m_terrain(this),
       m_time(0.f),
-      prevTime(QDateTime::currentMSecsSinceEpoch()), m_geomQuad(this),
-      showInventory(false), mp_textureAtlas(nullptr)
+      m_nick(glm::vec3(2.f, 136.f, -9.f), m_terrain, *mp_player.get(), this), prevTime(QDateTime::currentMSecsSinceEpoch()),
+      m_geomQuad(this), showInventory(false),
+      mp_textureAtlas(nullptr), mp_textureNick(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -76,6 +77,9 @@ void MyGL::initializeGL()
     m_worldAxes.createVBOdata();
     m_hud.createVBOdata();
 
+    m_nick.m_geomCube.destroyVBOdata();
+    m_nick.m_geomCube.createVBOdata();
+    m_nick.constructSceneGraph();
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
@@ -116,7 +120,7 @@ void MyGL::initializeGL()
 
     m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
-    m_terrain.allowRivers(false);        // whether to draw rivers
+    m_terrain.allowRivers(true);        // whether to draw rivers
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -160,6 +164,7 @@ void MyGL::tick() {
     qint64 currTime = QDateTime::currentMSecsSinceEpoch(); // time at this ticl
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     mp_player->tick(dT, m_inputs); // tick the player
+    m_nick.tick(dT, m_inputs);
     // Uncomment this line to test terrain expansion
 //    m_terrain.updateTerrain(m_player.mcr_position);
 
@@ -253,6 +258,13 @@ void MyGL::paintGL() {
     mp_textureAtlas->bind(0);
     m_progSkyTerrain.setQuadDraw(false);
     renderTerrain();
+    mp_textureNick->bind(1);
+    m_progLambert.setQuadDraw(false);
+    if(m_nick.root)
+    {
+        m_progLambert.setModelMatrix(glm::mat4(1.f));
+        traverse(m_nick.root, glm::mat4(1.f), 1);
+    }
     // Draw Sky
     m_progSkyTerrain.setQuadDraw(true);
     m_progSkyTerrain.draw(m_geomQuad, 0);
@@ -307,6 +319,10 @@ void MyGL::createTexAtlas()
     mp_textureAtlas = mkU<Texture>(this);
     mp_textureAtlas->create(":/textures/minecraft_textures_all.png");
     mp_textureAtlas->load(0);
+
+    mp_textureNick = mkU<Texture>(this);
+    mp_textureNick->create(":/textures/nick_texture.png");
+    mp_textureNick->load(1);
 }
 
 void MyGL::performPostprocessRenderPass()
@@ -427,8 +443,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-//    float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
+//    float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
+    float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.
@@ -446,5 +462,31 @@ void MyGL::mousePressEvent(QMouseEvent *e) {
     } else if (e->button() == Qt::RightButton) { // if the player clicks the right mouse, place a block
         BlockType blockToPlace = mp_player->holdingBlock;//LAVA;//GRASS;
         this->mp_player->placeBlock(this->m_terrain, blockToPlace);
+    }
+}
+
+// Implement a function that takes in a pointer to a Node and a mat3,
+// and which traverses your scene graph and draws any existing Polygon2Ds
+// at each Node using the sequence of transformation matrices that have been
+// concatenated thus far, following the example in the lecture slides.
+// You should invoke this function from MyGL::paintGL.
+
+void MyGL::traverse(const uPtr<Node> &node, glm::mat4 transform_mat, int texture_slot)
+{
+    transform_mat = transform_mat * node->computeTransformation();
+    // Use a foreach loop to the effect of for(const uPtr& n : node->children).
+    //This enables you to read the children without transferring ownership to
+    //traverse because you're not creating a second unique_ptr, just a reference to one.
+    for(const uPtr<Node> &n : node->children)
+    {
+        traverse(n, transform_mat, texture_slot);
+    }
+    if(node->cube != nullptr && node->toDraw)
+    {
+        node->cube->NPCbodyPart = node->NPCbodyPart;
+        node->cube->destroyVBOdata();
+        node->cube->createVBOdata();
+        m_progLambert.setModelMatrix(transform_mat);
+        m_progLambert.drawNPC(*(node->cube), texture_slot);
     }
 }

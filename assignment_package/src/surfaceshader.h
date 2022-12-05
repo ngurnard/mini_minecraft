@@ -53,6 +53,7 @@ void setEye(glm::vec3 eye);
 
 // Draw the given object to our screen using this ShaderProgram's shaders
 virtual void draw(Drawable &d, int textureSlot) override;
+void drawNPC(Drawable &d, int textureSlot);
 void drawInterleaved(Drawable &d, int textureSlot);
 // Draw the given object to our screen multiple times using instanced rendering
 void drawInstanced(InstancedDrawable &d);

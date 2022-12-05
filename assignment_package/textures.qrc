@@ -11,5 +11,7 @@
         <file>textures/water_block.png</file>
         <file>textures/sand_block.png</file>
         <file>textures/blank.png</file>
+        <file>textures/Minecraft_Fandom_SteveTexture.jpg</file>
+        <file>textures/nick_texture.png</file>
     </qresource>
 </RCC>

@@ -13,8 +13,13 @@ SOURCES += \
     $$PWD/scene/blockwireframe.cpp \
     $$PWD/scene/deltariver.cpp \
     $$PWD/scene/hud.cpp \
+    $$PWD/scene/nick_npc.cpp \
+    $$PWD/scene/node.cpp \
     $$PWD/scene/noise.cpp \
     $$PWD/scene/quad.cpp \
+    $$PWD/scene/rotate_node.cpp \
+    $$PWD/scene/scale_node.cpp \
+    $$PWD/scene/translate_node.cpp \
     $$PWD/shaderprogram.cpp \
     $$PWD/drawable.cpp \
     $$PWD/cameracontrolshelp.cpp \
@@ -42,8 +47,13 @@ HEADERS += \
     $$PWD/scene/blockwireframe.h \
     $$PWD/scene/deltariver.h \
     $$PWD/scene/hud.h \
+    $$PWD/scene/nick_npc.h \
+    $$PWD/scene/node.h \
     $$PWD/scene/noise.h \
     $$PWD/scene/quad.h \
+    $$PWD/scene/rotate_node.h \
+    $$PWD/scene/scale_node.h \
+    $$PWD/scene/translate_node.h \
     $$PWD/shaderprogram.h \
     $$PWD/drawable.h \
     $$PWD/cameracontrolshelp.h \

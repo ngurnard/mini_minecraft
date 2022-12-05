@@ -2,9 +2,6 @@
 #include <glm_includes.h>
 #include <iostream>
 
-static const int CUB_IDX_COUNT = 36;
-static const int CUB_VERT_COUNT = 24;
-
 glm::vec4 GetCubeNormal(const glm::vec4& P)
 {
     int idx = 0;
@@ -27,63 +24,63 @@ void createCubeVertexPositions(glm::vec4 (&cub_vert_pos)[CUB_VERT_COUNT])
     int idx = 0;
     //Front face
     //UR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
     //LR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, -0.5f, 0.5f, 1.f);
     //LL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, -0.5f, 0.5f, 1.f);
     //UL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, 0.5f, 0.5f, 1.f);
 
     //Right face
     //UR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, 0.5f, -0.5f, 1.f);
     //LR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, -0.5f, -0.5f, 1.f);
     //LL
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, -0.5f, 0.5f, 1.f);
     //UL
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
 
     //Left face
     //UR
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, 0.5f, 0.5f, 1.f);
     //LR
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, -0.5f, 0.5f, 1.f);
     //LL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, -0.5f, -0.5f, 1.f);
     //UL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, 0.5f, -0.5f, 1.f);
 
     //Back face
     //UR
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, 0.5f, -0.5f, 1.f);
     //LR
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, -0.5f, -0.5f, 1.f);
     //LL
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, -0.5f, -0.5f, 1.f);
     //UL
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, 0.5f, -0.5f, 1.f);
 
     //Top face
     //UR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, 0.5f, -0.5f, 1.f);
     //LR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
     //LL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, 0.5f, 0.5f, 1.f);
     //UL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, 0.5f, -0.5f, 1.f);
 
     //Bottom face
     //UR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, -0.5f, 0.5f, 1.f);
     //LR
-    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(0.5f, -0.5f, -0.5f, 1.f);
     //LL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, -0.5f, -0.5f, 1.f);
     //UL
-    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    cub_vert_pos[idx++] = glm::vec4(-0.5f, -0.5f, 0.5f, 1.f);
 }
 
 
@@ -128,17 +125,28 @@ void createCubeIndices(GLuint (&cub_idx)[CUB_IDX_COUNT])
         cub_idx[idx++] = i*4+3;
     }
 }
-
+void Cube::createCubeUVs(glm::vec2 (&cub_vert_uv)[CUB_VERT_COUNT])
+{
+    int index = 0;
+    for(int i = 0; i < bodyPartUVs[NPCbodyPart].size(); i++)
+    {
+        for(int j = 0; j < faceCorners.size(); j++)
+        {
+            cub_vert_uv[index++] = bodyPartUVs[NPCbodyPart][i]  + (bodyPartUVOffsets[NPCbodyPart][i] * faceCorners[j]);
+        }
+    }
+}
 void Cube::createVBOdata()
 {
     GLuint sph_idx[CUB_IDX_COUNT];
     glm::vec4 sph_vert_pos[CUB_VERT_COUNT];
     glm::vec4 sph_vert_nor[CUB_VERT_COUNT];
+    glm::vec2 sph_vert_uv[CUB_VERT_COUNT];
 
     createCubeVertexPositions(sph_vert_pos);
     createCubeVertexNormals(sph_vert_nor);
     createCubeIndices(sph_idx);
-
+    createCubeUVs(sph_vert_uv);
     m_countOpq = CUB_IDX_COUNT;
 
     // Create a VBO on our GPU and store its handle in bufIdx
@@ -160,18 +168,7 @@ void Cube::createVBOdata()
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufNor);
     mp_context->glBufferData(GL_ARRAY_BUFFER, CUB_VERT_COUNT * sizeof(glm::vec4), sph_vert_nor, GL_STATIC_DRAW);
 
-}
-
-
-void Cube::createInstancedVBOdata(std::vector<glm::vec3> &offsets, std::vector<glm::vec3> &colors) {
-    m_numInstances = offsets.size();
-
-    generateOffsetBuf();
-    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufPosOffset);
-    mp_context->glBufferData(GL_ARRAY_BUFFER, offsets.size() * sizeof(glm::vec3), offsets.data(), GL_STATIC_DRAW);
-
-
-    generateCol();
-    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufCol);
-    mp_context->glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), colors.data(), GL_STATIC_DRAW);
+    generateUV();
+    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufUV);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, CUB_VERT_COUNT * sizeof(glm::vec3), sph_vert_uv, GL_STATIC_DRAW);
 }
