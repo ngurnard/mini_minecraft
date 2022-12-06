@@ -1,7 +1,7 @@
 #include "cloud.h"
 
-Cloud::Cloud(OpenGLContext* context, Noise* N)
-    : Drawable(context), m_offset({1000, 1000}), noise(N)
+Cloud::Cloud(OpenGLContext* context)
+    : Drawable(context), m_bounds(0, 16, 0, 16)
 {}
 
 Cloud::~Cloud()
@@ -14,7 +14,7 @@ GLenum Cloud::drawMode() {
 void Cloud::createVBOdata() {
 
     this->destroyVBOdata();
-
+    std::cout << "in m_cloud createVBOdata()" << std::endl;
     std::vector<glm::vec4> pos, col;
     std::vector<GLuint> idx;
 
@@ -24,33 +24,22 @@ void Cloud::createVBOdata() {
     {
         for (int z = m_bounds[2]; z < m_bounds[3]; z++)
         {
-            int xo = x + m_offset.x;
-            int zo = z + m_offset.y;
-
-            int H = noise->computeHeight(xo, zo).first;
-
-            if(H >= m_threshold)
+            for (int i = x; i <= x+1; i++)
             {
-
-                float alpha = (float)(H - m_threshold)/(float)(256 - m_threshold);
-
-                for (int i = x; i <= x+1; i++)
+                for (int j = z; j <= z+1; j++)
                 {
-                    for (int j = z; j <= z+1; j++)
-                    {
-                        col.push_back(glm::vec4(1.f, 1.f, 1.f, alpha)); // fill white cloud color
-                        pos.push_back(glm::vec4(i, m_height, j, 1.f)); // populate vert pos
-                    }
+                    col.push_back(glm::vec4(1.f, 1.f, 1.f, 1.f)); // fill white cloud color
+                    pos.push_back(glm::vec4(i, m_height, j, 1.f)); // populate vert pos
                 }
-                // Fan triangulate quad
-                idx.push_back(totalV);
-                idx.push_back(totalV + 3);
-                idx.push_back(totalV + 1);
-                idx.push_back(totalV);
-                idx.push_back(totalV + 2);
-                idx.push_back(totalV + 3);
-                totalV += 4;
             }
+            // Fan triangulate quad
+            idx.push_back(totalV);
+            idx.push_back(totalV + 3);
+            idx.push_back(totalV + 1);
+            idx.push_back(totalV);
+            idx.push_back(totalV + 2);
+            idx.push_back(totalV + 3);
+            totalV += 4;
         }
     }
 
@@ -73,14 +62,7 @@ void Cloud::setHeight(int h) {
     m_height = h;
 }
 
-void Cloud::setThreshold(int t) {
-    m_threshold = t;
-}
-
 void Cloud::setBounds(int xmin, int xmax, int zmin, int zmax) {
     m_bounds = glm::ivec4(xmin, xmax, zmin, zmax);
 }
 
-void Cloud::incrementOffset(glm::ivec2 increment) {
-    m_offset += increment;
-}

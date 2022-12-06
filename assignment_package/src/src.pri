@@ -20,6 +20,7 @@ SOURCES += \
     $$PWD/scene/quad.cpp \
     $$PWD/scene/rotate_node.cpp \
     $$PWD/scene/scale_node.cpp \
+    $$PWD/scene/staticcloud.cpp \
     $$PWD/scene/translate_node.cpp \
     $$PWD/shaderprogram.cpp \
     $$PWD/drawable.cpp \
@@ -55,6 +56,7 @@ HEADERS += \
     $$PWD/scene/quad.h \
     $$PWD/scene/rotate_node.h \
     $$PWD/scene/scale_node.h \
+    $$PWD/scene/staticcloud.h \
     $$PWD/scene/translate_node.h \
     $$PWD/shaderprogram.h \
     $$PWD/drawable.h \

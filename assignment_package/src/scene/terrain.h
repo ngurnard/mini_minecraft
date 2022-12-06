@@ -1,4 +1,5 @@
 #pragma once
+#include "scene/staticcloud.h"
 #include "scene/cloud.h"
 #include "scene/deltariver.h"
 #include "scene/noise.h"
@@ -37,6 +38,7 @@ private:
     bool m_permit_transparent_terrain;
     bool m_permit_caves;
     bool m_permit_lrivers;
+    bool m_permit_clouds;
 
     float m_tryExpansionTimer;
     // We will designate every 64 x 64 area of the world's x-z plane
@@ -78,6 +80,7 @@ public:
     void allowTransparent(bool);
     void allowCaves(bool);
     void allowRivers(bool);
+    void allowClouds(bool);
 
     void printHeight(int x, int z);
 
@@ -87,7 +90,6 @@ public:
     Chunk* instantiateChunkAt(int x, int z);
 
     void setChunkBlocks(Chunk* chunk, int x, int z);
-    void recreateClouds(Chunk* chunk, int x, int z, float time);
     // Do these world-space coordinates lie within
     // a Chunk that exists?
     bool hasChunkAt(int x, int z) const;
@@ -111,8 +113,10 @@ public:
     // ShaderProgram    
     void drawTransparentOrOpaque(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader, bool opaque);
     void draw(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader);
-    void createClouds();
-    void drawClouds(int minX, int maxX, int minZ, int maxZ, glm::ivec2 increment, SurfaceShader *shader);
+
+    // Cloud stuff
+    void drawClouds(int minX, int maxX, int minZ, int maxZ, SurfaceShader *shader);
+    void createCloud();
 
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.
