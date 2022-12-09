@@ -122,7 +122,7 @@ void MyGL::initializeGL()
 
     m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
-    m_terrain.allowRivers(false);       // whether to draw LRivers
+    m_terrain.allowRivers(true);       // whether to draw LRivers
     m_terrain.allowClouds(true);        // whether to draw clouds
     m_terrain.createCloud();            // creates 16x16 cloud chunk in m_terrain which is drawn above chunks
 }

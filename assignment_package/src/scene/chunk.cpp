@@ -182,8 +182,6 @@ void Chunk::generateVBOdata()
                                     // Color
                                     interleavedOpq.push_back(color);
                                     // Normal
-                                    // TODO: add piggyback float/bool to check if the above block is empty
-                                    //       so animatible blocks do not hover above each other when stacked
                                     interleavedOpq.push_back(glm::vec4(block.directionVec, 0));
                                     // UV coordinates, Animatable flag
                                     glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];
@@ -245,7 +243,16 @@ void Chunk::generateVBOdata()
                                             // Color
                                             interleavedTra.push_back(color);
                                             // Normal
-                                            interleavedTra.push_back(glm::vec4(block.directionVec, 0));
+                                            glm::ivec3 below_block = glm::ivec3(x, y, z) - glm::ivec3(0,1,0);
+                                            BlockType below_block_type = getBlockAt(below_block.x, below_block.y, below_block.z);
+
+                                            // embed flag for whether to displace liquid surface in last element
+                                            if (vertex.pos.y != 1 && !isAnimatable(below_block_type))
+                                            {
+                                                interleavedTra.push_back(glm::vec4(block.directionVec, 0));
+                                            } else {
+                                                interleavedTra.push_back(glm::vec4(block.directionVec, 1));
+                                            }
                                             // UV coordinates, Animatable flag
                                             glm::vec2 uv_coord = vertex.uv + blockFaceUVs[curr][block.direction];
                                             float animatable = isAnimatable(getBlockAt(x, y, z));
