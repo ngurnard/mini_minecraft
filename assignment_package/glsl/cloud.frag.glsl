@@ -107,8 +107,8 @@ void main()
 {
     // Copy the color; there is no shading.
     out_Col = fs_Col;
-    float a = 1.f; // timelapse factor (go woosh)
-    float threshold = 0.15f + 0.15f * sin(a * 0.00025 * u_Time);
+    float a = 1.2f; // timelapse factor (go woosh)
+    float threshold = 0.175f + 0.15f * sin(a * 0.00025 * u_Time);
     ivec2 offset_coords = ivec2(floor(fs_Pos.x + a * 0.025 * u_Time) + 1000, floor(fs_Pos.z + a * 0.025 * u_Time) + 1000);
 
     float largeH = fbmLargeH(offset_coords.x, offset_coords.y);
