@@ -14,9 +14,9 @@ SOURCES += \
     $$PWD/scene/cloud.cpp \
     $$PWD/scene/deltariver.cpp \
     $$PWD/scene/hud.cpp \
-    $$PWD/scene/nick_npc.cpp \
     $$PWD/scene/node.cpp \
     $$PWD/scene/noise.cpp \
+    $$PWD/scene/npc.cpp \
     $$PWD/scene/quad.cpp \
     $$PWD/scene/rotate_node.cpp \
     $$PWD/scene/scale_node.cpp \
@@ -50,9 +50,9 @@ HEADERS += \
     $$PWD/scene/cloud.h \
     $$PWD/scene/deltariver.h \
     $$PWD/scene/hud.h \
-    $$PWD/scene/nick_npc.h \
     $$PWD/scene/node.h \
     $$PWD/scene/noise.h \
+    $$PWD/scene/npc.h \
     $$PWD/scene/quad.h \
     $$PWD/scene/rotate_node.h \
     $$PWD/scene/scale_node.h \

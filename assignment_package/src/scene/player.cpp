@@ -50,7 +50,6 @@ void Player::processInputs(InputBundle &inputs) {
 
     // DELETE ME LATER (WHEN DONE WITH POSPROCSSING SHADERS)
 //    BlockType TEMP = headSpaceSight();
-
     this->m_acceleration = glm::vec3(0, 0, 0); // ensure we dont accidentally keep accelerating
     float tune_max_accel = 9.5; // this is acceleration of Usain Bolt
     float accel_scaler;
@@ -162,10 +161,6 @@ void Player::computePhysics(float dT, const Terrain &terrain, InputBundle &input
         playSoundsFlight();
 
     } else { // if not in flight mode
-
-//        std::cout << "acceleration: {" << m_acceleration.x << ", " << m_acceleration.y << ", " << m_acceleration.z << "}" << std::endl;
-//        std::cout << "velocity: {" << m_velocity.x << ", " << m_velocity.y << ", " << m_velocity.z << "}" << std::endl;
-
         this->m_velocity.x *= 0.85f; // reduce velocity for friction and drag (slow down on release)
         this->m_velocity.y *= 0.975f; // reduce velocity for friction and drag (slow down on release) -- allow terminal velocity to be reached
         this->m_velocity.z *= 0.85f; // reduce velocity for friction and drag (slow down on release)
@@ -223,7 +218,7 @@ bool Player::gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrai
             }
         }
         if(interfaceAxis == -1) {
-            throw std::out_of_range("interfaceAxis was -1 after the for loop in gridMarch!");
+            throw std::out_of_range("interfaceAxis was -1 after the for loop in gridMarch (player.cpp)!");
         }
         if (interfaceAxisPtr != nullptr) {
             *interfaceAxisPtr = interfaceAxis;
@@ -287,7 +282,6 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
             glm::vec3 rayX = rayDirection * glm::vec3(1, 0, 0); // get only the x component
             glm::vec3 rayY = rayDirection * glm::vec3(0, 1, 0); // get only the y component
             glm::vec3 rayZ = rayDirection * glm::vec3(0, 0, 1); // get only the z component
-
             if (gridMarch(castedRayOrigin, rayX, terrain, &out_dist, &out_blockHit)) { // if there is a collision in x
                 if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
                     rayDirection.x = glm::sign(rayDirection.x) * glm::max((out_dist - offset), 0.f);
@@ -296,7 +290,6 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
                     }
                 }
             }
-
             if (gridMarch(castedRayOrigin, rayY, terrain, &out_dist, &out_blockHit)) { // if there is a collision in y
                 if (!checkIsLiquid(out_blockHit.x, out_blockHit.y, out_blockHit.z)) { // dont collide with liquid
                     rayDirection.y = glm::sign(rayDirection.y) * glm::max((out_dist - offset), 0.f);
@@ -353,9 +346,9 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
 //            }
 //        }
 //        if(interfaceAxis == -1) {
-//            std::cout << axis << std::endl;
-//            std::cout << maxLen << std::endl;
-//            std::cout << "rayDirection: {" << rayDirection.x << ", " << rayDirection.y << ", " << rayDirection.z << "}" << std::endl;
+//            std:://cout << axis << std::endl;
+//            std:://cout << maxLen << std::endl;
+//            std:://cout << "rayDirection: {" << rayDirection.x << ", " << rayDirection.y << ", " << rayDirection.z << "}" << std::endl;
 //            throw std::out_of_range("interfaceAxis was -1 after the for loop in gridMarchAxis!");
 //        }
 //        curr_t += min_t; // min_t is declared in slide 7 algorithm
@@ -392,7 +385,7 @@ std::array<bool, 3> Player::checkCollision(glm::vec3 &rayDirection, const Terrai
 //            float collisionDist = distToMove;
 //            bool collision = gridMarchAxis(corner + m_position, projectedCorner - (corner + m_position), terrain, i, &collisionDist);
 ////            if (collision && i != 1) {
-////                std::cout << "Collision in " << my_map[i] << std::endl;
+////                std:://cout << "Collision in " << my_map[i] << std::endl;
 ////            }
 //            collisionDist = collisionDist - offset;
 //            if (collisionDist < distToMove) {

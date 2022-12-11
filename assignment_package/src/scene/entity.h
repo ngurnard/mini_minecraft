@@ -29,12 +29,11 @@ protected:
     // Vectors that define the axes of our local coordinate system
     glm::vec3 m_forward, m_right, m_up;
     // The origin of our local coordinate system
-    glm::vec3 m_position;
 
 public:
     // A readonly reference to position for external use
     const glm::vec3& mcr_position;
-
+    glm::vec3 m_position;
     // Various constructors
     Entity();
     Entity(glm::vec3 pos);
