@@ -107,7 +107,7 @@ void main()
 {
     // Copy the color; there is no shading.
     out_Col = fs_Col;
-    float a = 1.f;
+    float a = 1.f; // timelapse factor (go woosh)
     float threshold = 0.15f + 0.15f * sin(a * 0.00025 * u_Time);
     ivec2 offset_coords = ivec2(floor(fs_Pos.x + a * 0.025 * u_Time) + 1000, floor(fs_Pos.z + a * 0.025 * u_Time) + 1000);
 
@@ -124,7 +124,6 @@ void main()
 
     if (H > threshold) {
         out_Col.a = (H - threshold)/(0.75f - threshold);
-//        out_Col = vec4(1, 0, 0, 1);
     } else {
         out_Col.a = 0.f;
     }

@@ -152,52 +152,40 @@ void main()
     fs_dimVal = random1(modelposition.xyz/100.f);
     fs_LightVec = rotateLightVec(0.0025 * u_Time, lightDir);  // Compute the direction in which the light source lies
 
-    if (vs_Anim != 0) { // if we want to animate this surface
+    // New condition to check flag set in w'th coord of vs_Nor
+    if (vs_Anim != 0 && vs_Nor.w == 1) { // if we want to animate this surface
         // check region in texture to decide which animatable type is drawn
         bool lava = fs_UVs.x >= 13.f/16.f && fs_UVs.y < 2.f/16.f;
         bool water = !lava && fs_UVs.x >= 13.f/16.f && fs_UVs.y <= 4.f/16.f;
 
         // don't distort bottom face verts
-        if (fs_Nor.y != -1) {
-            if (water) {
-                // If top block or top two verts on sides, perform distortion
-                if (fs_Nor.y == 1 || vs_UV.y*16.f > 3.5) {
-                    // Perturb the surface
-                    modelposition.xyz = surfacePerturb(modelposition.xyz);
 
-                    // Recompute the normals
-                    // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 1.f)))); // take cross product with oblique so cube normals are never zero
-                    float eps = 0.008;
-                    //            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_Nor.x + eps, fs_Nor.y + eps, fs_Nor.z + eps)))); // make it so normals are never zero
-                    vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 0.f)))); // make it so normals are never zero
-                    // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_LightVec.x, fs_LightVec.y, fs_LightVec.z)))); // take cross product with oblique so cube normals are never zero
-                    vec3 bitangent = normalize(cross(vec3(fs_Nor), tangent));
+        if (water) {
+            // If top block or top two verts on sides, perform distortion
 
-                    vec3 p1 = surfacePerturb(modelposition.xyz + (eps * tangent));
-                    vec3 p2 = surfacePerturb(modelposition.xyz - (eps * tangent));
-                    vec3 p3 = surfacePerturb(modelposition.xyz + (eps * bitangent));
-                    vec3 p4 = surfacePerturb(modelposition.xyz - (eps * bitangent));
+            // Perturb the surface
+            modelposition.xyz = surfacePerturb(modelposition.xyz);
 
-                    //            vec3 p1 = surfacePerturb(modelposition.xyz + (eps * vec3(1.f, 0.f, 0.f)));
-                    //            vec3 p2 = surfacePerturb(modelposition.xyz - (eps * vec3(1.f, 0.f, 0.f)));
-                    //            vec3 p3 = surfacePerturb(modelposition.xyz + (eps * vec3(0.f, 0.f, 1.f)));
-                    //            vec3 p4 = surfacePerturb(modelposition.xyz - (eps * vec3(0.f, 0.f, 1.f)));
+            // Recompute the normals
+            // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 1.f)))); // take cross product with oblique so cube normals are never zero
+            float eps = 0.008;
+            //            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_Nor.x + eps, fs_Nor.y + eps, fs_Nor.z + eps)))); // make it so normals are never zero
+            vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(1.f, 0.f, 0.f)))); // make it so normals are never zero
+            // vec3 tangent = normalize(cross(vec3(fs_Nor), normalize(vec3(fs_LightVec.x, fs_LightVec.y, fs_LightVec.z)))); // take cross product with oblique so cube normals are never zero
+            vec3 bitangent = normalize(cross(vec3(fs_Nor), tangent));
 
-                    // only make the top surface shiny
-                    //            if (vs_Nor.y == 1) {
-                    //                fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
-                    //            }
-                    fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
-                }
+            vec3 p1 = surfacePerturb(modelposition.xyz + (eps * tangent));
+            vec3 p2 = surfacePerturb(modelposition.xyz - (eps * tangent));
+            vec3 p3 = surfacePerturb(modelposition.xyz + (eps * bitangent));
+            vec3 p4 = surfacePerturb(modelposition.xyz - (eps * bitangent));
 
-            } else if (lava) {
-                // If top block or top two verts on sides, perform distortion
-                if (fs_Nor.y == 1 || vs_UV.y*16.f > 1.f) {
-                    // Perturb the surface
-                    modelposition.xyz = surfacePerturb(modelposition.xyz);
-                    // Do not recompute the normals
-                }
-            }
+            fs_Nor = vec4(normalize(cross(normalize(p1 - p2), normalize(p3 - p4))), 0);
+
+        } else if (lava) {
+            // If top block or top two verts on sides, perform distortion
+            // Perturb the surface
+            modelposition.xyz = surfacePerturb(modelposition.xyz);
+            // Do not recompute the normals
         }
     }
 
