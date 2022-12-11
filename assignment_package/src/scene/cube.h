@@ -118,9 +118,9 @@ static std::unordered_map<BlockTypeNPC, std::vector<glm::vec2>> bodyPartUVOffset
             }},
 };
 static std::vector<glm::vec2> faceCorners{
-    glm::vec2(BLK_UV, BLK_UV),
-    glm::vec2(BLK_UV, 0),
     glm::vec2(0, 0),
+    glm::vec2(BLK_UV, 0),
+    glm::vec2(BLK_UV, BLK_UV),
     glm::vec2(0, BLK_UV),
 };
 
