@@ -13,7 +13,6 @@ private:
     void processInputs(InputBundle &inputs);
     void computePhysics(float dT, const Terrain &terrain, InputBundle &inputs);
 
-    bool flightMode; // the player always begins in flight mode (no gravity and no collision detection)
     float gravity; // acceleration cosntant in m/s due to gravity. Follows tradition
     float lockDegree = 0; // Ensures the player cant rotate past the global up vector
 
@@ -21,6 +20,7 @@ public:
     // Readonly public reference to our camera
     // for easy access from MyGL
     const Camera& mcr_camera;
+    bool flightMode; // the player always begins in flight mode (no gravity and no collision detection)
 
     // For sounds
     QSoundEffect walk_grass;

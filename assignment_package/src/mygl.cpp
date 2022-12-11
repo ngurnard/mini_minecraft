@@ -18,10 +18,17 @@ MyGL::MyGL(QWidget *parent)
       m_frameBuffer(this, width(), height(), 1.0f),
       m_noOp(this), m_postLava(this), m_postWater(this), m_HUD(this),
       m_terrain(this),
+      mp_player(mkU<Player>(glm::vec3(2.f, 150.f, -9.f), m_terrain)),
       m_time(0.f),
-      m_nick(glm::vec3(2.f, 136.f, -9.f), m_terrain, *mp_player.get(), this), prevTime(QDateTime::currentMSecsSinceEpoch()),
+      m_benny(glm::vec3(2.f, 136.001f, 5.f), m_terrain, *mp_player.get(), this),
+      m_evan(glm::vec3(12.f, 141.001f, -8.f), m_terrain, *mp_player.get(), this),
+      m_nick(glm::vec3(-11.f, 135.001f, -7.f), m_terrain, *mp_player.get(), this),
+      prevTime(QDateTime::currentMSecsSinceEpoch()),
       m_geomQuad(this), showInventory(false),
-      mp_textureAtlas(nullptr), mp_textureNick(nullptr)
+      mp_textureAtlas(nullptr),
+      mp_textureNick(nullptr),
+      mp_textureEvan(nullptr),
+      mp_textureBenny(nullptr)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -61,7 +68,7 @@ void MyGL::initializeGL()
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glEnable(GL_CULL_FACE);
+//    glEnable(GL_CULL_FACE);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -82,6 +89,12 @@ void MyGL::initializeGL()
     m_nick.m_geomCube.destroyVBOdata();
     m_nick.m_geomCube.createVBOdata();
     m_nick.constructSceneGraph();
+    m_benny.m_geomCube.destroyVBOdata();
+    m_benny.m_geomCube.createVBOdata();
+    m_benny.constructSceneGraph();
+    m_evan.m_geomCube.destroyVBOdata();
+    m_evan.m_geomCube.createVBOdata();
+    m_evan.constructSceneGraph();
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
@@ -94,8 +107,6 @@ void MyGL::initializeGL()
 
     // Generate the unique player Ptr to select blocks
 //    mup_player = mkU<Player>(mp_player.get());
-     mp_player = mkU<Player>(glm::vec3(0.f, 150.f, 0.f), m_terrain);
-
     // Create and set up the diffuse shader
     m_progLambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
@@ -122,7 +133,7 @@ void MyGL::initializeGL()
 
     m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
-    m_terrain.allowRivers(false);       // whether to draw LRivers
+    m_terrain.allowRivers(true);       // whether to draw LRivers
     m_terrain.allowClouds(true);        // whether to draw clouds
     m_terrain.createCloud();            // creates 16x16 cloud chunk in m_terrain which is drawn above chunks
 }
@@ -168,7 +179,13 @@ void MyGL::tick() {
     qint64 currTime = QDateTime::currentMSecsSinceEpoch(); // time at this ticl
     float dT = (currTime - prevTime) / 1000.f; // convert from miliseconds to seconds. also typecast to float for computePhysics
     mp_player->tick(dT, m_inputs); // tick the player
-    m_nick.tick(dT, m_inputs);
+    if(m_time > 400)
+    {
+        m_nick.tick(dT, m_inputs);
+        m_evan.tick(dT, m_inputs);
+        m_benny.tick(dT, m_inputs);
+
+    }
     // Uncomment this line to test terrain expansion
 //    m_terrain.updateTerrain(m_player.mcr_position);
 
@@ -266,11 +283,24 @@ void MyGL::paintGL() {
     m_progSkyTerrain.setQuadDraw(false);
     renderTerrain();
     mp_textureNick->bind(1);
+    mp_textureEvan->bind(2);
+    mp_textureBenny->bind(3);
+
     m_progSkyTerrain.setQuadDraw(false);
     if(m_nick.root)
     {
         m_progSkyTerrain.setModelMatrix(glm::mat4(1.f));
         traverse(m_nick.root, glm::mat4(1.f), 1);
+    }
+    if(m_evan.root)
+    {
+        m_progSkyTerrain.setModelMatrix(glm::mat4(1.f));
+        traverse(m_evan.root, glm::mat4(1.f), 2);
+    }
+    if(m_benny.root)
+    {
+        m_progSkyTerrain.setModelMatrix(glm::mat4(1.f));
+        traverse(m_benny.root, glm::mat4(1.f), 3);
     }
 
     // Post process render pass ///
@@ -326,8 +356,16 @@ void MyGL::createTexAtlas()
     mp_textureAtlas->load(0);
 
     mp_textureNick = mkU<Texture>(this);
-    mp_textureNick->create(":/textures/nick_texture.png");
+    mp_textureNick->create(":/textures/nick_texture_2.png");
     mp_textureNick->load(1);
+
+    mp_textureEvan = mkU<Texture>(this);
+    mp_textureEvan->create(":/textures/evan_texture_2.png");
+    mp_textureEvan->load(2);
+
+    mp_textureBenny = mkU<Texture>(this);
+    mp_textureBenny->create(":/textures/benny_texture.png");
+    mp_textureBenny->load(3);
 }
 
 void MyGL::performPostprocessRenderPass()
@@ -409,6 +447,20 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     } else if (e->key() == Qt::Key_I) {
         showInventory = !showInventory; // switch it from whatever it was before
         emit sig_showInventory(showInventory);
+    }
+    else if (e->key() == Qt::Key_B) {
+        m_benny.doBFS = true;
+        m_benny.m_prev_position = m_benny.m_position;
+        }
+    else if(e->key() == Qt::Key_N)
+    {
+        m_nick.doBFS = true;
+        m_nick.m_prev_position = m_nick.m_position;
+    }
+    else if(e->key() == Qt::Key_G)
+    {
+        m_evan.doBFS = true;
+        m_evan.m_prev_position = m_evan.m_position;
     }
 }
 

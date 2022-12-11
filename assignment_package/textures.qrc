@@ -13,5 +13,9 @@
         <file>textures/blank.png</file>
         <file>textures/Minecraft_Fandom_SteveTexture.jpg</file>
         <file>textures/nick_texture.png</file>
+        <file>textures/benny_texture.png</file>
+        <file>textures/evan_texture.png</file>
+        <file>textures/evan_texture_2.png</file>
+        <file>textures/nick_texture_2.png</file>
     </qresource>
 </RCC>
