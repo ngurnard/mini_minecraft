@@ -10,10 +10,9 @@ public:
     // resizeable arrays.
     std::vector<uPtr<Node>> children;
     Cube* cube;
-    bool toDraw;
     BlockTypeNPC NPCbodyPart;
     Node();
-    Node(Cube* cube, bool toDraw, BlockTypeNPC NPCbodyPart);
+    Node(Cube* cube, BlockTypeNPC NPCbodyPart);
     virtual ~Node();
     // Methods
     // A purely virtual function that computes and returns a 3x3 homogeneous matrix representing the transformation in the node.

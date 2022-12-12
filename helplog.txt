@@ -3,6 +3,31 @@ Milestone 2:
 ------------------------
 Evan:
 ------------------------
+
+------------------------
+Nick:
+------------------------
+see bottom
+------------------------
+Benedict:
+------------------------
+Referred the following links:
+
+L-Systems:
+https://drive.google.com/drive/u/1/folders/1AmrasHrBNppmPbb6YNZgCG0s6qBcPnBW
+http://www.kevs3d.co.uk/dev/lsystems/
+
+NPC AI:
+Textures 
+https://minecraft.fandom.com/wiki/List_of_mob_textures
+https://minecraft.novaskin.me/gallery/model/PlayerSlim
+https://www.geeksforgeeks.org/print-paths-given-source-destination-using-bfs/
+
+Milestone 2:
+
+------------------------
+Evan:
+------------------------
 Nov 20-21: Nick and I worked together to understand why nothing was showing with post-process shaders.
 Additionally, refactored ShaderProgram and broke everything. Ultimately we fixed our issue together and
 then got advice from Adam on post-process rendering pipeline.

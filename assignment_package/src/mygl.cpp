@@ -538,7 +538,7 @@ void MyGL::traverse(const uPtr<Node> &node, glm::mat4 transform_mat, int texture
     {
         traverse(n, transform_mat, texture_slot);
     }
-    if(node->cube != nullptr && node->toDraw)
+    if(node->cube != nullptr)
     {
         node->cube->NPCbodyPart = node->NPCbodyPart;
         node->cube->destroyVBOdata();

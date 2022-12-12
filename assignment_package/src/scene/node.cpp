@@ -1,9 +1,9 @@
 #include "node.h"
 
-Node::Node() : cube(nullptr), toDraw(), NPCbodyPart()
+Node::Node() : cube(nullptr), NPCbodyPart()
 {}
-Node::Node(Cube* cube, bool toDraw, BlockTypeNPC NPCbodyPart)
-    : cube(cube), toDraw(toDraw), NPCbodyPart(NPCbodyPart)
+Node::Node(Cube* cube, BlockTypeNPC NPCbodyPart)
+    : cube(cube), NPCbodyPart(NPCbodyPart)
 {}
 Node& Node::addChild(uPtr<Node> node)
 {

@@ -8,7 +8,7 @@ public:
     glm::vec3 scale;
     ScaleNode();
     ScaleNode(float x, float y, float z);
-    ScaleNode(float x, float y, float z, Cube* cube, bool toDraw, BlockTypeNPC NPCbodyPart);
+    ScaleNode(float x, float y, float z, Cube* cube, BlockTypeNPC NPCbodyPart);
     virtual ~ScaleNode();
     // Methods
     glm::mat4 computeTransformation() override;
