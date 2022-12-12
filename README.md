@@ -37,6 +37,26 @@
 - This was mostly implemented in the last milestone for the sake of this milestone. Please refer to comment there for more information
 - Post-process effects are for when the player is under water or lava and are an upgrade from the regular red or blue tinge
 
+**Evan: Day and Night Cycle/Procedural Sky, Moving & dynamically dense FBM Clouds, HUD crosshair, Selected Block Wireframe**
+#### Day and Night Cycle:
+- I was most interested in beautifying our game, so I implmented a day and night cycle starting with the raycast method discussed during class - with many alterations to produce a smooth, natural-looking environment.
+- A separate sky shader pipeline was created, but because I wanted to be able to infuse the sky color (possibly off-screen sky color) into the environement, a new "SkyTerrainUber" shader was made to combine lambert and sky shaders. This now handles both draw calls for the sky's screen-spanning quad and the terrain.
+- Instead of defining a series of hard-coded color thresholds for sunset and dusk colors and linearly mixing between them, I instead used the tool at http://dev.thi.ng/gradients/ to carefully design 3 separate cosine color palettes to represent, day, sunrise/sunset, and night sky gradients.
+- The day and night sky gradients are static - the dot product (re-mapped to [0,1] range) between ray direction and the world up vector sets the cosine color value at each fragment.
+- The sunset palette, however, is dynamic - the value to retrieve its color is the dot between ray direction and the sun direction, such that the gradient enveloping the sky is always rotating with the sun.
+- To blend between these palettes, I use a custom non-linear blending strategy such that if the y-component is positive, the blending occurs between sunset and day palettes, and otherwise between sunset and night. The nonlinearity of this blending essentially compresses the region (angle) at which sunset coloring occurs. This effectively holds off the sunset until the sun is lower in the sky, and there is more time spent in unaffected day/night coloring before the vibrant sunset/sunrise happens.
+- Fixed one issue with the sun/corona method mentioned in class. Instead of having linear falloff in the glow around the sun, exponential falloff is used for a more natural and seamless look.
+- Added a moon opposite the sun with a different color and smaller corona.
+- Implmented stars using 3D worley noise which fade into the sky as the brightness falls off toward nighttime. The vec3 ray direction is used and a threshold is used to make the sky color white within close 3D proximity to the worley points. The extra dimension in this noise allows for varying star sizes - some of which twinkle or wink out according to look direction.
+
+#### Distance Fog:
+- Implemented distance fog based on fragment Z with a fine-tuned exponential falloff function which starts a given distance from the player.
+- Initially mixed terrain terrain color with arbitrary fog color, but was dissatisfied with the disconnect between ambient sky color, especially at night. then, I applied the falloff function to the terrain alpha channel, but encountered the same tranparency render order issues encountered previously with OpenGL.
+- Finally, after implmenting the "SkyTerrainUber" shader, The distance fog now blends a slightly darker sky color into the terrina with the exponential falloff. This makes it feel like the sky has much greater influence over terrain color and brings the environement together 
+
+- Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values...)
+
+
 ### Milestone 2:
 
 **1. Procedural generation of caves using 3D noise and PostProcess Shaders _(Nick)_**
