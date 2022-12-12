@@ -2,6 +2,8 @@
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 3:
 
+**Benedict: L-system Rivers + NPC AI**
+
 **Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound, Back-Face Culling (OpenGL)**
 #### Inventory:
 - Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, lava, ice, snow, sand
