@@ -2,7 +2,7 @@
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 3:
 
-**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound**
+**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound, Back-Face Culling (OpenGL)**
 #### Inventory:
 - Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, lava, ice, snow, sand
 - The player is not able to place a block if their block count falls below 1 (ie they have zero)
@@ -36,6 +36,9 @@
 #### Post-Process Camera Overlay
 - This was mostly implemented in the last milestone for the sake of this milestone. Please refer to comment there for more information
 - Post-process effects are for when the player is under water or lava and are an upgrade from the regular red or blue tinge
+
+#### Back-Face Culling
+- Implmented OpenGL solution (simple one-line solution) to backface culling such that the world gets rendered more efficiently since less textures are drawn. The previous solution was not universal accross operating systems
 
 ### Milestone 2:
 
@@ -114,4 +117,4 @@
 - When the player is in flight mode, translations occur parallel to each of the cardinal planes (xy, xz, yz) intentially such that easy world viewing is achievable. It was tested such that the player moved along its local axes, but that produces unfavorable gameplay.
 - The Entity class was edited to hold useful values to any future entities such as button presses and bools to determine whether on ground.  
 - Currently cannot jump on water or lava since that doesn't make physical sense.
-- Challenges: collision with corners
+- Challenges: collision with corners. The ray casting method is geometricxally limiting, and this solution would be more easily solved with volume projection.
