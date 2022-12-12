@@ -71,6 +71,7 @@
 #### Misc...
 - Implemented naive backface culling before Nick found a much simpler and better way!
 - Fixed an issue with liquid blocks' vertex deformation causing them to move into other blocks causing Z-fighting.
+- Made toggles in myGL for caves, clouds to assist with performance
 
 - Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values, etc...)
 
