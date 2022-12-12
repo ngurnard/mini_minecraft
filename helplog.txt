@@ -1,9 +1,14 @@
-Milestone 2:
+Milestone 3:
 
 ------------------------
 Evan:
 ------------------------
+Used http://dev.thi.ng/gradients/ to design custom cosine color palettes
 
+Adam gave advice to help replace my naive backface culling with the proper OpenGL command.
+
+Otherwise, most of the ideation was driven by an intuitive kind of visual exploration, and I didn't 
+use to many outside sources.
 ------------------------
 Nick:
 ------------------------
