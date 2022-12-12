@@ -44,17 +44,30 @@
 - Instead of defining a series of hard-coded color thresholds for sunset and dusk colors and linearly mixing between them, I instead used the tool at http://dev.thi.ng/gradients/ to carefully design 3 separate cosine color palettes to represent, day, sunrise/sunset, and night sky gradients.
 - The day and night sky gradients are static - the dot product (re-mapped to [0,1] range) between ray direction and the world up vector sets the cosine color value at each fragment.
 - The sunset palette, however, is dynamic - the value to retrieve its color is the dot between ray direction and the sun direction, such that the gradient enveloping the sky is always rotating with the sun.
-- To blend between these palettes, I use a custom non-linear blending strategy such that if the y-component is positive, the blending occurs between sunset and day palettes, and otherwise between sunset and night. The nonlinearity of this blending essentially compresses the region (angle) at which sunset coloring occurs. This effectively holds off the sunset until the sun is lower in the sky, and there is more time spent in unaffected day/night coloring before the vibrant sunset/sunrise happens.
+- To blend between these palettes, I use a custom non-linear blending strategy such that if the y-component of sun direction is positive, the blending occurs between sunset and day palettes, and otherwise between sunset and night. The nonlinearity of this blending essentially compresses the region (angle) at which sunset coloring occurs. This effectively holds off the sunset until the sun is lower in the sky, and there is more time spent in unaffected day/night coloring before the vibrant sunset/sunrise happens.
 - Fixed one issue with the sun/corona method mentioned in class. Instead of having linear falloff in the glow around the sun, exponential falloff is used for a more natural and seamless look.
 - Added a moon opposite the sun with a different color and smaller corona.
 - Implmented stars using 3D worley noise which fade into the sky as the brightness falls off toward nighttime. The vec3 ray direction is used and a threshold is used to make the sky color white within close 3D proximity to the worley points. The extra dimension in this noise allows for varying star sizes - some of which twinkle or wink out according to look direction.
 
 #### Distance Fog:
-- Implemented distance fog based on fragment Z with a fine-tuned exponential falloff function which starts a given distance from the player.
-- Initially mixed terrain terrain color with arbitrary fog color, but was dissatisfied with the disconnect between ambient sky color, especially at night. then, I applied the falloff function to the terrain alpha channel, but encountered the same tranparency render order issues encountered previously with OpenGL.
-- Finally, after implmenting the "SkyTerrainUber" shader, The distance fog now blends a slightly darker sky color into the terrina with the exponential falloff. This makes it feel like the sky has much greater influence over terrain color and brings the environement together 
+- Implemented distance fog based on vertex depth with a fine-tuned exponential falloff function which starts a given distance from the player.
+- Initially mixed terrain terrain color with arbitrary fog color, but was dissatisfied with the disconnect between ambient sky color, especially at night. then, the falloff function was applied to the terrain alpha channel, but I encountered the same tranparency render order issues encountered previously with OpenGL.
+- Finally, after implmenting the "SkyTerrainUber" shader, The distance fog now blends a slightly darker sky color into the terrian with the exponential falloff. This makes it feel like the sky has much greater influence over terrain color and brings the environement together.
 
-- Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values...)
+#### Dynamic FBM Clouds:
+- Created new Cloud drawable class with separate VBO comprising 16x16 grid of opaque white squares to fit over exaclty one chunk at a given height. I then draw this instance over every chunk that gets loaded into the terrain class.
+- Created new cloud fragment shader. This shader is inspired by the CPU-side terrain height generation - it uses 3 FBM noise maps where two act as height maps and the third acts as a mask. these noise functions are identical the ones which generate the terrain/biomes except the position is offset by 1000 in x and z, the "height" value is instead applied to the alpha channel of the white cloud color to get a nice transparency, and the position offset is animated such that the clouds appear to move smoothly over time.
+- Additionally, a sine function is applied to the masking threshold for the 3rd FBM such that the sky oscillates slowly between very sparse cloud coverage and heavily overcast
+
+#### HUD Crosshair and Selected Block Wireframe:
+- Created HUD post process to draw a plus-shaped crosshair in the middle of the screen which subtly inverts the colors of the rendered texture behind it for better visibility.
+- Created Block wireframe drawable and drew it with flat shading over the terrain when the Player's look vector intersects with an opaque block in a 4-block range
+
+#### Misc...
+- Implemented naive backface culling before Nick found a much simpler and better way!
+- Fixed an issue with liquid blocks' vertex deformation causing them to move into other blocks causing Z-fighting.
+
+- Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values, etc...)
 
 
 ### Milestone 2:
