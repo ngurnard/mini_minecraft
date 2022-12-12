@@ -5,17 +5,32 @@
 **Benedict: L-system Rivers + NPC AI**
 #### L-system Rivers:
 - Implemented 2D L-systems, with procedurally generating branching curved trees, that are carved out of the surface terrain. 
-- Added deltariver.cpp that generates the delta river. Used alphabets similar to the slides F, X, -, +, [ and ]. Initial axiom is FX. Grammar is exactly defined as in the slides.
+- Added `deltariver.cpp` that generates the delta river. Used alphabets similar to the slides F, X, -, +, [ and ]. Initial axiom is FX. Grammar is exactly defined as in the slides.
 - Random values are used to determine if the correct grammar rule has to be applied to the initial axiom or extra alphabets have to be added to the axiom to have rivers of varying length.
 - The state is modelled as a structure with position, rotation and the iteration in which it was generated. 
 - Left and right rotations happen at 35 degrees with an error of 25% on either side. The forward distance initially starts with 35, and decreases exponentially based on the iteration of the L-system (we do 5 iterations). Also, we randomly turn 12 degrees on every side before the forward, so that the river is not just a straight line, but is curved and organic.
-- The delta rivers are generated and carved out from the terrain in every fixed interval, so there's procedural generation of the river (changes in noise.cpp and terrain.cpp)
+- The delta rivers are generated and carved out from the terrain in every fixed interval, so there's procedural generation of the river (changes in `noise.cpp` and `terrain.cpp`)
 - The delta river is also only rendered if it belongs to the grassland biome and is less than a certain height (like 155), so that the river doesn't split mountains and is aesthetic with rest of the terrain.
 - Challenges: Since the random numbers and angle turns are sometimes difficult to get control, it was difficult to get a perfectly looking delta river. The major difficulty was to procedurally generate this at fixed interval. Took a similar approach to cave carving by engraving it in the noise function. Another challenge was, since river carving out is random, the rivers got generated in random biomes of the terrain, sometimes splitting a mountain into two. Fixed this by limiting it to grasslang biomes. Sometimes this still gives weird rivers that might have potentially had a major portion in the mountain terrain (which is not drawn), and a small portion in the grassland biome (which is drawn), and this ends up looking like an incomplete river.
 
 #### NPC AI:
+- **Usage:** Use the following keys to move the NPC to the player: `N` for _Nick_ , G` for _Evan_ and `B` for _Benny_.
 - The first step for working on NPC AI was to render the NPC. I initially started created NPC meshes, but later switched to scene graph implementation for easy animation.
-- Firstly, I generated a workflow for 3D scene graphs by taking advantage of the cube.cpp and Translate/Scale/Rotate node implementations from the scene graph homework.
+- Firstly, I generated a workflow for 3D scene graphs by taking advantage of the `cube.cpp` and Translate/Scale/Rotate node implementations from the scene graph homework (`node.h`, `translate_node.h`, `scale_node.h` and `rotate_node.h`). The node now has a pointer to the cube instead of the Polygon2D Geometry.
+- Considerable time went into mapping the texture UV coordinates to constants in cube.h
+I took the standard texture arrangements for Minecraft UV mob characters (sourced from [Minecraft Fandom](https://minecraft.fandom.com/wiki/Textures) and [User PlayerSlim on NovaSkin](https://minecraft.novaskin.me/gallery/model/PlayerSlim)). The texture maps were edited using Figma.
+- First, the `constructSceneGraph()` function in npc.cpp was written to render the NPC scene graph properly, this took quite some time to get the NPC rendering properly.
+- Next, I worked on basic animations of the NPCs (`moveNPC()`). The NPC rotates/waves its hands and leg in opposite directions while moving. While stationary, the NPC's hands waves in a different axis toward and away from hitting its torso (animations similar to Minecraft Game)
+- Next, I worked on getting the collision physics for NPCs right. This took the major time, since I had to understand Nick's collision (beautifully written, so that I could directly use his interface), modify it and make it work for the NPC scene graphs. I tested the collision logic and by sending out fixed direction commands (emulating wPressed, sPressed etc. behaviour in non-flight mode) to wander.
+- Once the collision worked, I worked on NPC AI, where I do a BFS from the NPC to the player. This took more time than I anticipated because there were just too many edge cases. 
+- The NPC now can do the following six actions: going LEFT, RIGHT, FORWARD and BACKWARD, doing a JUMP, and STAYing put.
+- I used the BFS path finding algorithm, it gives okay-ish/roundabout paths as long as the player and NPC are within a fixed radius and the player is in non-flight mode.
+- In most cases, the NPC is able to follow the path returned by BFS, and move to the player. But there are some cases where it's not able to reach because of JUMPs not getting succeded. Tried optimizing this, but it seems like the jump acceleration varies for different terrain locations. An easy JUMP action that we do using keyboard controls seems difficult to emulate in varied terrain arrangements.
+- Another cool thing is that the NPC can also swim and come towards the player.
+- A challenging thing in executing the path returned by the BFS is that the actions returned by BFS (say a trajectory like LEFT FORWARD JUMP RIGHT) might actually translate to (LEFT LEFT LEFT LEFT FORWARD FORWARD FORWARD JUMP RIGHT RIGHT), due to the frequency in which the tick function is called. 
+- Another change that I had to make was to change the vertex ordering, so that faces don't get culled and is in sync with GL_CULL_FACE used by teammates.
+- Another, animation that was added was the player rotates by 90 or 180 degrees during the course of taking its BFS trajectory based on the actions returned by the algorithm.
+- Many other animations can be added (like head rotations), the path finding algorithm could be improved to A* or third-person view could be extended easily, but due to lack of time I wasn't able to work on those.
 
 **Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound, Back-Face Culling (OpenGL)**
 #### Inventory:
