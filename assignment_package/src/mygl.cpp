@@ -20,9 +20,9 @@ MyGL::MyGL(QWidget *parent)
       m_terrain(this),
       mp_player(mkU<Player>(glm::vec3(2.f, 150.f, -9.f), m_terrain)),
       m_time(0.f),
-      m_benny(glm::vec3(2.f, 136.001f, 5.f), m_terrain, *mp_player.get(), this),
-      m_evan(glm::vec3(12.f, 141.001f, -8.f), m_terrain, *mp_player.get(), this),
-      m_nick(glm::vec3(-11.f, 135.001f, -7.f), m_terrain, *mp_player.get(), this),
+      m_benny(glm::vec3(-58.f, 143.001f, -3.f), m_terrain, *mp_player.get(), this),
+      m_evan(glm::vec3(-56.f, 143.001f, -3.f), m_terrain, *mp_player.get(), this),
+      m_nick(glm::vec3(-54.f, 143.001f, -3.f), m_terrain, *mp_player.get(), this),
       prevTime(QDateTime::currentMSecsSinceEpoch()),
       m_geomQuad(this), showInventory(false),
       mp_textureAtlas(nullptr),
@@ -133,7 +133,7 @@ void MyGL::initializeGL()
 
     m_terrain.allowTransparent(true);   // whether tosss draw transparent blocks
     m_terrain.allowCaves(false);        // whether to draw caves (improves performance considerably)
-    m_terrain.allowRivers(true);       // whether to draw LRivers
+    m_terrain.allowRivers(false);       // whether to draw LRivers
     m_terrain.allowClouds(true);        // whether to draw clouds
     m_terrain.createCloud();            // creates 16x16 cloud chunk in m_terrain which is drawn above chunks
 }
@@ -500,8 +500,8 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-//   float dpi = 0.03; // NICK: sensitivity of moving the mouse around the screen
-     float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
+   float dpi = 0.035; // NICK: sensitivity of moving the mouse around the screen
+//     float dpi = 0.0008; // BENEDICT: sensitivity of moving the mouse around the screen
 
     // NOTE: position() returns the position of the point in this event,
     // relative to the widget or item that received the event.

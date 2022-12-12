@@ -150,7 +150,7 @@ void main()
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
 
     fs_dimVal = random1(modelposition.xyz/100.f);
-    fs_LightVec = rotateLightVec(0.0025 * u_Time, lightDir);  // Compute the direction in which the light source lies
+    fs_LightVec = rotateLightVec(0.0005 * u_Time, lightDir);  // Compute the direction in which the light source lies
 
     // New condition to check flag set in w'th coord of vs_Nor
     if (vs_Anim != 0 && vs_Nor.w == 1) { // if we want to animate this surface

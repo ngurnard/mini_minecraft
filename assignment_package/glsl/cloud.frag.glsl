@@ -107,7 +107,7 @@ void main()
 {
     // Copy the color; there is no shading.
     out_Col = fs_Col;
-    float a = 2.0f; // timelapse factor (go woosh)
+    float a = 2.5f; // timelapse factor (go woosh)
     float threshold = 0.175f + 0.15f * sin(a * 0.00025 * u_Time);
     ivec2 offset_coords = ivec2(floor(fs_Pos.x + a * 0.025 * u_Time) + 1000, floor(fs_Pos.z + a * 0.025 * u_Time) + 1000);
 
@@ -128,7 +128,7 @@ void main()
         out_Col.a = 0.f;
     }
 
-    float Z = length(fs_Z.xz) / 150.f;
+    float Z = length(fs_Z.xz) / 180.f;
     float fogfalloff = clamp(1.15 - exp(-5.5f * (Z - 1.0f)), 0.f, 1.f);
     out_Col = vec4(out_Col.rgb, out_Col.a * (1-fogfalloff));
 }
