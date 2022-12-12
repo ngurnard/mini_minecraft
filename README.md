@@ -4,6 +4,7 @@
 
 **Benedict: L-system Rivers + NPC AI**
 #### L-system Rivers:
+- **Usage:** Set `m_terrain.allowRivers(true);` in mygl.cpp (line 136) to enable rivers.
 - Implemented 2D L-systems, with procedurally generating branching curved trees, that are carved out of the surface terrain. 
 - Added `deltariver.cpp` that generates the delta river. Used alphabets similar to the slides F, X, -, +, [ and ]. Initial axiom is FX. Grammar is exactly defined as in the slides.
 - Random values are used to determine if the correct grammar rule has to be applied to the initial axiom or extra alphabets have to be added to the axiom to have rivers of varying length.
