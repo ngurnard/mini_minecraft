@@ -17,9 +17,9 @@
 - The first step for working on NPC AI was to render the NPC. I initially started created NPC meshes, but later switched to scene graph implementation for easy animation.
 - Firstly, I generated a workflow for 3D scene graphs by taking advantage of the cube.cpp and Translate/Scale/Rotate node implementations from the scene graph homework.
 
-**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound**
+**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound, Back-Face Culling (OpenGL)**
 #### Inventory:
-- Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, lava, ice, snow, sand
+- Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, ice, snow, and sand. The player starts with 32 blocks of lava because... why not!?
 - The player is not able to place a block if their block count falls below 1 (ie they have zero)
 - The player can collect up to 64 of each block type
 - The player can open the gui by pressing the key "i" and can close the gui by pressing the key "i"
@@ -33,9 +33,9 @@
 #### Water Waves:
 - If a vertex is animatable and is liquid (water or lava), then the surface of the block will have displaces vertices
 - The surface of either water or lava appears to be moving according to a noise function
-- The vertex positions were changed inside of the *lambert.vert.glsl* vertex shader file in the *Resources* directory
-- Implemented Blinn-Phong lighting in the *lambert.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert, however was not able to figure out to to correctly displace the normals in the vertex shader so it doesn't appear different that that of the lambert shading
-- Challenges: I was not able to figure out how to displace the normals correctly inside of the vertex shader. The tranformation I did was non-linear, so an inverse-transpose of the vertex normals was not enough. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal, however was unable to figure out the surface contour since I had no information on surrounding vertices. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
+- The vertex positions were changed inside of the *SkyTerrainUber.vert.glsl* vertex shader file in the *Resources* directory
+- Implemented Blinn-Phong lighting in the *SkyTerrainUber.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert
+- Challenges: It took a long time trying to figure out how to properly displace the normal vectors from within the shader itself. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
 
 #### Sound
 - Made a additional functions inside of *player.cpp* and *mygl.cpp* that induces sounds based on certain events
@@ -51,6 +51,41 @@
 #### Post-Process Camera Overlay
 - This was mostly implemented in the last milestone for the sake of this milestone. Please refer to comment there for more information
 - Post-process effects are for when the player is under water or lava and are an upgrade from the regular red or blue tinge
+
+#### Back-Face Culling
+- Implmented OpenGL solution (simple one-line solution) to backface culling such that the world gets rendered more efficiently since less textures are drawn. The previous solution was not universal accross operating systems
+
+**Evan: Day and Night Cycle/Procedural Sky, Moving & dynamically dense FBM Clouds, HUD crosshair, Selected Block Wireframe**
+#### Day and Night Cycle:
+- I was most interested in beautifying our game, so I implmented a day and night cycle starting with the raycast method discussed during class - with many alterations to produce a smooth, natural-looking environment.
+- A separate sky shader pipeline was created, but because I wanted to be able to infuse the sky color (possibly off-screen sky color) into the environement, a new "SkyTerrainUber" shader was made to combine lambert and sky shaders. This now handles both draw calls for the sky's screen-spanning quad and the terrain.
+- Instead of defining a series of hard-coded color thresholds for sunset and dusk colors and linearly mixing between them, I instead used the tool at http://dev.thi.ng/gradients/ to carefully design 3 separate cosine color palettes to represent, day, sunrise/sunset, and night sky gradients.
+- The day and night sky gradients are static - the dot product (re-mapped to [0,1] range) between ray direction and the world up vector sets the cosine color value at each fragment.
+- The sunset palette, however, is dynamic - the value to retrieve its color is the dot between ray direction and the sun direction, such that the gradient enveloping the sky is always rotating with the sun.
+- To blend between these palettes, I use a custom non-linear blending strategy such that if the y-component of sun direction is positive, the blending occurs between sunset and day palettes, and otherwise between sunset and night. The nonlinearity of this blending essentially compresses the region (angle) at which sunset coloring occurs. This effectively holds off the sunset until the sun is lower in the sky, and there is more time spent in unaffected day/night coloring before the vibrant sunset/sunrise happens.
+- Fixed one issue with the sun/corona method mentioned in class. Instead of having linear falloff in the glow around the sun, exponential falloff is used for a more natural and seamless look.
+- Added a moon opposite the sun with a different color and smaller corona.
+- Implmented stars using 3D worley noise which fade into the sky as the brightness falls off toward nighttime. The vec3 ray direction is used and a threshold is used to make the sky color white within close 3D proximity to the worley points. The extra dimension in this noise allows for varying star sizes - some of which twinkle or wink out according to look direction.
+
+#### Distance Fog:
+- Implemented distance fog based on vertex depth with a fine-tuned exponential falloff function which starts a given distance from the player.
+- Initially mixed terrain terrain color with arbitrary fog color, but was dissatisfied with the disconnect between ambient sky color, especially at night. then, the falloff function was applied to the terrain alpha channel, but I encountered the same tranparency render order issues encountered previously with OpenGL.
+- Finally, after implmenting the "SkyTerrainUber" shader, The distance fog now blends a slightly darker sky color into the terrian with the exponential falloff. This makes it feel like the sky has much greater influence over terrain color and brings the environement together.
+
+#### Dynamic FBM Clouds:
+- Created new Cloud drawable class with separate VBO comprising 16x16 grid of opaque white squares to fit over exaclty one chunk at a given height. I then draw this instance over every chunk that gets loaded into the terrain class.
+- Created new cloud fragment shader. This shader is inspired by the CPU-side terrain height generation - it uses 3 FBM noise maps where two act as height maps and the third acts as a mask. these noise functions are identical the ones which generate the terrain/biomes except the position is offset by 1000 in x and z, the "height" value is instead applied to the alpha channel of the white cloud color to get a nice transparency, and the position offset is animated such that the clouds appear to move smoothly over time.
+- Additionally, a sine function is applied to the masking threshold for the 3rd FBM such that the sky oscillates slowly between very sparse cloud coverage and heavily overcast
+
+#### HUD Crosshair and Selected Block Wireframe:
+- Created HUD post process to draw a plus-shaped crosshair in the middle of the screen which subtly inverts the colors of the rendered texture behind it for better visibility.
+- Created Block wireframe drawable and drew it with flat shading over the terrain when the Player's look vector intersects with an opaque block in a 4-block range
+
+#### Misc...
+- Implemented naive backface culling before Nick found a much simpler and better way!
+- Fixed an issue with liquid blocks' vertex deformation causing them to move into other blocks causing Z-fighting.
+
+- Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values, etc...)
 
 ### Milestone 2:
 
@@ -129,4 +164,4 @@
 - When the player is in flight mode, translations occur parallel to each of the cardinal planes (xy, xz, yz) intentially such that easy world viewing is achievable. It was tested such that the player moved along its local axes, but that produces unfavorable gameplay.
 - The Entity class was edited to hold useful values to any future entities such as button presses and bools to determine whether on ground.  
 - Currently cannot jump on water or lava since that doesn't make physical sense.
-- Challenges: collision with corners
+- Challenges: collision with corners. The ray casting method is geometricxally limiting, and this solution would be more easily solved with volume projection.
