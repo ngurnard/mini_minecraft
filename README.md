@@ -6,7 +6,7 @@
 
 **Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound, Back-Face Culling (OpenGL)**
 #### Inventory:
-- Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, lava, ice, snow, sand
+- Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, ice, snow, and sand. The player starts with 32 blocks of lava because... why not!?
 - The player is not able to place a block if their block count falls below 1 (ie they have zero)
 - The player can collect up to 64 of each block type
 - The player can open the gui by pressing the key "i" and can close the gui by pressing the key "i"
@@ -20,9 +20,9 @@
 #### Water Waves:
 - If a vertex is animatable and is liquid (water or lava), then the surface of the block will have displaces vertices
 - The surface of either water or lava appears to be moving according to a noise function
-- The vertex positions were changed inside of the *lambert.vert.glsl* vertex shader file in the *Resources* directory
-- Implemented Blinn-Phong lighting in the *lambert.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert, however was not able to figure out to to correctly displace the normals in the vertex shader so it doesn't appear different that that of the lambert shading
-- Challenges: I was not able to figure out how to displace the normals correctly inside of the vertex shader. The tranformation I did was non-linear, so an inverse-transpose of the vertex normals was not enough. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal, however was unable to figure out the surface contour since I had no information on surrounding vertices. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
+- The vertex positions were changed inside of the *SkyTerrainUber.vert.glsl* vertex shader file in the *Resources* directory
+- Implemented Blinn-Phong lighting in the *SkyTerrainUber.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert
+- Challenges: It took a long time trying to figure out how to properly displace the normal vectors from within the shader itself. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
 
 #### Sound
 - Made a additional functions inside of *player.cpp* and *mygl.cpp* that induces sounds based on certain events
