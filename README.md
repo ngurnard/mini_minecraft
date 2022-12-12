@@ -2,9 +2,11 @@
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 3:
 
-**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound**
+**Benedict: L-system Rivers + NPC AI**
+
+**Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound, Back-Face Culling (OpenGL)**
 #### Inventory:
-- Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, lava, ice, snow, sand
+- Implemented basic inventory system where the player starts off with 1 of each block type: grass, dirt, stone, water, ice, snow, and sand. The player starts with 32 blocks of lava because... why not!?
 - The player is not able to place a block if their block count falls below 1 (ie they have zero)
 - The player can collect up to 64 of each block type
 - The player can open the gui by pressing the key "i" and can close the gui by pressing the key "i"
@@ -18,9 +20,9 @@
 #### Water Waves:
 - If a vertex is animatable and is liquid (water or lava), then the surface of the block will have displaces vertices
 - The surface of either water or lava appears to be moving according to a noise function
-- The vertex positions were changed inside of the *lambert.vert.glsl* vertex shader file in the *Resources* directory
-- Implemented Blinn-Phong lighting in the *lambert.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert, however was not able to figure out to to correctly displace the normals in the vertex shader so it doesn't appear different that that of the lambert shading
-- Challenges: I was not able to figure out how to displace the normals correctly inside of the vertex shader. The tranformation I did was non-linear, so an inverse-transpose of the vertex normals was not enough. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal, however was unable to figure out the surface contour since I had no information on surrounding vertices. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
+- The vertex positions were changed inside of the *SkyTerrainUber.vert.glsl* vertex shader file in the *Resources* directory
+- Implemented Blinn-Phong lighting in the *SkyTerrainUber.frag.glgl* file in the *Resources* directory since Blinn-Phong is an extension of lambert
+- Challenges: It took a long time trying to figure out how to properly displace the normal vectors from within the shader itself. I had the idea of using a tangent vector and bi-tangent vector relative to the surface to then take a cross product to compute the new normal. Additionally, the vertices exit only on the corvers of each cube, and it would have looked nicer to quadrangulate each face to have more vertices but that required a lot of additional work that I did not have the time for.
 
 #### Sound
 - Made a additional functions inside of *player.cpp* and *mygl.cpp* that induces sounds based on certain events
@@ -36,6 +38,9 @@
 #### Post-Process Camera Overlay
 - This was mostly implemented in the last milestone for the sake of this milestone. Please refer to comment there for more information
 - Post-process effects are for when the player is under water or lava and are an upgrade from the regular red or blue tinge
+
+#### Back-Face Culling
+- Implmented OpenGL solution (simple one-line solution) to backface culling such that the world gets rendered more efficiently since less textures are drawn. The previous solution was not universal accross operating systems
 
 **Evan: Day and Night Cycle/Procedural Sky, Moving & dynamically dense FBM Clouds, HUD crosshair, Selected Block Wireframe**
 #### Day and Night Cycle:
@@ -68,7 +73,6 @@
 - Fixed an issue with liquid blocks' vertex deformation causing them to move into other blocks causing Z-fighting.
 
 - Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values, etc...)
-
 
 ### Milestone 2:
 
@@ -147,4 +151,4 @@
 - When the player is in flight mode, translations occur parallel to each of the cardinal planes (xy, xz, yz) intentially such that easy world viewing is achievable. It was tested such that the player moved along its local axes, but that produces unfavorable gameplay.
 - The Entity class was edited to hold useful values to any future entities such as button presses and bools to determine whether on ground.  
 - Currently cannot jump on water or lava since that doesn't make physical sense.
-- Challenges: collision with corners
+- Challenges: collision with corners. The ray casting method is geometricxally limiting, and this solution would be more easily solved with volume projection.
