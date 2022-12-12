@@ -15,7 +15,7 @@
 - Challenges: Since the random numbers and angle turns are sometimes difficult to get control, it was difficult to get a perfectly looking delta river. The major difficulty was to procedurally generate this at fixed interval. Took a similar approach to cave carving by engraving it in the noise function. Another challenge was, since river carving out is random, the rivers got generated in random biomes of the terrain, sometimes splitting a mountain into two. Fixed this by limiting it to grasslang biomes. Sometimes this still gives weird rivers that might have potentially had a major portion in the mountain terrain (which is not drawn), and a small portion in the grassland biome (which is drawn), and this ends up looking like an incomplete river.
 
 #### NPC AI:
-- **Usage:** Use the following keys to move the NPC to the player: `N` for _Nick_ , G` for _Evan_ and `B` for _Benny_.
+- **Usage:** Use the following keys to move the NPC to the player: `N` for _Nick_ , `G` for _Evan_ and `B` for _Benny_.
 - The first step for working on NPC AI was to render the NPC. I initially started created NPC meshes, but later switched to scene graph implementation for easy animation.
 - Firstly, I generated a workflow for 3D scene graphs by taking advantage of the `cube.cpp` and Translate/Scale/Rotate node implementations from the scene graph homework (`node.h`, `translate_node.h`, `scale_node.h` and `rotate_node.h`). The node now has a pointer to the cube instead of the Polygon2D Geometry.
 - Considerable time went into mapping the texture UV coordinates to constants in cube.h
