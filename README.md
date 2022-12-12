@@ -2,7 +2,20 @@
 ## Team O(idk): Benedict Florance Arockiaraj, Evan Grant, Nicholas Gurnard
 ### Milestone 3:
 
-**Benedict: L-system Rivers + NPC AI
+**Benedict: L-system Rivers + NPC AI**
+#### L-system Rivers:
+- Implemented 2D L-systems, with procedurally generating branching curved trees, that are carved out of the surface terrain. 
+- Added deltariver.cpp that generates the delta river. Used alphabets similar to the slides F, X, -, +, [ and ]. Initial axiom is FX. Grammar is exactly defined as in the slides.
+- Random values are used to determine if the correct grammar rule has to be applied to the initial axiom or extra alphabets have to be added to the axiom to have rivers of varying length.
+- The state is modelled as a structure with position, rotation and the iteration in which it was generated. 
+- Left and right rotations happen at 35 degrees with an error of 25% on either side. The forward distance initially starts with 35, and decreases exponentially based on the iteration of the L-system (we do 5 iterations). Also, we randomly turn 12 degrees on every side before the forward, so that the river is not just a straight line, but is curved and organic.
+- The delta rivers are generated and carved out from the terrain in every fixed interval, so there's procedural generation of the river (changes in noise.cpp and terrain.cpp)
+- The delta river is also only rendered if it belongs to the grassland biome and is less than a certain height (like 155), so that the river doesn't split mountains and is aesthetic with rest of the terrain.
+- Challenges: Since the random numbers and angle turns are sometimes difficult to get control, it was difficult to get a perfectly looking delta river. The major difficulty was to procedurally generate this at fixed interval. Took a similar approach to cave carving by engraving it in the noise function. Another challenge was, since river carving out is random, the rivers got generated in random biomes of the terrain, sometimes splitting a mountain into two. Fixed this by limiting it to grasslang biomes. Sometimes this still gives weird rivers that might have potentially had a major portion in the mountain terrain (which is not drawn), and a small portion in the grassland biome (which is drawn), and this ends up looking like an incomplete river.
+
+#### NPC AI:
+- The first step for working on NPC AI was to render the NPC. I initially started created NPC meshes, but later switched to scene graph implementation for easy animation.
+- Firstly, I generated a workflow for 3D scene graphs by taking advantage of the cube.cpp and Translate/Scale/Rotate node implementations from the scene graph homework.
 
 **Nick: Inventory + GUI, Water Waves, Post-Process Camera Overlay (Improved), Sound**
 #### Inventory:

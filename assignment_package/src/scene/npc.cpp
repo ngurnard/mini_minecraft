@@ -512,7 +512,7 @@ void NPC::constructSceneGraph()
     uPtr<Node> torsoRotate = mkU<RotateNode>(0.f, glm::vec3(0.f, 1.f, 0.f));
     torsoRotateRaw = torsoRotate.get();
     Node& torsoRotateRef = root->addChild(std::move(torsoRotate));    
-    uPtr<Node> torsoScale = mkU<ScaleNode>(0.5f, 0.75f, 0.25f, &m_geomCube, true, TORSO);
+    uPtr<Node> torsoScale = mkU<ScaleNode>(0.5f, 0.75f, 0.25f, &m_geomCube, TORSO);
     torsoScaleRaw = torsoScale.get();
     Node& torsoScaleRef = torsoRotateRef.addChild(std::move(torsoScale));
 
@@ -522,7 +522,7 @@ void NPC::constructSceneGraph()
     uPtr<Node> headRotate = mkU<RotateNode>(0.f, glm::vec3(0.f, 1.f, 0.f));
     headRotateRaw = headRotate.get();
     Node& headRotateRef = headTranslateRef.addChild(std::move(headRotate));
-    uPtr<Node> headScale = mkU<ScaleNode>(0.5f, 0.5f, 0.5f, &m_geomCube, true, HEAD);
+    uPtr<Node> headScale = mkU<ScaleNode>(0.5f, 0.5f, 0.5f, &m_geomCube, HEAD);
     headScaleRaw = headScale.get();
     Node& headScaleRef = headRotateRef.addChild(std::move(headScale));
 
@@ -534,7 +534,7 @@ void NPC::constructSceneGraph()
     Node& leftHandRotateRef = leftHandTranslateRef.addChild(std::move(leftHandRotate));
     uPtr<Node> leftHandTranslate2 = mkU<TranslateNode>(0.f, -0.25f, 0.f);
     Node& leftHandTranslate2Ref = leftHandRotateRef.addChild(std::move(leftHandTranslate2));
-    uPtr<Node> leftHandScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, true, LEFT_HAND);
+    uPtr<Node> leftHandScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, LEFT_HAND);
     leftHandScaleRaw = leftHandScale.get();
     Node& leftHandScaleRef = leftHandTranslate2Ref.addChild(std::move(leftHandScale));
 
@@ -546,7 +546,7 @@ void NPC::constructSceneGraph()
     Node& rightHandRotateRef = rightHandTranslateRef.addChild(std::move(rightHandRotate));
     uPtr<Node> rightHandTranslate2 = mkU<TranslateNode>(0.f, -0.25f, 0.f);
     Node& rightHandTranslate2Ref = rightHandRotateRef.addChild(std::move(rightHandTranslate2));
-    uPtr<Node> rightHandScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, true, RIGHT_HAND);
+    uPtr<Node> rightHandScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, RIGHT_HAND);
     rightHandScaleRaw = rightHandScale.get();
     Node& rightHandScaleRef = rightHandTranslate2Ref.addChild(std::move(rightHandScale));
 
@@ -559,7 +559,7 @@ void NPC::constructSceneGraph()
     Node& leftLegRotateRef = leftLegTranslateRef.addChild(std::move(leftLegRotate));
     uPtr<Node> leftLegTranslate2 = mkU<TranslateNode>(0.f, -0.5f, 0.f);
     Node& leftLegTranslate2Ref = leftLegRotateRef.addChild(std::move(leftLegTranslate2));
-    uPtr<Node> leftLegScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, true, LEFT_LEG);
+    uPtr<Node> leftLegScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, LEFT_LEG);
     leftLegScaleRaw = leftLegScale.get();
     Node& leftLegScaleRef = leftLegTranslate2Ref.addChild(std::move(leftLegScale));
 
@@ -572,7 +572,7 @@ void NPC::constructSceneGraph()
     Node& rightLegRotateRef = rightLegTranslateRef.addChild(std::move(rightLegRotate));
     uPtr<Node> rightLegTranslate2 = mkU<TranslateNode>(0.f, -0.5f, 0.f);
     Node& rightLegTranslate2Ref = rightLegRotateRef.addChild(std::move(rightLegTranslate2));
-    uPtr<Node> rightLegScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, true, RIGHT_LEG);
+    uPtr<Node> rightLegScale = mkU<ScaleNode>(0.25f, 0.75f, 0.25f, &m_geomCube, RIGHT_LEG);
     rightLegScaleRaw = rightLegScale.get();
     Node& rightLegScaleRef = rightLegTranslate2Ref.addChild(std::move(rightLegScale));
 }
