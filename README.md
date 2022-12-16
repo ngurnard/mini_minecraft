@@ -89,17 +89,17 @@ I took the standard texture arrangements for Minecraft UV mob characters (source
 - Finally, after implmenting the "SkyTerrainUber" shader, The distance fog now blends a slightly darker sky color into the terrian with the exponential falloff. This makes it feel like the sky has much greater influence over terrain color and brings the environement together.
 
 #### Dynamic FBM Clouds:
-- Created new Cloud drawable class with separate VBO comprising 16x16 grid of opaque white squares to fit over exaclty one chunk at a given height. I then draw this instance over every chunk that gets loaded into the terrain class.
-- Created new cloud fragment shader. This shader is inspired by the CPU-side terrain height generation - it uses 3 FBM noise maps where two act as height maps and the third acts as a mask. these noise functions are identical the ones which generate the terrain/biomes except the position is offset by 1000 in x and z, the "height" value is instead applied to the alpha channel of the white cloud color to get a nice transparency, and the position offset is animated such that the clouds appear to move smoothly over time.
-- Additionally, a sine function is applied to the masking threshold for the 3rd FBM such that the sky oscillates slowly between very sparse cloud coverage and heavily overcast
+- Created new Cloud drawable class with separate VBO comprising a 16x16 grid of opaque white squares to fit over exaclty one chunk at a given height. I then draw this instance over every chunk that gets loaded into the terrain class.
+- Created new cloud fragment shader. This shader is inspired by the CPU-side terrain height generation - it uses 3 FBM noise maps where two act as height maps and the third acts as a mask. these noise functions are identical to the ones which generate the terrain/biomes except the position is offset by 1000 in x and z, the "height" value is instead applied to the alpha channel of the white cloud color to get a nice transparency, and the position offset is animated such that the clouds appear to move smoothly over time.
+- Additionally, the threshold for the FBM mask is animated sinusoidally such that the sky oscillates slowly between very sparse cloud coverage and overcast.
 
 #### HUD Crosshair and Selected Block Wireframe:
-- Created HUD post process to draw a plus-shaped crosshair in the middle of the screen which subtly inverts the colors of the rendered texture behind it for better visibility.
+- Created HUD post process shader to draw a plus-shaped crosshair in the middle of the screen which subtly inverts the colors of the rendered frame buffer texture behind it for better visibility.
 - Created Block wireframe drawable and drew it with flat shading over the terrain when the Player's look vector intersects with an opaque block in a 4-block range
 
 #### Misc...
 - Implemented naive backface culling before Nick found a much simpler and better way!
-- Fixed an issue with liquid blocks' vertex deformation causing them to move into other blocks causing Z-fighting.
+- Fixed an issue with liquid blocks' vertex deformation causing them to move into other blocks and produce texture Z-fighting.
 - Made toggles in myGL for caves, clouds to assist with performance
 
 - Challenges: arriving at the proper shader pipeline for all these effects proved difficult - I spent an entire day setting up a secondary frame buffer, texture loading, and compositing step before realizing it would be best and more efficient to implement a larger, more flexible shader for both sky and terrain. Additionally, my work was largely aesthetic in nature, and required a great deal of tuning to perfect the look (e.g. star distribution, cloud density/speed, color gradients and the unexpected blending of their values, etc...)
@@ -121,10 +121,10 @@ I took the standard texture arrangements for Minecraft UV mob characters (source
 - Created Texture class as a way of loading images into OpenGL
 - Troubleshooted and developed pipeline for creating, loading, and binding the texture atlas to slot0
 - Implemented time variable and animatible flag such that lava and water textures could be animated
-- Created custom (intentionally subtle, so look closely!) animations for lava and water blocks (and decoupled lava shading from lambert to give it a uniform, unshaded look which resembles illumination/glow)
+- Created custom (intentionally subtle, so look closely!) animations for lava and water blocks and decoupled lava shading from lambert to give it a uniform, unshaded look which resembles illumination/glow
 - Enabled alpha blending in myGL and extensively updated drawable/chunk/terrain/multithreading code to split the vbo construction and drawing for the opaque and transparent block passes.
-- Created new shader variable to handle passing per-vertex random noise to the fragment shader for animatable blocks
-- Added new VBO element (utilizing the unused float in vec4 already being sent) as a flag to identify if a face of a transparent block is in contact with another transparent block of a different type. I then set that block's alpha channel to 1 if it has a higher display priority (e.g. ice should be more opaque and show through water), and have some complicated logic in generateVBOdata() for the transparent pass to instead push back that tranparent block onto the opaque VBO. This is a complicated method to get around the OpenGL arbitrary transparency rendering order for blocks where discarding a fragment is not possible. Essentially, looking at Ice underneath water will now make the ice opaque so that it is guarnteed to be rendered instead of invisible (I'm hoping to make an icy river biome in the future)
+- Created new shader variable to handle passing per-vertex random noise to the fragment shader for animatable blocks ( to give lava lake surfaces a nonuniform brightness throughout)
+- Added new VBO element (utilizing the unused float in a vec4 already being sent) as a flag to identify if a face of a transparent block is in contact with another transparent block of a different type. I then set that block's alpha channel to 1 if it has a higher display priority (e.g. ice should be more opaque and show through water), and have some logic in generateVBOdata() for the transparent pass to instead push back that transparent block onto the opaque VBO. This is a complicated method to get around the OpenGL arbitrary transparency rendering order for blocks where discarding a fragment is not possible. Essentially, looking at Ice underneath water will now make the ice opaque so that it is guaranteed to be rendered instead of invisible (I'm hoping to make an icy river biome in the future)
 - Challenges: understanding the requisite ordering of OpenGL functions to properly create and bind a texture was time consuming and led to no visible output and no errors with which to debug. Also, in order to properly split VBOs, I felt I needed to fully understand Benedict's multithreading code and this was challenging as an additional task. Otherwise, I'm enjoying the satisfying texturing results.
 - Also worked with Nick to re-factor ShaderProgram to be a generic parent class from which SurfaceShader and PostProcessShader could inherit for our two respective parts.
 
@@ -143,8 +143,9 @@ I took the standard texture arrangements for Minecraft UV mob characters (source
 ### Milestone 1:
 
 **1. Procedural generation of terrain using noise functions _(Evan)_**
-- Created several fragment shaders in ShaderToy.pro to design and visualize various noise functions to be used for terrain
-- Wrote customFBM class as a template for the 3 FBM-based noise function I decided upon for mountains, grassland, and biomeMask
+- Created several fragment shaders in ShaderFun.pro to design and visualize various noise functions to be used for terrain
+- Explored Perlin, Worley, and FBM (with Perlin, Worley, and standard 2D noise as the base octave), and ultimately decided that pure FBM gives the most realistic terrain results. I am intentionally not going for the smooth, traversable terrain of actual Minecraft.
+- Wrote customFBM class as a template for the 3 FBM-based noise functions I decided upon for mountains, grassland, and biomeMask
 - Made 3 post-process functions for each FBM function to further tailor the output to specific terrain and exponentiate/ smoothstep the mask
 - Mapped keypress ("P") to a print function which prints the terrain height at player position (useful for debugging terrrain stuff)
 - Wrote computeHeight() function which interpolates between biome height maps via the biomeMask FBM and returns final height & biome
